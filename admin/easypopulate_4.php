@@ -28,6 +28,7 @@
 // 4.0.2   - 06-03-10 - changed all price_as to price_uom for unit of measure. This is a logical correction. Databased updated
 // ALTER TABLE products ADD products_upc VARCHAR(32) AFTER products_model; << to add UPC support
 // ALTER TABLE products ADD products_price_uom VARCHAR(2) AFTER products_price; << to add UOM support
+// 6-18-2010 adding to github
 
 
 
