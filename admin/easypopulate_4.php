@@ -29,7 +29,7 @@
 // ALTER TABLE products ADD products_upc VARCHAR(32) AFTER products_model; << to add UPC support
 // ALTER TABLE products ADD products_price_uom VARCHAR(2) AFTER products_price; << to add UOM support
 // 6-18-2010 adding to github
-
+// 11-15-2010 test
 
 
 
