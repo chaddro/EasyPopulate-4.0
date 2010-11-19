@@ -25,15 +25,10 @@
 
 // 4.0.000 - 12-21-09 - Begin Move to 4.0.000 beta
 // 4.0.001 - 12-22-09 - Ha! Manufacturers weren't being created because I left off the "s" in manufacturers!
-// 4.0.2   - 06-03-10 - changed all price_as to price_uom for unit of measure. This is a logical correction. Databased updated
-// ALTER TABLE products ADD products_upc VARCHAR(32) AFTER products_model; << to add UPC support
-// ALTER TABLE products ADD products_price_uom VARCHAR(2) AFTER products_price; << to add UOM support
-// 6-18-2010 adding to github
-// 11-15-2010 test
-
-
-
-
+// 4.0.02  - 06-03-10 - changed all price_as to price_uom for unit of measure. This is a logical correction. Databased updated
+// ALTER TABLE products ADD products_upc VARCHAR(32) AFTER products_model;
+// ALTER TABLE products ADD products_price_uom VARCHAR(2) AFTER products_price;
+// 4.0.03 - 11-19-2010 Fixed bug where v_date_avail (products_date_available) wasn't being set to NULL correctly.
 
 
 // CSV VARIABLES - need to make this configurable in the ADMIN
@@ -73,7 +68,7 @@ $ep_debug_logging_all = false; // do not comment out.. make false instead
 /* Initialise vars */
 
 // Current EP Version - Modded by Chadd
-$curver                   = '4.0.2 - Beta';
+$curver                   = '4.0.03 - Beta';
 $display_output           = '';
 $ep_dltype                = NULL;
 $ep_dlmethod              = NULL;
@@ -273,8 +268,8 @@ if (zen_not_null($ep_dltype)) {
 		$filelayout[] = 'v_products_sort_order';
 		$filelayout[] = 'v_products_quantity_order_min';
 		$filelayout[] = 'v_products_quantity_order_units';
-		$filelayout[] = 'v_date_avail';
-		$filelayout[] = 'v_date_added';
+		$filelayout[] = 'v_date_avail'; // should be changed to v_products_date_available for clarity
+		$filelayout[] = 'v_date_added'; // should be changed to v_products_date_added for clarity
 		$filelayout[] = 'v_products_quantity';
 		$filelayout[] = 'v_manufacturers_name';
 
@@ -893,7 +888,7 @@ if ( isset($_POST['localfile']) OR isset($_FILES['usrfl']) ) {
 		'v_products_quantity_order_min',
 		'v_products_quantity_order_units',
 		'v_date_added',
-		'v_date_avail',
+		'v_date_avail', // chadd - this should default to null not "zero" or system date
 		'v_instock',
 		'v_tax_class_title',
 		'v_manufacturers_name',
@@ -1174,8 +1169,12 @@ if ( isset($_POST['localfile']) OR isset($_FILES['usrfl']) ) {
 			$v_products_quantity = 0;
 		}
 
-		// date variables
-		$v_date_avail = ($v_date_avail == true) ? date("Y-m-d H:i:s",strtotime($v_date_avail)) : "";
+		// date variables - chadd ... these should really be products_date_available and products_date_added for clarity
+		// date_avail is only set to show when out of stock items will be available, else it is NULL
+		// 11-19-2010 fixed this bug where NULL wasn't being correctly set
+		$v_date_avail = ($v_date_avail) ? "'".date("Y-m-d H:i:s",strtotime($v_date_avail))."'" : "NULL";
+		
+		// if products has been added before, do not change, else use current time stamp
 		$v_date_added = ($v_date_added) ? "'".date("Y-m-d H:i:s",strtotime($v_date_added))."'" : "CURRENT_TIMESTAMP";
 
 		// default the stock if they spec'd it or if it's blank
@@ -1326,7 +1325,7 @@ if ( isset($_POST['localfile']) OR isset($_FILES['usrfl']) ) {
 					products_quantity_order_min     = '".zen_db_input($v_products_quantity_order_min)."',
 					products_quantity_order_units   = '".zen_db_input($v_products_quantity_order_units)."',
 					products_tax_class_id			= '".zen_db_input($v_tax_class_id)."',
-					products_date_available			= '".$v_date_avail."',
+					products_date_available			= $v_date_avail, 
 					products_date_added				= $v_date_added,
 					products_last_modified			= CURRENT_TIMESTAMP,
 					products_quantity				= '".zen_db_input($v_products_quantity)."',
@@ -1377,7 +1376,7 @@ if ( isset($_POST['localfile']) OR isset($_FILES['usrfl']) ) {
 					products_quantity_order_min		= '".zen_db_input($v_products_quantity_order_min)."',
 					products_quantity_order_units	= '".zen_db_input($v_products_quantity_order_units)."',				
 					products_tax_class_id			= '".zen_db_input($v_tax_class_id)."',
-					products_date_available			= '".$v_date_avail."',
+					products_date_available			= $v_date_avail,
 					products_date_added				= $v_date_added,
 					products_last_modified			= CURRENT_TIMESTAMP,
 					products_quantity				= '".zen_db_input($v_products_quantity)."',
