@@ -29,7 +29,7 @@
 // ALTER TABLE products ADD products_upc VARCHAR(32) AFTER products_model;
 // ALTER TABLE products ADD products_price_uom VARCHAR(2) AFTER products_price;
 // 4.0.03 - 11-19-2010 Fixed bug where v_date_avail (products_date_available) wasn't being set to NULL correctly.
-
+// 4.0.04 - 11-22-2010 worked on quantity discount import code. now removes old discounts when discount type or number of discounts changes
 
 // CSV VARIABLES - need to make this configurable in the ADMIN
 $csv_deliminator = "\t"; // "\t" = tab AND "," = COMMA
@@ -68,7 +68,7 @@ $ep_debug_logging_all = false; // do not comment out.. make false instead
 /* Initialise vars */
 
 // Current EP Version - Modded by Chadd
-$curver                   = '4.0.03 - Beta';
+$curver                   = '4.0.04 - Beta';
 $display_output           = '';
 $ep_dltype                = NULL;
 $ep_dlmethod              = NULL;
@@ -1434,59 +1434,63 @@ if ( isset($_POST['localfile']) OR isset($_FILES['usrfl']) ) {
 			// 9-29-09 - changed to while loop to allow for more than 3 discounts
 			// 9-29-09 - code has test well for first run through.
 			// initialize variables
-			$xxx = 1;
-			$v_discount_id_var    = 'v_discount_id_'.$xxx ;
-			$v_discount_qty_var   = 'v_discount_qty_'.$xxx;
-			$v_discount_price_var = 'v_discount_price_'.$xxx;
-		
-			while ( isset($$v_discount_id_var) ) { 
-				if ($v_products_discount_type != '0') { // if v_products_discount_type == 0 then there are no quantity breaks
-	
-					if ($v_products_model != "") { // we check to see if this is a product in the current db, must have product model number
-						$result = ep_4_query("SELECT products_id FROM ".TABLE_PRODUCTS." WHERE (products_model = '" . zen_db_input($v_products_model) . "')");
+			
+			if ($v_products_discount_type != '0') { // if v_products_discount_type == 0 then there are no quantity breaks
+				if ($v_products_model != "") { // we check to see if this is a product in the current db, must have product model number
+					$result = ep_4_query("SELECT products_id FROM ".TABLE_PRODUCTS." WHERE (products_model = '" . zen_db_input($v_products_model) . "')");
+					if (mysql_num_rows($result) != 0)  { // found entry
+						$row3 =  mysql_fetch_array($result);
+						$v_products_id = $row3['products_id'];
+
+						// remove all old associated quantity discounts
+						// this simplifies the below code to JUST insert all the new values
+						$db->Execute("delete from " . TABLE_PRODUCTS_DISCOUNT_QUANTITY . " where products_id = '" . (int)$v_products_id . "'");
+
+						// initialize quantity discount variables
+						$xxx = 1;
+						$v_discount_id_var    = 'v_discount_id_'.$xxx ;
+						$v_discount_qty_var   = 'v_discount_qty_'.$xxx;
+						$v_discount_price_var = 'v_discount_price_'.$xxx;
+						while (isset($$v_discount_id_var)) { 
+							// INSERT price break
+							if ($$v_discount_price_var != "") { // check for empty price
+								$sql = "INSERT INTO " . TABLE_PRODUCTS_DISCOUNT_QUANTITY . "(
+									products_id,
+									discount_id,
+									discount_qty,
+									discount_price
+								) VALUES (
+									'$v_products_id',
+									'".zen_db_input($$v_discount_id_var)."',
+									'".zen_db_input($$v_discount_qty_var)."',
+									'".zen_db_input($$v_discount_price_var)."')";
+								$result = ep_4_query($sql);
+							} // end: check for empty price
+			
+							$xxx++;
+							$v_discount_id_var    = 'v_discount_id_'.$xxx ;
+							$v_discount_qty_var   = 'v_discount_qty_'.$xxx;
+							$v_discount_price_var = 'v_discount_price_'.$xxx;
+						} // while (isset($$v_discount_id_var)
+			
+					} // end: if (row count <> 0) found entry
+				} // if ($v_products_model)
+
+			} else { // products_discount_type == 0, so remove any old quantity_discounts
+				if ($v_products_model != "") { // we check to see if this is a product in the current db, must have product model number
+					$result = ep_4_query("SELECT products_id FROM ".TABLE_PRODUCTS." WHERE (products_model = '" . zen_db_input($v_products_model) . "')");
+
+					if (mysql_num_rows($result) != 0)  { // found entry
+						$row3 =  mysql_fetch_array($result);
+						$v_products_id = $row3['products_id'];
 						
-						if (mysql_num_rows($result) != 0)  { // found entry
-							$row3 =  mysql_fetch_array($result);
-							$v_products_id = $row3['products_id'];
-		
-							$sql2 = "SELECT discount_id, discount_qty, discount_price
-								FROM ".TABLE_PRODUCTS_DISCOUNT_QUANTITY." WHERE
-								products_id = " . zen_db_input($v_products_id) . " AND discount_id = '".$xxx."'";
-							$result2 = ep_4_query($sql2);
-							$row2 = mysql_fetch_array($result2);
-		
-							if ( $row2 != '' ) { // found entry: update discount_price value
-								$query = "UPDATE ".TABLE_PRODUCTS_DISCOUNT_QUANTITY." SET
-									discount_qty   = '".zen_db_input($$v_discount_qty_var)."',
-									discount_price = '".zen_db_input($$v_discount_price_var)."'
-									WHERE
-									products_id = '$v_products_id' AND
-									discount_id = '".$xxx."'";						
-								$result = ep_4_query($query);
-							} else { // entry does not exist, add to database
-								// code to INSERT price breaks
-								if ($$v_discount_price_var != "") { // check for empty price
-									$sql = "INSERT INTO " . TABLE_PRODUCTS_DISCOUNT_QUANTITY . "(
-										products_id,
-										discount_id,
-										discount_qty,
-										discount_price
-									) VALUES (
-										'$v_products_id',
-										'".zen_db_input($$v_discount_id_var)."',
-										'".zen_db_input($$v_discount_qty_var)."',
-										'".zen_db_input($$v_discount_price_var)."')";
-									$result = ep_4_query($sql);
-								} // end: check for empty price
-							} // end: update discount_price value
-						} // end: if (row count <> 0) found entry
-					} // if ($v_products_model)
-				} // if ($v_products_discount_type != '0')
-				$xxx++;
-				$v_discount_id_var    = 'v_discount_id_'.$xxx ;
-				$v_discount_qty_var   = 'v_discount_qty_'.$xxx;
-				$v_discount_price_var = 'v_discount_price_'.$xxx;
-			} // while (isset($$v_discount_id_var)
+						// remove all associated quantity discounts
+						$db->Execute("delete from " . TABLE_PRODUCTS_DISCOUNT_QUANTITY . " where products_id = '" . (int)$v_products_id . "'");
+					}
+				}
+			} // if ($v_products_discount_type != '0')
+	
+			
 			
 			// BEGIN: Products Descriptions
 			// the following is common in both the updating an existing product and creating a new product
