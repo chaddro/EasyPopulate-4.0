@@ -30,6 +30,7 @@
 // ALTER TABLE products ADD products_price_uom VARCHAR(2) AFTER products_price;
 // 4.0.03 - 11-19-2010 Fixed bug where v_date_avail (products_date_available) wasn't being set to NULL correctly.
 // 4.0.04 - 11-22-2010 worked on quantity discount import code. now removes old discounts when discount type or number of discounts changes
+// 4.0.05 - 11-23-2010 more work on quantity breaks. Eliminated the v_discount_id column since all discounts are entered at once fresh i'm just using loop index
 
 // CSV VARIABLES - need to make this configurable in the ADMIN
 $csv_deliminator = "\t"; // "\t" = tab AND "," = COMMA
@@ -1448,7 +1449,7 @@ if ( isset($_POST['localfile']) OR isset($_FILES['usrfl']) ) {
 
 						// initialize quantity discount variables
 						$xxx = 1;
-						$v_discount_id_var    = 'v_discount_id_'.$xxx ;
+						// $v_discount_id_var    = 'v_discount_id_'.$xxx ; // this column is now redundant
 						$v_discount_qty_var   = 'v_discount_qty_'.$xxx;
 						$v_discount_price_var = 'v_discount_price_'.$xxx;
 						while (isset($$v_discount_id_var)) { 
@@ -1461,14 +1462,14 @@ if ( isset($_POST['localfile']) OR isset($_FILES['usrfl']) ) {
 									discount_price
 								) VALUES (
 									'$v_products_id',
-									'".zen_db_input($$v_discount_id_var)."',
+									'(int)$xxx',
 									'".zen_db_input($$v_discount_qty_var)."',
 									'".zen_db_input($$v_discount_price_var)."')";
 								$result = ep_4_query($sql);
 							} // end: check for empty price
 			
-							$xxx++;
-							$v_discount_id_var    = 'v_discount_id_'.$xxx ;
+							$xxx++; 
+							// $v_discount_id_var    = 'v_discount_id_'.$xxx ;  // chadd - now redundant, just input $xxx index value
 							$v_discount_qty_var   = 'v_discount_qty_'.$xxx;
 							$v_discount_price_var = 'v_discount_price_'.$xxx;
 						} // while (isset($$v_discount_id_var)
