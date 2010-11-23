@@ -1452,17 +1452,17 @@ if ( isset($_POST['localfile']) OR isset($_FILES['usrfl']) ) {
 						// $v_discount_id_var    = 'v_discount_id_'.$xxx ; // this column is now redundant
 						$v_discount_qty_var   = 'v_discount_qty_'.$xxx;
 						$v_discount_price_var = 'v_discount_price_'.$xxx;
-						while (isset($$v_discount_id_var)) { 
+						while (isset($$v_discount_qty_var)) { 
 							// INSERT price break
 							if ($$v_discount_price_var != "") { // check for empty price
-								$sql = "INSERT INTO " . TABLE_PRODUCTS_DISCOUNT_QUANTITY . "(
+								$sql = 'INSERT INTO ' . TABLE_PRODUCTS_DISCOUNT_QUANTITY . "(
 									products_id,
 									discount_id,
 									discount_qty,
 									discount_price
 								) VALUES (
 									'$v_products_id',
-									'(int)$xxx',
+									'".zen_db_input($xxx)."',
 									'".zen_db_input($$v_discount_qty_var)."',
 									'".zen_db_input($$v_discount_price_var)."')";
 								$result = ep_4_query($sql);
