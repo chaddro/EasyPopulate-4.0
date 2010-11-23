@@ -31,6 +31,8 @@
 // 4.0.03 - 11-19-2010 Fixed bug where v_date_avail (products_date_available) wasn't being set to NULL correctly.
 // 4.0.04 - 11-22-2010 worked on quantity discount import code. now removes old discounts when discount type or number of discounts changes
 // 4.0.05 - 11-23-2010 more work on quantity breaks. Eliminated the v_discount_id column since all discounts are entered at once fresh i'm just using loop index
+//          11-23-2010 added products_status to the Model/Price/Qty and Model/Price/Breaks
+
 
 // CSV VARIABLES - need to make this configurable in the ADMIN
 $csv_deliminator = "\t"; // "\t" = tab AND "," = COMMA
@@ -325,6 +327,7 @@ if (zen_not_null($ep_dltype)) {
 		
 	case 'priceqty':
 		$filelayout[] = 'v_products_model';
+		$filelayout[] = 'v_status'; // 11-23-2010 added product status to price quantity option
 		$filelayout[] = 'v_specials_price';
 		$filelayout[] = 'v_specials_date_avail';
 		$filelayout[] = 'v_specials_expires_date';
@@ -335,9 +338,10 @@ if (zen_not_null($ep_dltype)) {
 		$filelayout[] = 'v_products_quantity';
 
 		$filelayout_sql = 'SELECT
-			p.products_id as v_products_id,
-			p.products_model as v_products_model,
-			p.products_price as v_products_price,';
+			p.products_id     as v_products_id,
+			p.products_status as v_status,
+			p.products_model  as v_products_model,
+			p.products_price  as v_products_price,';
 
 		if ($ep_supported_mods['uom'] == true) { // price UOM mod
 			$filelayout_sql .=  'p.products_price_uom as v_products_price_uom,'; // to soon be changed to v_products_price_uom
@@ -355,6 +359,7 @@ if (zen_not_null($ep_dltype)) {
 	//          then I will be able to generate $filelayout() dynamically
 	case 'pricebreaks':
 		$filelayout[] =	'v_products_model';
+		$filelayout[] = 'v_status'; // 11-23-2010 added product status to price quantity option
 		$filelayout[] =	'v_products_price';
 		
 		if ($ep_supported_mods['uom'] == true) { // price UOM mod
@@ -371,9 +376,10 @@ if (zen_not_null($ep_dltype)) {
 		}
 			
 		$filelayout_sql = 'SELECT
-			p.products_id            as v_products_id,
-			p.products_model         as v_products_model,
-			p.products_price         as v_products_price,';
+			p.products_id     as v_products_id,
+			p.products_status as v_status,
+			p.products_model  as v_products_model,
+			p.products_price  as v_products_price,';
 			
 		if ($ep_supported_mods['uom'] == true) { // price UOM mod
 			$filelayout_sql .=  'p.products_price_uom as v_products_price_uom,'; // to soon be changed to v_products_price_uom
@@ -1741,7 +1747,7 @@ if ($ep_stack_sql_error == true) $messageStack->add(EASYPOPULATE_4_MSGSTACK_ERRO
             <!-- Download file links -  Add your custom fields here -->
             <a href="easypopulate_4.php?download=stream&dltype=full">Download <b>Complete Products</b></a><br />
             <a href="easypopulate_4.php?download=stream&dltype=priceqty">Download <b>Model/Price/Qty</b></a><br />
-            <a href="easypopulate_4.php?download=stream&dltype=pricebreaks">Download <b>Model/Price/Breaks</b> (post-beta) </a><br />
+            <a href="easypopulate_4.php?download=stream&dltype=pricebreaks">Download <b>Model/Price/Breaks</b></a><br />
             <a href="easypopulate_4.php?download=stream&dltype=category">Download <b>Model/Category</b> </a><br />
 			<br>
 			<br>Under Construction<br>
