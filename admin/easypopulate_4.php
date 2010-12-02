@@ -32,13 +32,16 @@
 // 4.0.04 - 11-22-2010 worked on quantity discount import code. now removes old discounts when discount type or number of discounts changes
 // 4.0.05 - 11-23-2010 more work on quantity breaks. Eliminated the v_discount_id column since all discounts are entered at once fresh i'm just using loop index
 //          11-23-2010 added products_status to the Model/Price/Qty and Model/Price/Breaks
+// 4.0.06 - 12-02-2010 added uninstall button on form page, removed unnecessary tables from form page
+//			12-02-2010 removed 'v_discount_id_' from export file layout - no longer needed
+//			12-02-2010 add EASYPOPULATE_4_CONFIG_MAX_QTY_DISCOUNTS variable to configuration page
 
 
 // CSV VARIABLES - need to make this configurable in the ADMIN
 $csv_deliminator = "\t"; // "\t" = tab AND "," = COMMA
 $csv_deliminator = ","; // "\t" = tab AND "," = COMMA
-
 $csv_enclosure   = '"'; // if want none, change to space (chadd - i think you should always us the '"').
+
 $separator = "\t"; // tab delimited file
 $separator = ",";  // CSV - comma delimited file
 
@@ -49,7 +52,7 @@ require_once ('includes/application_top.php');
 @set_time_limit(300); // if possible, let's try for 5 minutes before timeouts
 
 /* Configuration Variable from Admin Interface  */
-$max_qty_discounts = 6;
+
 $tempdir          = EASYPOPULATE_4_CONFIG_TEMP_DIR;
 $ep_date_format   = EASYPOPULATE_4_CONFIG_FILE_DATE_FORMAT;
 $ep_raw_time      = EASYPOPULATE_4_CONFIG_DEFAULT_RAW_TIME;
@@ -58,6 +61,7 @@ $maxrecs          = EASYPOPULATE_4_CONFIG_SPLIT_MAX;
 $price_with_tax   = ((EASYPOPULATE_4_CONFIG_PRICE_INC_TAX == 'true') ? true : false);
 $max_categories   = EASYPOPULATE_4_CONFIG_MAX_CATEGORY_LEVELS;
 $strip_smart_tags = ((EASYPOPULATE_4_CONFIG_SMART_TAGS == 'true') ? true : false);
+$max_qty_discounts = EASYPOPULATE_4_CONFIG_MAX_QTY_DISCOUNTS;
 
 /* Test area start */
 // error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);//test purposes only
@@ -71,7 +75,7 @@ $ep_debug_logging_all = false; // do not comment out.. make false instead
 /* Initialise vars */
 
 // Current EP Version - Modded by Chadd
-$curver                   = '4.0.04 - Beta';
+$curver                   = '4.0.06 - Beta 12-2-2010';
 $display_output           = '';
 $ep_dltype                = NULL;
 $ep_dlmethod              = NULL;
@@ -370,7 +374,7 @@ if (zen_not_null($ep_dltype)) {
 		$filelayout[] =	'v_products_discount_type_from';
 		// discount quantities base on $max_qty_discounts	
 		for ($i=1;$i<$max_qty_discounts+1;$i++) {
-			$filelayout[] = 'v_discount_id_' . $i;
+			// $filelayout[] = 'v_discount_id_' . $i; // chadd - no longer needed
 			$filelayout[] = 'v_discount_qty_' . $i;
 			$filelayout[] = 'v_discount_price_' . $i;
 		}
@@ -740,16 +744,16 @@ if ($ep_dlmethod == 'stream' or  $ep_dlmethod == 'tempfile') { // DOWNLOAD FILE
 			}
 		}
 		
-		// Price/Qty/Discounts - chadd
+		// Price/Qty/Discounts - chadd - updated 12-02-2010 to remove discount_id from export
 		 $discount_index = 1;
-		 while (isset($filelayout['v_discount_id_'.$discount_index])) {
+		 while (isset($filelayout['v_discount_qty_'.$discount_index])) {
 			if ($row['v_products_discount_type'] != '0') { // if v_products_discount_type == 0 then there are no quantity breaks
 				$sql2 = 'SELECT discount_id, discount_qty, discount_price FROM '. 
 					TABLE_PRODUCTS_DISCOUNT_QUANTITY.' WHERE products_id = '. 
 					$row['v_products_id'].' AND discount_id='.$discount_index;
 				$result2 = ep_4_query($sql2);
 				$row2    = mysql_fetch_array($result2);
-				$row['v_discount_id_'.$discount_index]    = $row2['discount_id'];
+				// $row['v_discount_id_'.$discount_index]    = $row2['discount_id'];  // chadd - no longer needed
 				$row['v_discount_price_'.$discount_index] = $row2['discount_price'];
 				$row['v_discount_qty_'.$discount_index]   = $row2['discount_qty'];
 			}
@@ -1684,18 +1688,17 @@ if ($ep_stack_sql_error == true) $messageStack->add(EASYPOPULATE_4_MSGSTACK_ERRO
 <!-- header_eof -->
 
 <!-- body -->
-<table border="0" width="100%" cellspacing="2" cellpadding="2">
-	<tr><td width="100%" valign="top">
+<div style="padding:5px">
+	
 	<?php 	echo zen_draw_separator('pixel_trans.gif', '1', '10'); ?>
-		
-	<table border="0" width="100%" cellspacing="0" cellpadding="0">
-		<tr><td class="pageHeading"><?php echo "Easy Populate $curver"; ?></td></tr>
-	</table>
+	<div class="pageHeading"><?php echo "Easy Populate $curver"; ?></div>
+    
+    
+	<div style="text-align:right"><a href="<?php echo zen_href_link(FILENAME_EASYPOPULATE_4, 'epinstaller=remove') ?>">Un-Install EP4</a></div>
+
 	<?php echo zen_draw_separator('pixel_trans.gif', '1', '10'); ?>
-    <table border="0" width="100%" cellspacing="0" cellpadding="0">
-        <tr><td valign="top">
-        <table width="70%" border="0" cellpadding="8" valign="top">
-            <tr><td width="100%"><p>
+
+     <div style="text-align:left">
             <form ENCTYPE="multipart/form-data" ACTION="easypopulate_4.php" METHOD="POST">
                 <div align = "left">
                     <b>Upload EP File</b><br />
@@ -1742,7 +1745,7 @@ if ($ep_stack_sql_error == true) $messageStack->add(EASYPOPULATE_4_MSGSTACK_ERRO
             </form>
             </p>
 
-            <b>Easy Populate Tab-Delimited .txt Files</b>
+            <b>Easy Populate Files</b>
             <br /><br />
             <!-- Download file links -  Add your custom fields here -->
             <a href="easypopulate_4.php?download=stream&dltype=full">Download <b>Complete Products</b></a><br />
@@ -1757,8 +1760,8 @@ if ($ep_stack_sql_error == true) $messageStack->add(EASYPOPULATE_4_MSGSTACK_ERRO
             <a href="easypopulate_4.php?download=stream&dltype=values">Download <b>Attribute Options Values</b> </a><br />
             <a href="easypopulate_4.php?download=stream&dltype=optionvalues">Download <b>Attribute Options-Names-to-Values</b> </a><br />
 	
-	        <?php
-/*            <br /><br />
+	        <?php /* 
+			<br /><br />
             <b>Create Easy Populate Files in Temp Directory (<? echo $tempdir; ?>)</b>
             <br /><br />
             <a href="easypopulate_4.php?download=tempfile&dltype=full">Create <b>Complete</b> </a>
@@ -1770,10 +1773,10 @@ if ($ep_stack_sql_error == true) $messageStack->add(EASYPOPULATE_4_MSGSTACK_ERRO
 			<br>
             <a href="easypopulate_4.php?download=tempfile&dltype=attrib">Create <b>Products Attributes</b> </a><br />
             <a href="easypopulate_4.php?download=tempfile&dltype=options">Create <b>Attribute Optoins/Values</b> </a><br />
-*/			?>
-        </td>
-        </tr>
-    </table>
+			*/ ?>
+
+	</div>
+	
 	<?php
         echo '<br />' . $printsplit; // our files splitting matrix
         echo $display_output; // upload results
@@ -1781,15 +1784,11 @@ if ($ep_stack_sql_error == true) $messageStack->add(EASYPOPULATE_4_MSGSTACK_ERRO
             echo '<br />' . $specials_print . EASYPOPULATE_4_SPECIALS_FOOTER; // specials summary
         }	
     ?>
-    </td>
-    </tr>
-    </table>
     
-	</td>
 <!-- body_text_eof -->
-	</tr>
-</table>
+</div>
 <!-- body_eof -->
+
 <br />
 <!-- footer -->
 <?php require(DIR_WS_INCLUDES . 'footer.php'); ?>
