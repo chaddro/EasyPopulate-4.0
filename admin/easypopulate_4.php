@@ -35,6 +35,7 @@
 // 4.0.06 - 12-02-2010 added uninstall button on form page, removed unnecessary tables from form page
 //			12-02-2010 removed 'v_discount_id_' from export file layout - no longer needed
 //			12-02-2010 add EASYPOPULATE_4_CONFIG_MAX_QTY_DISCOUNTS variable to configuration page
+// 4.0.07 - 12-02-2010 adding categories image, description and metadate export/import
 
 
 // CSV VARIABLES - need to make this configurable in the ADMIN
@@ -75,7 +76,7 @@ $ep_debug_logging_all = false; // do not comment out.. make false instead
 /* Initialise vars */
 
 // Current EP Version - Modded by Chadd
-$curver                   = '4.0.06 - Beta 12-2-2010';
+$curver                   = '4.0.07 - Beta 12-2-2010';
 $display_output           = '';
 $ep_dltype                = NULL;
 $ep_dlmethod              = NULL;
@@ -398,7 +399,7 @@ if (zen_not_null($ep_dltype)) {
 	case 'category':
 		// The file layout is dynamically made depending on the number of languages
 		$filelayout[] = 'v_products_model';
-
+		
 		// build categories name section of the array based on the number of categores the user wants to have
 		for ($i=1;$i<$max_categories+1;$i++) {
 			$filelayout[] = 'v_categories_name_' . $i;
@@ -415,6 +416,29 @@ if (zen_not_null($ep_dltype)) {
 			WHERE
 			p.products_id = ptoc.products_id AND
 			ptoc.categories_id = subc.categories_id';
+		break;
+
+    // Categories Meta Data - added 12-02-2010
+	case 'categorymeta':
+		$fileMeta = array();
+		$filelayout = array();
+		$filelayout[] = 'v_categories_id';
+		$filelayout[] = 'v_categories_image';
+		foreach ($langcode as $key => $lang) { // create variables for each language id
+				$l_id = $lang['id'];
+				$filelayout[] = 'v_categories_name_' . $l_id;
+				$filelayout[] = 'v_categories_description_' . $l_id;
+				$fileMeta[]   = 'v_metatags_title_' . $l_id;
+				$fileMeta[]   = 'v_metatags_keywords_' . $l_id;
+				$fileMeta[]   = 'v_metatags_description_' . $l_id;
+			} 
+		$filelayout = array_merge($filelayout, $fileMeta);
+
+		$filelayout_sql = 'SELECT
+			c.categories_id          AS v_categories_id,
+			c.categories_image       AS v_categories_image
+			FROM '
+			.TABLE_CATEGORIES.' AS c';
 		break;
 		
 	case 'attrib':
@@ -496,8 +520,7 @@ if (zen_not_null($ep_dltype)) {
 			WHERE
 			a.products_id       = p.products_id AND
 			a.options_id        = o.products_options_id AND
-			a.options_values_id = v.products_options_values_id' 			
-			;
+			a.options_values_id = v.products_options_values_id';
 		break;
 
 	case 'attrib_basic':
@@ -649,8 +672,7 @@ if ($ep_dlmethod == 'stream' or  $ep_dlmethod == 'tempfile') { // DOWNLOAD FILE
 			foreach ($langcode as $key => $lang) {
 				$lid = $lang['id'];
 				// metaData start
-				$sqlMeta = 'SELECT * FROM '.TABLE_META_TAGS_PRODUCTS_DESCRIPTION.' WHERE products_id = '.$row['v_products_id'].
-					' AND language_id = '.$lid.' LIMIT 1 ';
+				$sqlMeta = 'SELECT * FROM '.TABLE_META_TAGS_PRODUCTS_DESCRIPTION.' WHERE products_id = '.$row['v_products_id'].' AND language_id = '.$lid.' LIMIT 1 ';
 				$resultMeta = ep_4_query($sqlMeta);
 				$rowMeta    = mysql_fetch_array($resultMeta);
 				$row['v_metatags_title_' . $lid]       = $rowMeta['metatags_title'];
@@ -689,10 +711,34 @@ if ($ep_dlmethod == 'stream' or  $ep_dlmethod == 'tempfile') { // DOWNLOAD FILE
 			}
 		} // END: Specials
 		
+		
+		// CATEGORIES LANGUAGE, DESCRIPTIONS AND METADATA added 12-02-2010
+		if ($ep_dltype == 'categorymeta') {
+			// names and descriptions require that we loop thru all languages that are turned on in the store
+			foreach ($langcode as $key => $lang) {
+				$lid = $lang['id'];
+				// metaData start
+				$sqlMeta = 'SELECT * FROM '.TABLE_METATAGS_CATEGORIES_DESCRIPTION.' WHERE categories_id = '.$row['v_categories_id'].' AND language_id = '.$lid.' LIMIT 1 ';
+				$resultMeta = ep_4_query($sqlMeta) or die(mysql_error());
+				$rowMeta    = mysql_fetch_array($resultMeta);
+				$row['v_metatags_title_' . $lid]       = $rowMeta['metatags_title'];
+				$row['v_metatags_keywords_' . $lid]    = $rowMeta['metatags_keywords'];
+				$row['v_metatags_description_' . $lid] = $rowMeta['metatags_description'];
+				// metaData end
+				// for each language, get category description and name
+				$sql2    = 'SELECT * FROM '.TABLE_CATEGORIES_DESCRIPTION.' WHERE categories_id = '.$row['v_categories_id'].' AND language_id = '.$lid.' LIMIT 1 ';
+				$result2 = ep_4_query($sql2);
+				$row2    = mysql_fetch_array($result2);
+				$row['v_categories_name_'.$lid]        = $row2['categories_name'];
+				$row['v_categories_description_'.$lid] = $row2['categories_description'];
+			} // foreach
+		} // if ($ep_dltype
+		
+		
 		// CATEGORIES
 		// start with v_categories_id, Get the category description, set the appropriate variable name
 		// if parent_id is not null, then follow it up.
-		if (($ep_dltype == 'full') OR $ep_dltype == 'category') {
+		if ( ($ep_dltype == 'full') OR ($ep_dltype == 'category') ) { // chadd - 12-02-2010 fixed error: missing parenthesis
 			$thecategory_id = $row['v_categories_id'];
 			$fullcategory = ''; // this will have the entire category stack for froogle - is this now dead? - chadd
 			for ($categorylevel=1; $categorylevel<$max_categories+1; $categorylevel++) {
@@ -723,7 +769,7 @@ if ($ep_dlmethod == 'stream' or  $ep_dlmethod == 'tempfile') { // DOWNLOAD FILE
 			// temprow has the old style low to high level categories.
 			$newlevel = 1;
 			// let's turn them into high to low level categories
-			for ($categorylevel=6; $categorylevel>0; $categorylevel--) {
+			for ($categorylevel=6; $categorylevel>0; $categorylevel--) { // chadd - error: this should not be "6" but max categories level
 				if ($temprow['v_categories_name_' . $categorylevel] != '') {
 					$row['v_categories_name_' . $newlevel++] = $temprow['v_categories_name_' . $categorylevel];
 				}
@@ -811,6 +857,9 @@ if ($ep_dlmethod == 'stream' or  $ep_dlmethod == 'tempfile') { // DOWNLOAD FILE
 		break;
 		case 'category':
 		$EXPORT_FILE = "Category-EP" . $EXPORT_TIME;
+		break;
+		case 'categorymeta': // chadd - added 12-02-2010
+		$EXPORT_FILE = "CategoryMeta-EP" . $EXPORT_TIME;
 		break;
 		case 'attrib':
 		$EXPORT_FILE = "Attrib-Full-EP" . $EXPORT_TIME;
@@ -1160,7 +1209,7 @@ if ( isset($_POST['localfile']) OR isset($_FILES['usrfl']) ) {
 		if (isset($filelayout['v_categories_name_1'])) { // does category 1 column exist in our file..
 			$category_strlen_long = FALSE;// checks cat length does not exceed db, else exclude product from upload
 			$newlevel = 1;
-			for($categorylevel=6; $categorylevel>0; $categorylevel--) {
+			for($categorylevel=6; $categorylevel>0; $categorylevel--) { // chadd - error: $categorylevel here should not be 6, but max_categories-1
 				if ($items[$filelayout['v_categories_name_' . $categorylevel]] != '') {
 					if (strlen($items[$filelayout['v_categories_name_' . $categorylevel]]) > $category_strlen_max) $category_strlen_long = TRUE;
 					$v_categories_name[$newlevel++] = $items[$filelayout['v_categories_name_' . $categorylevel]]; // adding the category name values to $v_categories_name array
@@ -1752,6 +1801,8 @@ if ($ep_stack_sql_error == true) $messageStack->add(EASYPOPULATE_4_MSGSTACK_ERRO
             <a href="easypopulate_4.php?download=stream&dltype=priceqty">Download <b>Model/Price/Qty</b></a><br />
             <a href="easypopulate_4.php?download=stream&dltype=pricebreaks">Download <b>Model/Price/Breaks</b></a><br />
             <a href="easypopulate_4.php?download=stream&dltype=category">Download <b>Model/Category</b> </a><br />
+            <br>
+            <a href="easypopulate_4.php?download=stream&dltype=categorymeta">Download <b>Category Metadata</b> </a><br />
 			<br>
 			<br>Under Construction<br>
             <a href="easypopulate_4.php?download=stream&dltype=attrib">Download <b>Detailed Products Attributes</b> (multi-line)</a><br />
