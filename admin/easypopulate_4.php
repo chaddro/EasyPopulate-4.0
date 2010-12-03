@@ -35,7 +35,8 @@
 // 4.0.06 - 12-02-2010 added uninstall button on form page, removed unnecessary tables from form page
 //			12-02-2010 removed 'v_discount_id_' from export file layout - no longer needed
 //			12-02-2010 add EASYPOPULATE_4_CONFIG_MAX_QTY_DISCOUNTS variable to configuration page
-// 4.0.07 - 12-02-2010 adding categories image, description and metadate export/import
+// 4.0.07 - 12-02-2010 adding categories image, description and metadata export/import
+//			12-03-2010 completing Categories image/description/metadata export/import feature!
 
 
 // CSV VARIABLES - need to make this configurable in the ADMIN
@@ -76,7 +77,7 @@ $ep_debug_logging_all = false; // do not comment out.. make false instead
 /* Initialise vars */
 
 // Current EP Version - Modded by Chadd
-$curver                   = '4.0.07 - Beta 12-2-2010';
+$curver                   = '4.0.07 - Beta 12-3-2010';
 $display_output           = '';
 $ep_dltype                = NULL;
 $ep_dlmethod              = NULL;
@@ -964,7 +965,80 @@ if ( isset($_POST['localfile']) OR isset($_FILES['usrfl']) ) {
 	} else if($filelayout = array_flip(fgetcsv($handle, 0, $csv_deliminator, $csv_enclosure))) { // header row
 
 
-	// Main IMPORT loop
+	// The Category Metadata import routine only deals with existing Categories. It does not create or modify the tree.
+	// This code is used to Edit Categories image, description, and metadata only.
+	if ( substr($file['name'],0,15) == "CategoryMeta-EP") {
+		while ($items = fgetcsv($handle, 0, $csv_deliminator, $csv_enclosure)) { // read 1 line of data
+			// $items[$filelayout['v_categories_id']];
+			// $items[$filelayout['v_categories_image']];
+			$sql = "SELECT `categories_id` FROM ".TABLE_CATEGORIES." WHERE (`categories_id` = ".$items[$filelayout['v_categories_id']]." )";
+			$result = ep_4_query($sql);
+			if ($row = mysql_fetch_array($result)) {
+				// UPDATE
+				$sql = "UPDATE ".TABLE_CATEGORIES." SET 
+					`categories_image` = '".zen_db_input($items[$filelayout['v_categories_image']])."',
+					`last_modified`    = CURRENT_TIMESTAMP 
+					WHERE 
+					(`categories_id` = ".$items[$filelayout['v_categories_id']]." ) ";
+				$result = ep_4_query($sql);
+
+				foreach ($langcode as $key => $lang) {
+					$lid = $lang['id'];
+					// $items[$filelayout['v_categories_name_'.$lid]];
+					// $items[$filelayout['v_categories_description_'.$lid]];
+					$sql = "UPDATE ".TABLE_CATEGORIES_DESCRIPTION." SET 
+						`categories_name`        = '".zen_db_input($items[$filelayout['v_categories_name_'.$lid]])."',
+						`categories_description` = '".zen_db_input($items[$filelayout['v_categories_description_'.$lid]])."'
+						WHERE 
+						(`categories_id` = ".$items[$filelayout['v_categories_id']]." AND `language_id` = ".$lid.")";
+					$result = ep_4_query($sql);
+				
+					// $items[$filelayout['v_metatags_title_'.$lid]];
+					// $items[$filelayout['v_metatags_keywords_'.$lid]];
+					// $items[$filelayout['v_metatags_description_'.$lid]];
+					/*$sql = "UPDATE ".TABLE_METATAGS_CATEGORIES_DESCRIPTION." SET 
+						`metatags_title`		= '".zen_db_input($items[$filelayout['v_metatags_title_'.$lid]])."',
+						`metatags_keywords`		= '".zen_db_input($items[$filelayout['v_metatags_keywords_'.$lid]])."',
+						`metatags_description`	= '".zen_db_input($items[$filelayout['v_metatags_description_'.$lid]])."'
+						WHERE 
+						(`categories_id` = ".$items[$filelayout['v_categories_id']]." AND `language_id` = ".$lid.")";
+					$result = ep_4_query($sql);
+					*/
+					
+					// Categories Meta Start
+					$sql = "SELECT `categories_id` FROM ".TABLE_METATAGS_CATEGORIES_DESCRIPTION." WHERE (`categories_id` =  ".$items[$filelayout['v_categories_id']]." AND `language_id` = ".$lid.")";
+					$result = ep_4_query($sql);
+					if ($row = mysql_fetch_array($result)) {
+						// UPDATE
+						$sql = "UPDATE ".TABLE_METATAGS_CATEGORIES_DESCRIPTION." SET 
+						`metatags_title`		= '".zen_db_input($items[$filelayout['v_metatags_title_'.$lid]])."',
+						`metatags_keywords`		= '".zen_db_input($items[$filelayout['v_metatags_keywords_'.$lid]])."',
+						`metatags_description`	= '".zen_db_input($items[$filelayout['v_metatags_description_'.$lid]])."'
+						WHERE 
+						(`categories_id` = ".$items[$filelayout['v_categories_id']]." AND `language_id` = ".$lid.")";
+					} else {
+						// NEW
+						$sql = "INSERT INTO ".TABLE_METATAGS_CATEGORIES_DESCRIPTION." SET 
+							`metatags_title`		= '".zen_db_input($items[$filelayout['v_metatags_title_'.$lid]])."',
+							`metatags_keywords`		= '".zen_db_input($items[$filelayout['v_metatags_keywords_'.$lid]])."',
+							`metatags_description`	= '".zen_db_input($items[$filelayout['v_metatags_description_'.$lid]])."',
+							`categories_id`			= '".$items[$filelayout['v_categories_id']]."',
+							`language_id` 			= '$lid' ";
+					}
+					$result = ep_4_query($sql);					
+				} 
+			} else {
+				// error
+				die("Category ID not Found");
+			} // if category found
+		} // while
+	} // if
+
+
+
+	if ( substr($file['name'],0,15) <> "CategoryMeta-EP") { //  temporary solution here...
+	
+	// Main IMPORT loop For Product Related Data. v_products_id is the main key here.
 	while ($items = fgetcsv($handle, 0, $csv_deliminator, $csv_enclosure)) { // read 1 line of data
 		// now do a query to get the record's current contents
 		$sql = 'SELECT
@@ -1461,7 +1535,7 @@ if ( isset($_POST['localfile']) OR isset($_FILES['usrfl']) ) {
 				}
 			}
 			
-			// Product Meta Start
+			// Product Meta Start - This section is for Products Metadata
 			if (isset($v_metatags_title)){
 				foreach ( $v_metatags_title as $key => $metaData ) {
 					$sql = "SELECT `products_id` FROM ".TABLE_META_TAGS_PRODUCTS_DESCRIPTION." WHERE (`products_id` = '$v_products_id' AND `language_id` = '$key') LIMIT 1 ";
@@ -1485,6 +1559,8 @@ if ( isset($_POST['localfile']) OR isset($_FILES['usrfl']) ) {
 					$result = ep_4_query($sql);
 				}
 			}
+			
+
 		
 			// chadd: use this command to remove all old discount entries.
 			// $db->Execute("delete from " . TABLE_PRODUCTS_DISCOUNT_QUANTITY . " where products_id = '" . (int)$v_products_id . "'");
@@ -1687,7 +1763,9 @@ if ( isset($_POST['localfile']) OR isset($_FILES['usrfl']) ) {
 				$display_output .= print_el_4($langer);
 			}
 		} // end of row insertion code
-	}
+	} // end of Mail While Loop
+	} // conditional IF statement
+	
 	$display_output .= EASYPOPULATE_4_DISPLAY_RESULT_UPLOAD_COMPLETE;
 }	
 	
@@ -1700,8 +1778,7 @@ if ( isset($_POST['localfile']) OR isset($_FILES['usrfl']) ) {
 	}
 	
 	/* Post-upload tasks end */
-}
-// END FILE UPLOADS
+} // END FILE UPLOADS
 
 // if we had an SQL error anywhere, let's tell the user - maybe they can sort out why
 if ($ep_stack_sql_error == true) $messageStack->add(EASYPOPULATE_4_MSGSTACK_ERROR_SQL, 'caution');
