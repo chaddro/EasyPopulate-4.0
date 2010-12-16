@@ -1,5 +1,407 @@
 <?php
 
+function ep_4_get_languages() {
+	$langcode = array();
+	$languages_query = ep_4_query("SELECT languages_id, name, code FROM " . TABLE_LANGUAGES . " ORDER BY sort_order");
+	$i = 1;
+	while ($ep_languages = mysql_fetch_array($languages_query)) {
+		$ep_languages_array[$i++] = array(
+			'id' => $ep_languages['languages_id'],
+			'name' => $ep_languages['name'],
+			'code' => $ep_languages['code']
+			);
+	}
+	return $ep_languages_array;
+}
+
+function ep_4_set_filelayout($ep_dltype, &$filelayout_sql, $sql_filter, $langcode, $ep_supported_mods) {
+	$filelayout = array();
+	switch($ep_dltype) {
+	case 'full': // FULL products download
+		// The file layout is dynamically made depending on the number of languages
+		$filelayout[] = 'v_products_model';
+		$filelayout[] = 'v_products_image';
+		foreach ($langcode as $key => $lang) { // create variables for each language id
+			$l_id = $lang['id'];
+			$filelayout[] = 'v_products_name_' . $l_id;
+			$filelayout[] = 'v_products_description_' . $l_id;
+			if ($ep_supported_mods['psd'] == true) { // products short description mod
+				$filelayout[] = 'v_products_short_desc_' . $l_id;
+			}
+			$filelayout[] = 'v_products_url_' . $l_id;
+		} 
+		$filelayout[] = 'v_specials_price';
+		$filelayout[] = 'v_specials_date_avail';
+		$filelayout[] = 'v_specials_expires_date';
+		$filelayout[] = 'v_products_price';
+		if ($ep_supported_mods['uom'] == true) { // price UOM mod
+			$filelayout[] = 'v_products_price_uom';
+		} 
+		if ($ep_supported_mods['upc'] == true) { // UPC Mod
+			$filelayout[] = 'v_products_upc'; 
+		} 
+		$filelayout[] = 'v_products_weight';
+		$filelayout[] = 'v_product_is_call';
+		$filelayout[] = 'v_products_sort_order';
+		$filelayout[] = 'v_products_quantity_order_min';
+		$filelayout[] = 'v_products_quantity_order_units';
+		$filelayout[] = 'v_date_avail'; // should be changed to v_products_date_available for clarity
+		$filelayout[] = 'v_date_added'; // should be changed to v_products_date_added for clarity
+		$filelayout[] = 'v_products_quantity';
+		$filelayout[] = 'v_manufacturers_name';
+
+		// NEW code for 'unlimited' category depth - 1 Category Column for each installed Language
+		foreach ($langcode as $key => $lang) { // create categories variables for each language id
+			$l_id = $lang['id'];
+			$filelayout[] = 'v_categories_name_' . $l_id;
+		} 
+		$filelayout[] = 'v_tax_class_title';
+		$filelayout[] = 'v_status'; // this should be v_products_status for clarity
+		// metatags
+		$filelayout[] = 'v_metatags_products_name_status';
+		$filelayout[] = 'v_metatags_title_status';
+		$filelayout[] = 'v_metatags_model_status';
+		$filelayout[] = 'v_metatags_price_status';
+		$filelayout[] = 'v_metatags_title_tagline_status';
+		foreach ($langcode as $key => $lang) { // create variables for each language id
+			$l_id = $lang['id'];
+			$filelayout[] = 'v_metatags_title_' . $l_id;
+			$filelayout[] = 'v_metatags_keywords_' . $l_id;
+			$filelayout[] = 'v_metatags_description_' . $l_id;
+		} 
+		
+		$filelayout_sql = 'SELECT
+			p.products_id					as v_products_id,
+			p.products_model				as v_products_model,
+			p.products_image				as v_products_image,
+			p.products_price				as v_products_price,';
+		if ($ep_supported_mods['uom'] == true) { // price UOM mod
+			$filelayout_sql .=  'p.products_price_uom as v_products_price_uom,'; // to soon be changed to v_products_price_uom
+		} 
+		if ($ep_supported_mods['upc'] == true) { // UPC Code mod
+			$filelayout_sql .=  'p.products_upc as v_products_upc,'; 
+		} 
+		$filelayout_sql .= 'p.products_weight as v_products_weight,
+			p.product_is_call				as v_product_is_call,
+			p.products_sort_order			as v_products_sort_order, 
+			p.products_quantity_order_min	as v_products_quantity_order_min,
+			p.products_quantity_order_units	as v_products_quantity_order_units,
+			p.products_date_available		as v_date_avail,
+			p.products_date_added			as v_date_added,
+			p.products_tax_class_id			as v_tax_class_id,
+			p.products_quantity				as v_products_quantity,
+			p.manufacturers_id				as v_manufacturers_id,
+			subc.categories_id				as v_categories_id,
+			p.products_status				as v_status,
+			p.metatags_title_status         as v_metatags_title_status,
+			p.metatags_products_name_status as v_metatags_products_name_status,
+			p.metatags_model_status         as v_metatags_model_status,
+			p.metatags_price_status         as v_metatags_price_status,
+			p.metatags_title_tagline_status as v_metatags_title_tagline_status 
+			FROM '
+			.TABLE_PRODUCTS.' as p,'
+			.TABLE_CATEGORIES.' as subc,'
+			.TABLE_PRODUCTS_TO_CATEGORIES.' as ptoc
+			WHERE
+			p.products_id = ptoc.products_id AND
+			ptoc.categories_id = subc.categories_id'.$sql_filter;
+		break;
+		
+	case 'priceqty':
+		$filelayout[] = 'v_products_model';
+		$filelayout[] = 'v_status'; // 11-23-2010 added product status to price quantity option
+		$filelayout[] = 'v_specials_price';
+		$filelayout[] = 'v_specials_date_avail';
+		$filelayout[] = 'v_specials_expires_date';
+		$filelayout[] = 'v_products_price';
+		if ($ep_supported_mods['uom'] == true) { // price UOM mod
+			$filelayout[] = 'v_products_price_uom'; // to soon be changed to v_products_price_uom
+		} 
+		$filelayout[] = 'v_products_quantity';
+		$filelayout_sql = 'SELECT
+			p.products_id     as v_products_id,
+			p.products_status as v_status,
+			p.products_model  as v_products_model,
+			p.products_price  as v_products_price,';
+
+		if ($ep_supported_mods['uom'] == true) { // price UOM mod
+			$filelayout_sql .=  'p.products_price_uom as v_products_price_uom,'; // to soon be changed to v_products_price_uom
+		} 
+		$filelayout_sql .= 'p.products_tax_class_id as v_tax_class_id,
+			p.products_quantity as v_products_quantity
+			FROM '
+			.TABLE_PRODUCTS.' as p';
+		break;
+	
+	// Chadd: quantity price breaks file layout
+	// 09-30-09 Need a configuration variable to set the MAX discounts level
+	//          then I will be able to generate $filelayout() dynamically
+	case 'pricebreaks':
+		$filelayout[] =	'v_products_model';
+		$filelayout[] = 'v_status'; // 11-23-2010 added product status to price quantity option
+		$filelayout[] =	'v_products_price';
+		if ($ep_supported_mods['uom'] == true) { // price UOM mod
+			$filelayout[] = 'v_products_price_uom'; // to soon be changed to v_products_price_uom
+		} 
+		$filelayout[] =	'v_products_discount_type';
+		$filelayout[] =	'v_products_discount_type_from';
+		// discount quantities base on $max_qty_discounts	
+		// must be a better way to get the maximum discounts used at any given time
+		for ($i=1;$i<EASYPOPULATE_4_CONFIG_MAX_QTY_DISCOUNTS+1;$i++) {
+			// $filelayout[] = 'v_discount_id_' . $i; // chadd - no longer needed
+			$filelayout[] = 'v_discount_qty_' . $i;
+			$filelayout[] = 'v_discount_price_' . $i;
+		}
+		$filelayout_sql = 'SELECT
+			p.products_id     as v_products_id,
+			p.products_status as v_status,
+			p.products_model  as v_products_model,
+			p.products_price  as v_products_price,';
+			
+		if ($ep_supported_mods['uom'] == true) { // price UOM mod
+			$filelayout_sql .=  'p.products_price_uom as v_products_price_uom,'; // to soon be changed to v_products_price_uom
+		} 
+		$filelayout_sql .= 'p.products_discount_type as v_products_discount_type,
+			p.products_discount_type_from as v_products_discount_type_from
+			FROM '
+			.TABLE_PRODUCTS.' as p';
+	break;	
+
+	case 'category': 
+		// The file layout is dynamically made depending on the number of languages
+		$filelayout[] = 'v_products_model';
+		// NEW code for unlimited category depth - 1 Category Column for each installed Language
+		foreach ($langcode as $key => $lang) { // create categories variables for each language id
+			$l_id = $lang['id'];
+			$filelayout[] = 'v_categories_name_' . $l_id;
+		} 
+		$filelayout_sql = 'SELECT
+			p.products_id      as v_products_id,
+			p.products_model   as v_products_model,
+			subc.categories_id as v_categories_id
+			FROM '
+			.TABLE_PRODUCTS.'   as p,'
+			.TABLE_CATEGORIES.' as subc,'
+			.TABLE_PRODUCTS_TO_CATEGORIES.' as ptoc      
+			WHERE
+			p.products_id = ptoc.products_id AND
+			ptoc.categories_id = subc.categories_id';
+		break;
+
+    // Categories Meta Data - added 12-02-2010
+	// 12-10-2010 removed array_merge() for better performance
+	case 'categorymeta':
+		$fileMeta = array();
+		$filelayout = array();
+		$filelayout[] = 'v_categories_id';
+		$filelayout[] = 'v_categories_image';
+		foreach ($langcode as $key => $lang) { // create categories variables for each language id
+			$l_id = $lang['id'];
+			$filelayout[] = 'v_categories_name_' . $l_id;
+			$filelayout[] = 'v_categories_description_' . $l_id;
+		} 
+		foreach ($langcode as $key => $lang) { // create metatags variables for each language id
+			$l_id = $lang['id'];
+			$filelayout[]   = 'v_metatags_title_' . $l_id;
+			$filelayout[]   = 'v_metatags_keywords_' . $l_id;
+			$filelayout[]   = 'v_metatags_description_' . $l_id;
+		} 
+		$filelayout_sql = 'SELECT
+			c.categories_id          AS v_categories_id,
+			c.categories_image       AS v_categories_image
+			FROM '
+			.TABLE_CATEGORIES.' AS c';
+		break;
+		
+	case 'attrib':
+		$filelayout[] =	'v_products_attributes_id';
+		$filelayout[] =	'v_products_id';
+		$filelayout[] =	'v_products_model'; // product model from table PRODUCTS
+		$filelayout[] =	'v_options_id';
+		$filelayout[] =	'v_products_options_name'; // options name from table PRODUCTS_OPTIONS
+		$filelayout[] =	'v_products_options_type'; // 0-drop down, 1=text , 2=radio , 3=checkbox, 4=file, 5=read only 
+		$filelayout[] =	'v_options_values_id';
+		$filelayout[] =	'v_products_options_values_name'; // options values name from table PRODUCTS_OPTIONS_VALUES
+		$filelayout[] =	'v_options_values_price';
+		$filelayout[] =	'v_price_prefix';
+		$filelayout[] =	'v_products_options_sort_order';
+		$filelayout[] =	'v_product_attribute_is_free';
+		$filelayout[] =	'v_products_attributes_weight';
+		$filelayout[] =	'v_products_attributes_weight_prefix';
+		$filelayout[] =	'v_attributes_display_only';
+		$filelayout[] =	'v_attributes_default';
+		$filelayout[] =	'v_attributes_discounted';
+		$filelayout[] =	'v_attributes_image';
+		$filelayout[] =	'v_attributes_price_base_included';
+		$filelayout[] =	'v_attributes_price_onetime';
+		$filelayout[] =	'v_attributes_price_factor';
+		$filelayout[] =	'v_attributes_price_factor_offset';
+		$filelayout[] =	'v_attributes_price_factor_onetime';
+		$filelayout[] =	'v_attributes_price_factor_onetime_offset';
+		$filelayout[] =	'v_attributes_qty_prices';
+		$filelayout[] =	'v_attributes_qty_prices_onetime';
+		$filelayout[] =	'v_attributes_price_words';
+		$filelayout[] =	'v_attributes_price_words_free';
+		$filelayout[] =	'v_attributes_price_letters';
+		$filelayout[] =	'v_attributes_price_letters_free';
+		$filelayout[] =	'v_attributes_required';
+		// a = table PRODUCTS_ATTRIBUTES
+		// p = table PRODUCTS
+		// o = table PRODUCTS_OPTIONS
+		// v = table PRODUCTS_OPTIONS_VALUES
+		$filelayout_sql = 'SELECT
+			a.products_attributes_id            as v_products_attributes_id,
+			a.products_id                       as v_products_id,
+			p.products_model				    as v_products_model,
+			a.options_id                        as v_options_id,
+			o.products_options_id               as v_products_options_id,
+			o.products_options_name             as v_products_options_name,
+			o.products_options_type             as v_products_options_type,
+			a.options_values_id                 as v_options_values_id,
+			v.products_options_values_id        as v_products_options_values_id,
+			v.products_options_values_name      as v_products_options_values_name,
+			a.options_values_price              as v_options_values_price,
+			a.price_prefix                      as v_price_prefix,
+			a.products_options_sort_order       as v_products_options_sort_order,
+			a.product_attribute_is_free         as v_product_attribute_is_free,
+			a.products_attributes_weight        as v_products_attributes_weight,
+			a.products_attributes_weight_prefix as v_products_attributes_weight_prefix,
+			a.attributes_display_only           as v_attributes_display_only,
+			a.attributes_default                as v_attributes_default,
+			a.attributes_discounted             as v_attributes_discounted,
+			a.attributes_image                  as v_attributes_image,
+			a.attributes_price_base_included    as v_attributes_price_base_included,
+			a.attributes_price_onetime          as v_attributes_price_onetime,
+			a.attributes_price_factor           as v_attributes_price_factor,
+			a.attributes_price_factor_offset    as v_attributes_price_factor_offset,
+			a.attributes_price_factor_onetime   as v_attributes_price_factor_onetime,
+			a.attributes_price_factor_onetime_offset      as v_attributes_price_factor_onetime_offset,
+			a.attributes_qty_prices             as v_attributes_qty_prices,
+			a.attributes_qty_prices_onetime     as v_attributes_qty_prices_onetime,
+			a.attributes_price_words            as v_attributes_price_words,
+			a.attributes_price_words_free       as v_attributes_price_words_free,
+			a.attributes_price_letters          as v_attributes_price_letters,
+			a.attributes_price_letters_free     as v_attributes_price_letters_free,
+			a.attributes_required               as v_attributes_required
+			FROM '
+			.TABLE_PRODUCTS_ATTRIBUTES.     ' as a,'
+			.TABLE_PRODUCTS.                ' as p,'
+			.TABLE_PRODUCTS_OPTIONS.        ' as o,'
+			.TABLE_PRODUCTS_OPTIONS_VALUES. ' as v
+			WHERE
+			a.products_id       = p.products_id AND
+			a.options_id        = o.products_options_id AND
+			a.options_values_id = v.products_options_values_id';
+		break;
+
+	case 'attrib_basic':
+		$filelayout[] =	'v_products_attributes_id';
+		$filelayout[] =	'v_products_id';
+		$filelayout[] =	'v_products_model'; // product model from table PRODUCTS
+		$filelayout[] =	'v_options_id';
+		$filelayout[] =	'v_products_options_name'; // options name from table PRODUCTS_OPTIONS
+		$filelayout[] =	'v_products_options_type'; // 0-drop down, 1=text , 2=radio , 3=checkbox, 4=file, 5=read only 
+		$filelayout[] =	'v_options_values_id';
+		$filelayout[] =	'v_products_options_values_name'; // options values name from table PRODUCTS_OPTIONS_VALUES
+		// a = table PRODUCTS_ATTRIBUTES
+		// p = table PRODUCTS
+		// o = table PRODUCTS_OPTIONS
+		// v = table PRODUCTS_OPTIONS_VALUES
+		$filelayout_sql = 'SELECT
+			a.products_attributes_id            as v_products_attributes_id,
+			a.products_id                       as v_products_id,
+			p.products_model				    as v_products_model,
+			a.options_id                        as v_options_id,
+			o.products_options_id               as v_products_options_id,
+			o.products_options_name             as v_products_options_name,
+			o.products_options_type             as v_products_options_type,
+			a.options_values_id                 as v_options_values_id,
+			v.products_options_values_id        as v_products_options_values_id,
+			v.products_options_values_name      as v_products_options_values_name
+			FROM '
+			.TABLE_PRODUCTS_ATTRIBUTES.     ' as a,'
+			.TABLE_PRODUCTS.                ' as p,'
+			.TABLE_PRODUCTS_OPTIONS.        ' as o,'
+			.TABLE_PRODUCTS_OPTIONS_VALUES. ' as v
+			WHERE
+			a.products_id       = p.products_id AND
+			a.options_id        = o.products_options_id AND
+			a.options_values_id = v.products_options_values_id' 			
+			;
+		break;
+		
+	case 'options':
+		$filelayout[] =	'v_products_options_id';
+		$filelayout[] =	'v_language_id';
+		$filelayout[] =	'v_products_options_name';
+		$filelayout[] =	'v_products_options_sort_order';
+		$filelayout[] =	'v_products_options_type';
+		$filelayout[] =	'v_products_options_length';
+		$filelayout[] =	'v_products_options_comment';
+		$filelayout[] =	'v_products_options_size';
+		$filelayout[] =	'v_products_options_images_per_row';
+		$filelayout[] =	'v_products_options_images_style';
+		$filelayout[] =	'v_products_options_rows';
+		// o = table PRODUCTS_OPTIONS
+		$filelayout_sql = 'SELECT
+			o.products_options_id             AS v_products_options_id,
+			o.language_id                     AS v_language_id,
+			o.products_options_name           AS v_products_options_name,
+			o.products_options_sort_order     AS v_products_options_sort_order,
+			o.products_options_type           AS v_products_options_type,
+			o.products_options_length         AS v_products_options_length,
+			o.products_options_comment        AS v_products_options_comment,
+			o.products_options_size           AS v_products_options_size,
+			o.products_options_images_per_row AS v_products_options_images_per_row,
+			o.products_options_images_style   AS v_products_options_images_style,
+			o.products_options_rows           AS v_products_options_rows '
+			.' FROM '
+			.TABLE_PRODUCTS_OPTIONS. ' AS o';
+		break;
+	
+	case 'values':
+		$filelayout[] =	'v_products_options_values_id';
+		$filelayout[] =	'v_language_id';
+		$filelayout[] =	'v_products_options_values_name';
+		$filelayout[] =	'v_products_options_values_sort_order';
+		// v = table PRODUCTS_OPTIONS_VALUES
+		$filelayout_sql = 'SELECT
+			v.products_options_values_id         AS v_products_options_values_id,
+			v.language_id                        AS v_language_id,
+			v.products_options_values_name       AS v_products_options_values_name,
+			v.products_options_values_sort_order AS v_products_options_values_sort_order '
+			.' FROM '
+			.TABLE_PRODUCTS_OPTIONS_VALUES. ' AS v'; 
+		break;
+
+	case 'optionvalues':
+		$filelayout[] =	'v_products_options_values_to_products_options_id';
+		$filelayout[] =	'v_products_options_id';
+		$filelayout[] =	'v_products_options_name';
+		$filelayout[] =	'v_products_options_values_id';
+		$filelayout[] =	'v_products_options_values_name';
+		// o = table PRODUCTS_OPTIONS
+		// v = table PRODUCTS_OPTIONS_VALUES
+		// otv = table PRODUCTS_OPTIONS_VALUES_TO_PRODUCTS_OPTIONS
+		$filelayout_sql = 'SELECT
+			otv.products_options_values_to_products_options_id AS v_products_options_values_to_products_options_id,   	    	 
+			otv.products_options_id           AS v_products_options_id,
+			o.products_options_name           AS v_products_options_name,
+			otv.products_options_values_id    AS v_products_options_values_id,
+			v.products_options_values_name    AS v_products_options_values_name '
+			.' FROM '
+			.TABLE_PRODUCTS_OPTIONS_VALUES_TO_PRODUCTS_OPTIONS. ' AS otv, '
+			.TABLE_PRODUCTS_OPTIONS.        ' AS o, '
+			.TABLE_PRODUCTS_OPTIONS_VALUES. ' AS v 
+			WHERE 
+			otv.products_options_id        = o.products_options_id AND
+			otv.products_options_values_id = v.products_options_values_id'; 
+		break;
+	}
+return $filelayout;;
+}
+
+
 if (!function_exists(zen_get_sub_categories)) {
   function zen_get_sub_categories(&$categories, $categories_id) {
     $sub_categories_query = mysql_query("select categories_id from " . TABLE_CATEGORIES . " where parent_id = '" . (int)$categories_id . "'");
@@ -190,6 +592,21 @@ function ep_4_query($query) {
 	return $result;
 }
 
+function ep_4_setkeys() { // Easypopulate_4 Configuration Keys
+	$ep_keys = array(
+		'EASYPOPULATE_4_CONFIG_TEMP_DIR',
+		'EASYPOPULATE_4_CONFIG_FILE_DATE_FORMAT',
+		'EASYPOPULATE_4_CONFIG_DEFAULT_RAW_TIME',
+		'EASYPOPULATE_4_CONFIG_PRICE_INC_TAX',
+		'EASYPOPULATE_4_CONFIG_ZERO_QTY_INACTIVE',
+		'EASYPOPULATE_4_CONFIG_SMART_TAGS',
+		'EASYPOPULATE_4_CONFIG_ADV_SMART_TAGS',
+		'EASYPOPULATE_4_CONFIG_DEBUG_LOGGING',
+		'EASYPOPULATE_4_CONFIG_MAX_QTY_DISCOUNTS'
+		);
+return $ep_keys;
+}
+
 function install_easypopulate_4() {
 	global $db;
 	$db->Execute("INSERT INTO " . TABLE_CONFIGURATION_GROUP . " VALUES ('', 'Easy Populate 4', 'Configuration Options for Easy Populate 4', '1', '1')");
@@ -199,7 +616,6 @@ function install_easypopulate_4() {
 		('', 'Uploads Directory',                  'EASYPOPULATE_4_CONFIG_TEMP_DIR', 'temp/', 'Name of directory for your uploads (default: temp/).', " . $group_id . ", '0', NULL, now(), NULL, NULL),
 		('', 'Upload File Date Format',            'EASYPOPULATE_4_CONFIG_FILE_DATE_FORMAT', 'm-d-y', 'Choose order of date values that corresponds to your uploads file, usually generated by MS Excel. Raw dates in your uploads file (Eg 2005-09-26 09:00:00) are not affected, and will upload as they are.', " . $group_id . ", '1', NULL, now(), NULL, 'zen_cfg_select_option(array(\"m-d-y\", \"d-m-y\", \"y-m-d\"),'),
 		('', 'Default Raw Time',                   'EASYPOPULATE_4_CONFIG_DEFAULT_RAW_TIME', '09:00:00', 'If no time value stipulated in upload file, use this value. Useful for ensuring specials begin after a specific time of the day (default: 09:00:00)', " . $group_id . ", '2', NULL, now(), NULL, NULL),
-		('', 'Maximum Category Depth',             'EASYPOPULATE_4_CONFIG_MAX_CATEGORY_LEVELS', '7', 'Maximum depth of categories required for your store. Is the number of category columns in downloaded file (default: 7).', " . $group_id . ", '4', NULL, now(), NULL, NULL),
 		('', 'Upload/Download Prices Include Tax', 'EASYPOPULATE_4_CONFIG_PRICE_INC_TAX', 'false', 'Choose to include or exclude tax, depending on how you manage prices outside of Zen Cart.', " . $group_id . ", '5', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
 		('', 'Make Zero Qty Products Inactive',    'EASYPOPULATE_4_CONFIG_ZERO_QTY_INACTIVE', 'false', 'When uploading, make the status Inactive for products with zero qty (default: false).', " . $group_id . ", '6', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
 		('', 'Smart Tags Replacement of Newlines', 'EASYPOPULATE_4_CONFIG_SMART_TAGS', 'true', 'Allows your description fields in your uploads file to have carriage returns and/or new-lines converted to HTML line-breaks on uploading, thus preserving some rudimentary formatting (default: true).', " . $group_id . ", '7', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),

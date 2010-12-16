@@ -60,5 +60,5 @@ define('EASYPOPULATE_4_SPECIALS_DELETE_FAIL', '<font color="darkviolet"><b>NOT F
 define('EASYPOPULATE_4_SPECIALS_FOOTER', '</p>'); // close paragraph
 
 // error log defines - for ep_debug_log.txt
-//define('EASYPOPULATE_4_ERRORLOG_SQL_ERROR', 'MySQL error %s: %s\nWhen executing:\n%sn');
+define('EASYPOPULATE_4_ERRORLOG_SQL_ERROR', 'MySQL error %s: %s\nWhen executing:\n%sn');
 ?>
