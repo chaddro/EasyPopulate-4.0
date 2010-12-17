@@ -294,7 +294,42 @@ function ep_4_set_filelayout($ep_dltype, &$filelayout_sql, $sql_filter, $langcod
 			a.options_values_id = v.products_options_values_id';
 		break;
 
-	case 'attrib_basic':
+	case 'attrib_basic_simple': // simplified sinlge-line attributes
+		// $filelayout[] =	'v_products_attributes_id';
+		// $filelayout[] =	'v_products_id';
+		$filelayout[] =	'v_products_model'; // product model from table PRODUCTS
+		// $filelayout[] =	'v_options_id';
+		$filelayout[] =	'v_products_options_name'; // options name from table PRODUCTS_OPTIONS
+		$filelayout[] =	'v_products_options_type'; // 0-drop down, 1=text , 2=radio , 3=checkbox, 4=file, 5=read only 
+		// $filelayout[] =	'v_options_values_id';
+		$filelayout[] =	'v_products_options_values_name'; // options values name from table PRODUCTS_OPTIONS_VALUES
+		// a = table PRODUCTS_ATTRIBUTES
+		// p = table PRODUCTS
+		// o = table PRODUCTS_OPTIONS
+		// v = table PRODUCTS_OPTIONS_VALUES
+		$filelayout_sql = 'SELECT
+			a.products_attributes_id            as v_products_attributes_id,
+			a.products_id                       as v_products_id,
+			p.products_model				    as v_products_model,
+			a.options_id                        as v_options_id,
+			o.products_options_id               as v_products_options_id,
+			o.products_options_name             as v_products_options_name,
+			o.products_options_type             as v_products_options_type,
+			a.options_values_id                 as v_options_values_id,
+			v.products_options_values_id        as v_products_options_values_id,
+			v.products_options_values_name      as v_products_options_values_name
+			FROM '
+			.TABLE_PRODUCTS_ATTRIBUTES.     ' as a,'
+			.TABLE_PRODUCTS.                ' as p,'
+			.TABLE_PRODUCTS_OPTIONS.        ' as o,'
+			.TABLE_PRODUCTS_OPTIONS_VALUES. ' as v
+			WHERE
+			a.products_id       = p.products_id AND
+			a.options_id        = o.products_options_id AND
+			a.options_values_id = v.products_options_values_id';
+		break;
+
+	case 'attrib_basic_detailed': // detailed multi-line attributes
 		$filelayout[] =	'v_products_attributes_id';
 		$filelayout[] =	'v_products_id';
 		$filelayout[] =	'v_products_model'; // product model from table PRODUCTS
@@ -326,8 +361,7 @@ function ep_4_set_filelayout($ep_dltype, &$filelayout_sql, $sql_filter, $langcod
 			WHERE
 			a.products_id       = p.products_id AND
 			a.options_id        = o.products_options_id AND
-			a.options_values_id = v.products_options_values_id' 			
-			;
+			a.options_values_id = v.products_options_values_id';
 		break;
 		
 	case 'options':

@@ -27,14 +27,14 @@ $max_qty_discounts  = EASYPOPULATE_4_CONFIG_MAX_QTY_DISCOUNTS;
 // register_globals_vars_check();
 // $maxrecs = 4; 
 // usefull stuff: mysql_affected_rows(), mysql_num_rows().
-$ep_debug_logging_all = false; // do not comment out.. make false instead
+$ep_debug_logging_all = true; // do not comment out.. make false instead
 //$sql_fail_test == true; // used to cause an sql error on new product upload - tests error handling & logs
 /* Test area end */
 
 /* Initialise vars */
 
 // Current EP Version - Modded by Chadd
-$curver              = '4.0.09 - Beta 12-16-2010';
+$curver              = '4.0.10 - Beta 12-16-2010';
 $display_output      = ''; // results of import displayed after script run
 $ep_dltype           = NULL;
 $ep_dlmethod         = NULL;
@@ -236,8 +236,9 @@ if ($ep_stack_sql_error == true) $messageStack->add(EASYPOPULATE_4_MSGSTACK_ERRO
             <a href="easypopulate_4.php?download=stream&dltype=categorymeta"><b>Categories Only</b> (with Metatags)</a><br />
 			<br>
 			<br>Under Construction<br>
-            <a href="easypopulate_4.php?download=stream&dltype=attrib"><b>Detailed Products Attributes</b> (multi-line)</a><br />
-            <a href="easypopulate_4.php?download=stream&dltype=attrib_basic"><b>Basic Products Attributes</b> (single-line)</a><br />
+            <a href="easypopulate_4.php?download=stream&dltype=attrib"><b>Detailed Products Attributes</b> (detailed multi-line)</a><br />
+            <a href="easypopulate_4.php?download=stream&dltype=attrib_basic_detailed"><b>Basic Products Attributes</b> (detailed multi-line)</a><br />
+            <a href="easypopulate_4.php?download=stream&dltype=attrib_basic_simple"><b>Basic Products Attributes</b> (single-line)</a><br />
             <a href="easypopulate_4.php?download=stream&dltype=options"><b>Attribute Options Names</b> </a><br />
             <a href="easypopulate_4.php?download=stream&dltype=values"><b>Attribute Options Values</b> </a><br />
             <a href="easypopulate_4.php?download=stream&dltype=optionvalues"><b>Attribute Options-Names-to-Values</b> </a><br />

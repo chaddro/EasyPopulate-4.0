@@ -54,6 +54,6 @@
 //                     Why? Because error checking on import may become to onerous.
 //			12-16-2010 fixed small error in configuration keys where key was misspelled
 //					   removed all references to now defunct $max_categories
-//
+// 4.0.10	12-16-2010 Simple single-line attribute import code merged into EP4. Initial testing is good.
 
 ?>

@@ -55,6 +55,17 @@ if ( isset($_POST['localfile']) OR isset($_FILES['usrfl']) ) {
 	} else if ( !($handle = fopen($file_location, "r"))) {
 		$display_output .="<b>ERROR: Can't open file</b>";
 	} else if($filelayout = array_flip(fgetcsv($handle, 0, $csv_delimiter, $csv_enclosure))) { // read header row
+	
+/////////
+/////////	
+	
+	// Attributes Import
+	if ( substr($file['name'],0,9) == "Attrib-EP") {
+		require_once('easypopulate_4_attrib.php');
+	} // Attributes Import	
+
+////////
+////////
 
 	// This Category MetaTags import routine only deals with existing Categories. It does not create or modify the tree.
 	// This code is used to Edit Categories image, description, and metatags data only.
@@ -116,7 +127,7 @@ if ( isset($_POST['localfile']) OR isset($_FILES['usrfl']) ) {
 		} // while
 	} // if
 
-if ( substr($file['name'],0,15) <> "CategoryMeta-EP") { //  temporary solution here... 12-06-2010
+if ((substr($file['name'],0,15) <> "CategoryMeta-EP") && (substr($file['name'],0,9) <> "Attrib-EP")){ //  temporary solution here... 12-06-2010
 	
 	// Main IMPORT loop For Product Related Data. v_products_id is the main key here.
 	while ($items = fgetcsv($handle, 0, $csv_delimiter, $csv_enclosure)) { // read 1 line of data
