@@ -55,5 +55,7 @@
 //			12-16-2010 fixed small error in configuration keys where key was misspelled
 //					   removed all references to now defunct $max_categories
 // 4.0.10	12-16-2010 Simple single-line attribute import code merged into EP4. Initial testing is good.
+//			12-18-2010 Made some small speed improvements to the export code. This code still needs greater scrutiny for performance.
+//					   Finally removed EOREOR. This is no longer necessary 
 
 ?>

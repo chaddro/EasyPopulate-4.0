@@ -39,7 +39,7 @@ $time_start = microtime(true);
 
 $ep_dlmethod = isset($_GET['download']) ? $_GET['download'] : $ep_dlmethod;
 if ($ep_dlmethod == 'stream' or  $ep_dlmethod == 'tempfile') { // DOWNLOAD FILE
-	$filestring	= ""; // file name
+	$filestring	= ''; // file name
 	$result		= ep_4_query($filelayout_sql);
 
 	// 09-30-09 - chadd - no custom header mapping code elsewhere, just use:
@@ -51,10 +51,9 @@ if ($ep_dlmethod == 'stream' or  $ep_dlmethod == 'tempfile') { // DOWNLOAD FILE
 	}
 	// Remove trailing tab
 	$filestring = substr($filestring, 0, strlen($filestring)-1);
-
-	// set End-of-Row End-of-Record Seperator
-	$endofrow = $csv_delimiter . 'EOREOR' . "\n"; // 'EOREOR' is now redundant -chadd
-	$filestring .= $endofrow;
+	
+	// one record per line, end with newline
+	$filestring .= "\n"; 
 	
 	while ($row = mysql_fetch_array($result)) {
 	
@@ -71,10 +70,10 @@ if ($ep_dlmethod == 'stream' or  $ep_dlmethod == 'tempfile') { // DOWNLOAD FILE
 				// metaData start
 				$sqlMeta = 'SELECT * FROM '.TABLE_META_TAGS_PRODUCTS_DESCRIPTION.' WHERE products_id = '.$row['v_products_id'].' AND language_id = '.$lid.' LIMIT 1 ';
 				$resultMeta = ep_4_query($sqlMeta);
-				$rowMeta    = mysql_fetch_array($resultMeta);
-				$row['v_metatags_title_' . $lid]       = $rowMeta['metatags_title'];
-				$row['v_metatags_keywords_' . $lid]    = $rowMeta['metatags_keywords'];
-				$row['v_metatags_description_' . $lid] = $rowMeta['metatags_description'];
+				$rowMeta = mysql_fetch_array($resultMeta);
+				$row['v_metatags_title_'.$lid] = $rowMeta['metatags_title'];
+				$row['v_metatags_keywords_'.$lid] = $rowMeta['metatags_keywords'];
+				$row['v_metatags_description_'.$lid] = $rowMeta['metatags_description'];
 				// metaData end
 				// for each language, get the description and set the vals
 				$sql2    = 'SELECT * FROM '.TABLE_PRODUCTS_DESCRIPTION.' WHERE products_id = '.$row['v_products_id'].' AND language_id = '.$lid.' LIMIT 1 ';
@@ -170,7 +169,6 @@ if ($ep_dlmethod == 'stream' or  $ep_dlmethod == 'tempfile') { // DOWNLOAD FILE
 				  $thecategory_id = false;
 				}
 			} // while
-			
 			// trim off trailing delimiter
 			foreach ($langcode as $key => $lang) {
 				$lid = $lang['id'];
@@ -181,13 +179,12 @@ if ($ep_dlmethod == 'stream' or  $ep_dlmethod == 'tempfile') { // DOWNLOAD FILE
 		// MANUFACTURERS DOWNLOAD
 		// if the filelayout says we need a manfacturers name, get it for download file
 		if (isset($filelayout['v_manufacturers_name'])) {
-			if ($row['v_manufacturers_id'] != '0') { // '' or 0 or '0' - not sure, chadd
+			if ($row['v_manufacturers_id'] != '0') { // Zero is correct, empty Manufacturer's name are assigned ID of 0
 				$sql2 = 'SELECT manufacturers_name FROM '.TABLE_MANUFACTURERS.' WHERE manufacturers_id = '.$row['v_manufacturers_id'];
 				$result2 = ep_4_query($sql2);
 				$row2    = mysql_fetch_array($result2);
 				$row['v_manufacturers_name'] = $row2['manufacturers_name']; 
-			} else {  // this is to fix the error on manufacturers name
-				// $row['v_manufacturers_id'] = '0';  blank name mean 0 id - right? chadd 4-7-09
+			} else {  // else-if id is zero
 				$row['v_manufacturers_name'] = ''; // no manufacturer name
 			}
 		}
@@ -201,7 +198,6 @@ if ($ep_dlmethod == 'stream' or  $ep_dlmethod == 'tempfile') { // DOWNLOAD FILE
 					$row['v_products_id'].' AND discount_id='.$discount_index;
 				$result2 = ep_4_query($sql2);
 				$row2    = mysql_fetch_array($result2);
-				// $row['v_discount_id_'.$discount_index]    = $row2['discount_id'];  // chadd - no longer needed
 				$row['v_discount_price_'.$discount_index] = $row2['discount_price'];
 				$row['v_discount_qty_'.$discount_index]   = $row2['discount_qty'];
 			}
@@ -214,8 +210,7 @@ if ($ep_dlmethod == 'stream' or  $ep_dlmethod == 'tempfile') { // DOWNLOAD FILE
 		$row['v_tax_class_title'] = zen_get_tax_class_title($row['v_tax_class_id']);
 		$row['v_products_price']  = round($row['v_products_price'] + ($price_with_tax * $row['v_products_price'] * $row_tax_multiplier / 100),2);
 
-		// Now set the status to a word the user specd in the config vars -- what? 
-		
+		// Now set the status to a word the user specd in the config vars
 		// Clean the texts that could confuse EasyPopulate
 		// chadd - i think something in NOT correct here
 		$therow = '';
@@ -236,51 +231,48 @@ if ($ep_dlmethod == 'stream' or  $ep_dlmethod == 'tempfile') { // DOWNLOAD FILE
 			  $therow .= $thetext . $csv_delimiter;
 			}
 		}
-
-		// Remove trailing tab, then append the end-of-row indicator
-		$therow = substr($therow,0,strlen($therow)-1) . $endofrow;
-
+		// Remove trailing tab, then append the end-of-line
+		$therow = substr($therow,0,strlen($therow)-1) . "\n";
 		$filestring .= $therow;
-	} // while ($row)
+	} // while ($row=mysql_fetch_array($result))
 	
 	// Create export file name
-	// $EXPORT_TIME=time();
-	$EXPORT_TIME = strftime('%Y%b%d-%H%M%S');  // chadd - changed for hour.minute.second
 	switch ($ep_dltype) { // chadd - changed to use $EXPORT_FILE
 		case 'full':
-		$EXPORT_FILE = "Full-EP" . $EXPORT_TIME;
+		$EXPORT_FILE = 'Full-EP';
 		break;
 		case 'priceqty':
-		$EXPORT_FILE = "PriceQty-EP" . $EXPORT_TIME;
+		$EXPORT_FILE = 'PriceQty-EP';
 		break;
 		case 'pricebreaks':
-		$EXPORT_FILE = "PriceBreaks-EP" . $EXPORT_TIME;
+		$EXPORT_FILE = 'PriceBreaks-EP';
 		break;
 		case 'category':
-		$EXPORT_FILE = "Category-EP" . $EXPORT_TIME;
+		$EXPORT_FILE = 'Category-EP';
 		break;
 		case 'categorymeta': // chadd - added 12-02-2010
-		$EXPORT_FILE = "CategoryMeta-EP" . $EXPORT_TIME;
+		$EXPORT_FILE = 'CategoryMeta-EP';
 		break;
 		case 'attrib':
-		$EXPORT_FILE = "Attrib-Full-EP" . $EXPORT_TIME;
+		$EXPORT_FILE = 'Attrib-Full-EP';
 		break;
 		case 'attrib_basic_detailed':
-		$EXPORT_FILE = "Attrib-Basic-Detailed-EP" . $EXPORT_TIME;
+		$EXPORT_FILE = 'Attrib-Basic-Detailed-EP';
 		break;
 		case 'attrib_basic_simple':
-		$EXPORT_FILE = "Attrib-Basic-Simple-EP" . $EXPORT_TIME;
+		$EXPORT_FILE = 'Attrib-Basic-Simple-EP';
 		break;
 		case 'options':
-		$EXPORT_FILE = "Options-EP" . $EXPORT_TIME;
+		$EXPORT_FILE = 'Options-EP';
 		break;
 		case 'values':
-		$EXPORT_FILE = "Values-EP" . $EXPORT_TIME;
+		$EXPORT_FILE = 'Values-EP';
 		break;
 		case 'optionvalues':
-		$EXPORT_FILE = "OptVals-EP" . $EXPORT_TIME;
+		$EXPORT_FILE = 'OptVals-EP';
 		break;
 	}
+	$EXPORT_FILE .= strftime('%Y%b%d-%H%M%S'); // chadd - changed for hour.minute.second
 
 	// either stream it to them or put it in the temp directory
 	if ($ep_dlmethod == 'stream') { // Stream File
@@ -300,7 +292,7 @@ if ($ep_dlmethod == 'stream' or  $ep_dlmethod == 'tempfile') { // DOWNLOAD FILE
 
 		echo $filestring.$time; // chadd
 		die();
-	} else { // PUT FILE IN TEMP DIR
+	} else { // Export data to file in temp directory
 		$tmpfpath = DIR_FS_CATALOG . '' . $tempdir . "$EXPORT_FILE" . (($csv_delimiter == ",")?".csv":".txt");
 		$fp = fopen( $tmpfpath, "w+");
 		fwrite($fp, $filestring);
