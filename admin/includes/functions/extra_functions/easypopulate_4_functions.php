@@ -527,18 +527,16 @@ function smart_tags_4($string,$tags,$crsub,$doit) {
 	return $string;
 }
 
-function ep_4_field_name_exists($table_name, $field_name) {
-    global $db;
-    $sql = "show fields from " . $table_name;
-    $result = $db->Execute($sql);
-    while (!$result->EOF) {
-      // echo 'fields found='.$result->fields['Field'].'<br />';
-      if  ($result->fields['Field'] == $field_name) {
-        return true; // exists, so return with no error
-      }
-      $result->MoveNext();
-    }
-    return false;
+function ep_4_check_table_column($table_name,$column_name) {
+	$sql = "SHOW COLUMNS FROM ".$table_name;
+	$result = ep_4_query($sql);
+	while ($row = mysql_fetch_array($result)) {
+		$column = $row['Field'];
+		if ($column == $column_name) {
+			return true;
+		}
+	}
+	return false;
 }
 
 function ep_4_remove_product($product_model) {

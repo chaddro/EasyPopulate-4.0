@@ -27,14 +27,14 @@ $max_qty_discounts  = EASYPOPULATE_4_CONFIG_MAX_QTY_DISCOUNTS;
 // register_globals_vars_check();
 // $maxrecs = 4; 
 // usefull stuff: mysql_affected_rows(), mysql_num_rows().
-$ep_debug_logging_all = true; // do not comment out.. make false instead
+$ep_debug_logging_all = false; // do not comment out.. make false instead
 //$sql_fail_test == true; // used to cause an sql error on new product upload - tests error handling & logs
 /* Test area end */
 
 /* Initialise vars */
 
 // Current EP Version - Modded by Chadd
-$curver              = '4.0.10 - Beta 12-16-2010';
+$curver              = '4.0.10 - Beta 12-21-2010';
 $display_output      = ''; // results of import displayed after script run
 $ep_dltype           = NULL;
 $ep_dlmethod         = NULL;
@@ -87,9 +87,9 @@ if ($_GET['epinstaller'] == 'remove') { // remove easy populate configuration va
 
 
 // START: check for existance of various mods
-$ep_supported_mods['psd'] = false; //ep_4_field_name_exists(TABLE_PRODUCTS_DESCRIPTION,'products_short_desc');
-$ep_supported_mods['uom'] = true;  //ep_4_field_name_exists(TABLE_PRODUCTS_DESCRIPTION,'products_price_uom'); // uom = unit of measure, added by Chadd
-$ep_supported_mods['upc'] = true;  //ep_4_field_name_exists(TABLE_PRODUCTS_DESCRIPTION,'products_upc');       // upc = UPC Code, added by Chadd
+$ep_supported_mods['psd'] = ep_4_check_table_column(TABLE_PRODUCTS_DESCRIPTION,'products_short_desc');
+$ep_supported_mods['uom'] = ep_4_check_table_column(TABLE_PRODUCTS,'products_price_uom'); // uom = unit of measure, added by Chadd
+$ep_supported_mods['upc'] = ep_4_check_table_column(TABLE_PRODUCTS,'products_upc');       // upc = UPC Code, added by Chadd
 // END: check for existance of various mods
 
 // maximum length for a category in this database
@@ -171,12 +171,12 @@ if ($ep_stack_sql_error == true) $messageStack->add(EASYPOPULATE_4_MSGSTACK_ERRO
 		echo 'Product Short Descriptions: '.(($ep_supported_mods['psd']) ? "TRUE":"FALSE").'<br>';
 		echo 'Product Unit of Measure: '.(($ep_supported_mods['uom']) ? "TRUE":"FALSE").'<br>';
 		echo 'Product UPC Code: '.(($ep_supported_mods['upc']) ? "TRUE":"FALSE").'<br>';
-		echo 'Default Language: '.	$epdlanguage_id .'-'. $epdlanguage_name.'<br>'; 
 		echo '<b>Installed Languages:</b> <br>';
 		foreach ($langcode as $key => $lang) {
 			echo $lang['id'].'-'.$lang['code'].': '.$lang['name'].'<br>';
 		}
-		
+		echo 'Default Language: '.	$epdlanguage_id .'-'. $epdlanguage_name.'<br>'; 
+	
 	?></div>
 
 	<?php echo zen_draw_separator('pixel_trans.gif', '1', '10'); ?>
