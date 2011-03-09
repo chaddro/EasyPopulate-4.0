@@ -51,10 +51,9 @@ if ($ep_dlmethod == 'stream' or  $ep_dlmethod == 'tempfile') { // DOWNLOAD FILE
 	}
 	// Remove trailing tab
 	$filestring = substr($filestring, 0, strlen($filestring)-1);
-
-	// set End-of-Row End-of-Record Seperator
-	$endofrow = $csv_delimiter . 'EOREOR' . "\n"; // 'EOREOR' is now redundant -chadd
-	$filestring .= $endofrow;
+	
+	// one record per line, end with newline
+	$filestring .= "\n"; 
 	
 	while ($row = mysql_fetch_array($result)) {
 	
@@ -126,6 +125,7 @@ if ($ep_dlmethod == 'stream' or  $ep_dlmethod == 'tempfile') { // DOWNLOAD FILE
 				$row['v_categories_description_'.$lid] = $row2['categories_description'];
 			} // foreach
 		} // if ($ep_dltype ...
+		
 		
 		// CATEGORIES
 		// chadd - 12-13-2010 - logic change. $max_categories no longer required. better to loop back to root category and 
@@ -201,7 +201,6 @@ if ($ep_dlmethod == 'stream' or  $ep_dlmethod == 'tempfile') { // DOWNLOAD FILE
 					$row['v_products_id'].' AND discount_id='.$discount_index;
 				$result2 = ep_4_query($sql2);
 				$row2    = mysql_fetch_array($result2);
-				// $row['v_discount_id_'.$discount_index]    = $row2['discount_id'];  // chadd - no longer needed
 				$row['v_discount_price_'.$discount_index] = $row2['discount_price'];
 				$row['v_discount_qty_'.$discount_index]   = $row2['discount_qty'];
 			}
@@ -214,8 +213,7 @@ if ($ep_dlmethod == 'stream' or  $ep_dlmethod == 'tempfile') { // DOWNLOAD FILE
 		$row['v_tax_class_title'] = zen_get_tax_class_title($row['v_tax_class_id']);
 		$row['v_products_price']  = round($row['v_products_price'] + ($price_with_tax * $row['v_products_price'] * $row_tax_multiplier / 100),2);
 
-		// Now set the status to a word the user specd in the config vars -- what? 
-		
+		// Now set the status to a word the user specd in the config vars
 		// Clean the texts that could confuse EasyPopulate
 		// chadd - i think something in NOT correct here
 		$therow = '';
@@ -237,50 +235,50 @@ if ($ep_dlmethod == 'stream' or  $ep_dlmethod == 'tempfile') { // DOWNLOAD FILE
 			}
 		}
 
-		// Remove trailing tab, then append the end-of-row indicator
-		$therow = substr($therow,0,strlen($therow)-1) . $endofrow;
+		// Remove trailing tab, then append the end-of-line
+		$therow = substr($therow,0,strlen($therow)-1) . "\n";
 
 		$filestring .= $therow;
 	} // while ($row)
 	
 	// Create export file name
-	// $EXPORT_TIME=time();
-	$EXPORT_TIME = strftime('%Y%b%d-%H%M%S');  // chadd - changed for hour.minute.second
 	switch ($ep_dltype) { // chadd - changed to use $EXPORT_FILE
 		case 'full':
-		$EXPORT_FILE = "Full-EP" . $EXPORT_TIME;
+		$EXPORT_FILE = 'Full-EP';
 		break;
 		case 'priceqty':
-		$EXPORT_FILE = "PriceQty-EP" . $EXPORT_TIME;
+		$EXPORT_FILE = 'PriceQty-EP';
 		break;
 		case 'pricebreaks':
-		$EXPORT_FILE = "PriceBreaks-EP" . $EXPORT_TIME;
+		$EXPORT_FILE = 'PriceBreaks-EP';
 		break;
 		case 'category':
-		$EXPORT_FILE = "Category-EP" . $EXPORT_TIME;
+		$EXPORT_FILE = 'Category-EP';
 		break;
 		case 'categorymeta': // chadd - added 12-02-2010
-		$EXPORT_FILE = "CategoryMeta-EP" . $EXPORT_TIME;
+		$EXPORT_FILE = 'CategoryMeta-EP';
 		break;
 		case 'attrib':
-		$EXPORT_FILE = "Attrib-Full-EP" . $EXPORT_TIME;
+		$EXPORT_FILE = 'Attrib-Full-EP';
 		break;
 		case 'attrib_basic_detailed':
-		$EXPORT_FILE = "Attrib-Basic-Detailed-EP" . $EXPORT_TIME;
+		$EXPORT_FILE = 'Attrib-Basic-Detailed-EP';
 		break;
 		case 'attrib_basic_simple':
-		$EXPORT_FILE = "Attrib-Basic-Simple-EP" . $EXPORT_TIME;
+		$EXPORT_FILE = 'Attrib-Basic-Simple-EP';
 		break;
 		case 'options':
-		$EXPORT_FILE = "Options-EP" . $EXPORT_TIME;
+		$EXPORT_FILE = 'Options-EP';
 		break;
 		case 'values':
-		$EXPORT_FILE = "Values-EP" . $EXPORT_TIME;
+		$EXPORT_FILE = 'Values-EP';
 		break;
 		case 'optionvalues':
-		$EXPORT_FILE = "OptVals-EP" . $EXPORT_TIME;
+		$EXPORT_FILE = 'OptVals-EP';
 		break;
 	}
+	$EXPORT_FILE .= strftime('%Y%b%d-%H%M%S'); // chadd - changed for hour.minute.second
+
 
 	// either stream it to them or put it in the temp directory
 	if ($ep_dlmethod == 'stream') { // Stream File
