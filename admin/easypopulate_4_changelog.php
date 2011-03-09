@@ -56,5 +56,6 @@
 //					   removed all references to now defunct $max_categories
 // 4.0.10	12-16-2010 Simple single-line attribute import code merged into EP4. Initial testing is good.
 //			12-21-2010 Auto checking of installed mods by checking if table columns exist, new fuction for checking table column, old one didn't work
+// 4.0.11	03-09-2011 Removed EOREOR from export files, updated README with info about attribute importing, included example of Attrib-EP-xxx.CSV file.
 
 ?>
