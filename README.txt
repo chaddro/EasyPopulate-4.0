@@ -1,6 +1,8 @@
-EasyPopulate 4.0
+EasyPopulate 4.0 Beta
 
-added .gitignore
+
+
+
 
 IMPORTING ATTRIBUTES
 Including sample attribute input file.
