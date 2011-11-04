@@ -56,3 +56,5 @@
 	 12-21-2010 Auto checking of installed mods by checking if table columns exist, new fuction for checking table column, old one didn't work
 4.0.11 - 03-09-2011 Removed EOREOR from export files, updated README with info about attribute importing, included example of Attrib-EP-xxx.CSV file.
 	 04-04-2011 Updated README.txt, added GPL license.txt file, added INSTALL.txt file. Replaced easypopulate_4_changelog.php with changelog.txt to avoid confusion.
+4.0.12 - 11-04-2011 Fixed issue with export and import where legacy data may have NULL values set for manufacturers_id in the products table. This should be 0, but NULL was set in some earlier versions of EP.
+

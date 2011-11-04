@@ -258,7 +258,7 @@ if ((substr($file['name'],0,15) <> "CategoryMeta-EP") && (substr($file['name'],0
 			//==================================================================================================================================			
 			
 			/** Retrieve current manufacturer name from db for this product if exist */
-			if ($row['v_manufacturers_id'] != '0') { // chadd made '0' - if 0, no manufacturer set
+			if (($row['v_manufacturers_id'] != '0') && ($row['v_manufacturers_id'] != '')) { // '0' or '' (NULL), no manufacturer set
 				$sql2 = 'SELECT manufacturers_name FROM '.TABLE_MANUFACTURERS.' WHERE manufacturers_id = ' . $row['v_manufacturers_id'];
 				$result2 = ep_4_query($sql2);
 				$row2 = mysql_fetch_array($result2);
@@ -461,7 +461,7 @@ if ((substr($file['name'],0,15) <> "CategoryMeta-EP") && (substr($file['name'],0
 					$result = ep_4_query($sql);
 					$v_manufacturers_id = mysql_insert_id(); // id is auto_increment, so can use this function
 				}
-			} else {// $v_manufacturers_name == ''
+			} else { // $v_manufacturers_name == ''
 				$v_manufacturers_id = 0; // chadd - zencart uses manufacturer's id = '0' for no assisgned manufacturer
 			} // END: Manufacturer's Name
 	
