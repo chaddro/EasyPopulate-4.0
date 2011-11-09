@@ -34,7 +34,7 @@ $ep_debug_logging_all = false; // do not comment out.. make false instead
 /* Initialise vars */
 
 // Current EP Version - Modded by Chadd
-$curver              = '4.0.12 - Beta 11-04-2011';
+$curver              = '4.0.13 - Beta 11-08-2011';
 $display_output      = ''; // results of import displayed after script run
 $ep_dltype           = NULL;
 $ep_dlmethod         = NULL;
@@ -85,7 +85,6 @@ if ($_GET['epinstaller'] == 'remove') { // remove easy populate configuration va
 	zen_redirect(zen_href_link(FILENAME_EASYPOPULATE_4));
 } // end installation/removal
 
-
 // START: check for existance of various mods
 $ep_supported_mods['psd'] = ep_4_check_table_column(TABLE_PRODUCTS_DESCRIPTION,'products_short_desc');
 $ep_supported_mods['uom'] = ep_4_check_table_column(TABLE_PRODUCTS,'products_price_uom'); // uom = unit of measure, added by Chadd
@@ -94,6 +93,17 @@ $ep_supported_mods['upc'] = ep_4_check_table_column(TABLE_PRODUCTS,'products_upc
 
 // maximum length for a category in this database
 $category_strlen_max = zen_field_length(TABLE_CATEGORIES_DESCRIPTION, 'categories_name');
+
+// maximum length for important fields
+$category_strlen_max = zen_field_length(TABLE_CATEGORIES_DESCRIPTION, 'categories_name'); // don't know what uses this
+$categories_name_max_len = $category_strlen_max; // my variables
+$manufacturers_name_max_len = zen_field_length(TABLE_MANUFACTURERS, 'manufacturers_name');
+$products_model_max_len = zen_field_length(TABLE_PRODUCTS, 'products_model');
+$products_name_max_len = zen_field_length(TABLE_PRODUCTS_DESCRIPTION, 'products_name');
+
+// test for Ajeh
+$ajeh_sql = 'SELECT * FROM '. TABLE_PRODUCTS .' WHERE '.TABLE_PRODUCTS.'.products_id NOT IN (SELECT '. TABLE_PRODUCTS_TO_CATEGORIES.'.products_id FROM '. TABLE_PRODUCTS_TO_CATEGORIES.')';
+$ajeh_result = ep_4_query($ajeh_sql);
 
 // model name length error handling - chadd - 12-10-2010 - why do we need to do this?
 $model_varchar = zen_field_length(TABLE_PRODUCTS, 'products_model');
@@ -176,6 +186,17 @@ if ($ep_stack_sql_error == true) $messageStack->add(EASYPOPULATE_4_MSGSTACK_ERRO
 			echo $lang['id'].'-'.$lang['code'].': '.$lang['name'].'<br>';
 		}
 		echo 'Default Language: '.	$epdlanguage_id .'-'. $epdlanguage_name.'<br>'; 
+
+		echo '<br><b>Fields Max Lenth:</b><br>';
+		echo 'categories_name:'.$categories_name_max_len.'<br>';
+		echo 'manufacturers_name:'.$manufacturers_name_max_len.'<br>';
+		echo 'products_model:'.$products_model_max_len.'<br>';
+		echo 'products_name:'.$products_name_max_len.'<br>';
+	
+		echo '<br><br>Problem Data: '. mysql_num_rows($ajeh_result);
+	
+	
+		//register_globals_vars_check_4(); // chadd testing
 	
 	?></div>
 

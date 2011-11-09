@@ -46,6 +46,12 @@ if ( isset($_POST['localfile']) OR isset($_FILES['usrfl']) ) {
 	$default_these[] = 'v_manufacturers_name';
 	$default_these[] = 'v_manufacturers_id';
 	$default_these[] = 'v_products_status'; // added by chadd so that de-activated products are not reactivated when the column is missing
+	// metatags switches also need to be pulled, 11-08-2011
+	$default_these[] = 'v_metatags_products_name_status';
+	$default_these[] = 'v_metatags_title_status';
+	$default_these[] = 'v_metatags_model_status';
+	$default_these[] = 'v_metatags_price_status';
+	$default_these[] = 'v_metatags_title_tagline_status';
 
 	$file_location = DIR_FS_CATALOG . $tempdir . $file['name'];
 	
@@ -160,6 +166,11 @@ if ((substr($file['name'],0,15) <> "CategoryMeta-EP") && (substr($file['name'],0
 			p.products_quantity				as v_products_quantity,
 			p.products_status				as v_products_status,
 			p.manufacturers_id				as v_manufacturers_id,
+			p.metatags_products_name_status	as v_metatags_products_name_status,
+			p.metatags_title_status			as v_metatags_title_status,
+			p.metatags_model_status			as v_metatags_model_status,
+			p.metatags_price_status			as v_metatags_price_status,
+			p.metatags_title_tagline_status	as v_metatags_title_tagline_status,
 			subc.categories_id				as v_categories_id
 			FROM '.
 			TABLE_PRODUCTS.' as p,'.
@@ -258,7 +269,8 @@ if ((substr($file['name'],0,15) <> "CategoryMeta-EP") && (substr($file['name'],0
 			//==================================================================================================================================			
 			
 			/** Retrieve current manufacturer name from db for this product if exist */
-			if (($row['v_manufacturers_id'] != '0') && ($row['v_manufacturers_id'] != '')) { // '0' or '' (NULL), no manufacturer set
+			// need to test for '0' and NULL for best compatibility with older version of EP that set blank manufacturers to NULL
+			if (($row['v_manufacturers_id'] != '0') && ($row['v_manufacturers_id'] != '') ) { // chadd made '0' - if 0, no manufacturer set
 				$sql2 = 'SELECT manufacturers_name FROM '.TABLE_MANUFACTURERS.' WHERE manufacturers_id = ' . $row['v_manufacturers_id'];
 				$result2 = ep_4_query($sql2);
 				$row2 = mysql_fetch_array($result2);
@@ -461,7 +473,7 @@ if ((substr($file['name'],0,15) <> "CategoryMeta-EP") && (substr($file['name'],0
 					$result = ep_4_query($sql);
 					$v_manufacturers_id = mysql_insert_id(); // id is auto_increment, so can use this function
 				}
-			} else { // $v_manufacturers_name == ''
+			} else {// $v_manufacturers_name == ''
 				$v_manufacturers_id = 0; // chadd - zencart uses manufacturer's id = '0' for no assisgned manufacturer
 			} // END: Manufacturer's Name
 	

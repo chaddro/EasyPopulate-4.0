@@ -181,12 +181,13 @@ if ($ep_dlmethod == 'stream' or  $ep_dlmethod == 'tempfile') { // DOWNLOAD FILE
 		// MANUFACTURERS DOWNLOAD
 		// if the filelayout says we need a manfacturers name, get it for download file
 		if (isset($filelayout['v_manufacturers_name'])) {
-			if (($row['v_manufacturers_id'] != '0') && ($row['v_manufacturers_id'] != '0')) { // '0' or '' (NULL) no manufacturer set
+			if ( ($row['v_manufacturers_id'] != '0') && ($row['v_manufacturers_id'] != '') ) { // '0' is correct, but '' NULL is possible
 				$sql2 = 'SELECT manufacturers_name FROM '.TABLE_MANUFACTURERS.' WHERE manufacturers_id = '.$row['v_manufacturers_id'];
 				$result2 = ep_4_query($sql2);
 				$row2    = mysql_fetch_array($result2);
 				$row['v_manufacturers_name'] = $row2['manufacturers_name']; 
-			} else {
+			} else {  // this is to fix the error on manufacturers name
+				// $row['v_manufacturers_id'] = '0';  blank name mean 0 id - right? chadd 4-7-09
 				$row['v_manufacturers_name'] = ''; // no manufacturer name
 			}
 		}
