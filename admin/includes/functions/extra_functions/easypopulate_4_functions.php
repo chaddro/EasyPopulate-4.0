@@ -39,7 +39,10 @@ function ep_4_set_filelayout($ep_dltype, &$filelayout_sql, $sql_filter, $langcod
 		} 
 		if ($ep_supported_mods['upc'] == true) { // UPC Mod
 			$filelayout[] = 'v_products_upc'; 
-		} 
+		}
+		if ($ep_supported_mods['gpc'] == true) { // Google Product Category for Google Merchant Center - chadd 10-1-2011
+			$filelayout[] = 'v_google_product_category'; 
+		}
 		$filelayout[] = 'v_products_weight';
 		$filelayout[] = 'v_product_is_call';
 		$filelayout[] = 'v_products_sort_order';
@@ -80,6 +83,9 @@ function ep_4_set_filelayout($ep_dltype, &$filelayout_sql, $sql_filter, $langcod
 		} 
 		if ($ep_supported_mods['upc'] == true) { // UPC Code mod
 			$filelayout_sql .=  'p.products_upc as v_products_upc,'; 
+		}
+		if ($ep_supported_mods['gpc'] == true) { // Google Product Category for Google Merchant Center - chadd 10-1-2011
+			$filelayout_sql .=  'p.google_product_category as v_google_product_category,'; 
 		} 
 		$filelayout_sql .= 'p.products_weight as v_products_weight,
 			p.product_is_call				as v_product_is_call,

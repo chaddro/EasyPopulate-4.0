@@ -30,6 +30,9 @@ if ( isset($_POST['localfile']) OR isset($_FILES['usrfl']) ) {
 	} 
 	if ($ep_supported_mods['upc'] == true) { // UPC Code mod - chadd
 		$default_these[] = 'v_products_upc';
+	}
+	if ($ep_supported_mods['gpc'] == true) { // Google Product Category for Google Merchant Center - chadd 10-1-2011
+		$default_these[] = 'v_google_product_category';
 	} 
 	$default_these[] = 'v_products_quantity';
 	$default_these[] = 'v_products_weight';
@@ -151,6 +154,9 @@ if ((substr($file['name'],0,15) <> "CategoryMeta-EP") && (substr($file['name'],0
 		} 
 		if ($ep_supported_mods['upc'] == true) { // UPC Code mod- chadd
 			$sql .= 'p.products_upc as v_products_upc,'; 
+		}
+		if ($ep_supported_mods['gpc'] == true) { // Google Product Category for Google Merhant Center - chadd 10-1-2011
+			$sql .= 'p.google_product_category as v_google_product_category,'; 
 		}
 
 		$sql .= 'p.products_weight			as v_products_weight,
@@ -598,7 +604,11 @@ if ((substr($file['name'],0,15) <> "CategoryMeta-EP") && (substr($file['name'],0
 				} 
 				if ($ep_supported_mods['upc'] == true) { // UPC Code mod
 					$query .= "products_upc = '".zen_db_input($v_products_upc)."',";
-				} 
+				}
+				if ($ep_supported_mods['gpc'] == true) { // Google Product Category for Google Merhcant Center - chadd 10-1-2011
+					$query .= "google_product_category = '".zen_db_input($v_google_product_category)."',";
+				}
+				 
 				$query .= "products_image			= '".zen_db_input($v_products_image)."',
 					products_weight					= '".zen_db_input($v_products_weight)."',
 					products_discount_type          = '".zen_db_input($v_products_discount_type)."',
@@ -648,7 +658,10 @@ if ((substr($file['name'],0,15) <> "CategoryMeta-EP") && (substr($file['name'],0
 				} 
 				if ($ep_supported_mods['upc'] == true) { // UPC Code mod
 					$query .= "products_upc = '".zen_db_input($v_products_upc)."',";
-				} 
+				}
+				if ($ep_supported_mods['gpc'] == true) { // Google Product Category for Google Merhcant Center - chadd 10-1-2011
+					$query .= "google_product_category = '".zen_db_input($v_google_product_category)."',";
+				}
 					
 				$query .= "products_image			= '".zen_db_input($v_products_image)."',
 					products_weight					= '".zen_db_input($v_products_weight)."',

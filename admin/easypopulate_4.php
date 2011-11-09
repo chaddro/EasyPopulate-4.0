@@ -89,6 +89,7 @@ if ($_GET['epinstaller'] == 'remove') { // remove easy populate configuration va
 $ep_supported_mods['psd'] = ep_4_check_table_column(TABLE_PRODUCTS_DESCRIPTION,'products_short_desc');
 $ep_supported_mods['uom'] = ep_4_check_table_column(TABLE_PRODUCTS,'products_price_uom'); // uom = unit of measure, added by Chadd
 $ep_supported_mods['upc'] = ep_4_check_table_column(TABLE_PRODUCTS,'products_upc');       // upc = UPC Code, added by Chadd
+$ep_supported_mods['gpc'] = ep_4_check_table_column(TABLE_PRODUCTS,'google_product_category'); // gpc = google product category for Google Merchant Center, added by Chadd 10-1-2011
 // END: check for existance of various mods
 
 // maximum length for a category in this database
@@ -177,10 +178,12 @@ if ($ep_stack_sql_error == true) $messageStack->add(EASYPOPULATE_4_MSGSTACK_ERRO
 	<div style="text-align:right; float:right; width:25%"><a href="<?php echo zen_href_link(FILENAME_EASYPOPULATE_4, 'epinstaller=remove') ?>">Un-Install EP4</a>
     <? 
 		echo '<br>Temporary Directory: <b>'.$tempdir.'</b>'; 
-		echo '<br><b>Supported Mods:</b><br>';
+		echo '<br><b>Custom Products Fields:</b><br>';
 		echo 'Product Short Descriptions: '.(($ep_supported_mods['psd']) ? "TRUE":"FALSE").'<br>';
 		echo 'Product Unit of Measure: '.(($ep_supported_mods['uom']) ? "TRUE":"FALSE").'<br>';
 		echo 'Product UPC Code: '.(($ep_supported_mods['upc']) ? "TRUE":"FALSE").'<br>';
+		// Google Product Category for Google Merchant Center
+		echo 'Google Product Category: '.(($ep_supported_mods['gpc']) ? "TRUE":"FALSE").'<br>';		
 		echo '<b>Installed Languages:</b> <br>';
 		foreach ($langcode as $key => $lang) {
 			echo $lang['id'].'-'.$lang['code'].': '.$lang['name'].'<br>';
@@ -256,7 +259,7 @@ if ($ep_stack_sql_error == true) $messageStack->add(EASYPOPULATE_4_MSGSTACK_ERRO
             <a href="easypopulate_4.php?download=stream&dltype=category"><b>Model/Category</b> </a><br />
             <a href="easypopulate_4.php?download=stream&dltype=categorymeta"><b>Categories Only</b> (with Metatags)</a><br />
 			<br>
-			<br>Under Construction<br>
+			<br>Under Construction - Note: DIAGNOSTIC EXPORTS, NOT FOR IMPORTING ATTRIBUTES YET!<br>
             <a href="easypopulate_4.php?download=stream&dltype=attrib"><b>Detailed Products Attributes</b> (detailed multi-line)</a><br />
             <a href="easypopulate_4.php?download=stream&dltype=attrib_basic_detailed"><b>Basic Products Attributes</b> (detailed multi-line)</a><br />
             <a href="easypopulate_4.php?download=stream&dltype=attrib_basic_simple"><b>Basic Products Attributes</b> (single-line)</a><br />
