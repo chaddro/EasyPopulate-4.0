@@ -26,12 +26,9 @@ if (zen_not_null($ep_dltype)) {
 	
 	$filelayout_sql = '';
 	
-$time_start = microtime(true);
+	$time_start = microtime(true); // benchmarking
  
 	$filelayout = ep_4_set_filelayout($ep_dltype,  $filelayout_sql, $sql_filter, $langcode, $ep_supported_mods); 
-
-// $time_end = microtime(true);
-// $time = $time_end - $time_start;
 
 	$filelayout = array_flip($filelayout);
 	$fileheaders = array_flip($fileheaders);
@@ -127,7 +124,7 @@ if ($ep_dlmethod == 'stream' or  $ep_dlmethod == 'tempfile') { // DOWNLOAD FILE
 		} // if ($ep_dltype ...
 		
 		
-		// CATEGORIES
+		// CATEGORIES EXPORT
 		// chadd - 12-13-2010 - logic change. $max_categories no longer required. better to loop back to root category and 
 		// concatenate the entire categories path into one string with $category_delimiter for separater.
 		if ( ($ep_dltype == 'full') OR ($ep_dltype == 'category') ) { // chadd - 12-02-2010 fixed error: missing parenthesis
@@ -145,20 +142,6 @@ if ($ep_dlmethod == 'stream' or  $ep_dlmethod == 'tempfile') { // DOWNLOAD FILE
 					$lid = $row2['language_id'];
 					$row['v_categories_name_'.$lid] = $row2['categories_name'].$category_delimiter.$row['v_categories_name_'.$lid];
 				}
-			
-				// this is an alternative way to accomplilsh the same thing, however, it is on average 2 seconds long than above code
-				// on export of store with 2 languages installed over 3300 records!	
-				/*
-				foreach ($langcode as $key => $lang) {
-					$lid = $lang['id'];
-					// mult-lingual categories start - for each language, get category description and name
-					$sql2    = 'SELECT * FROM '.TABLE_CATEGORIES_DESCRIPTION.' WHERE categories_id = '.$thecategory_id.' AND language_id = '.$lid.' LIMIT 1 ';
-					$result2 = ep_4_query($sql2);
-					$row2    = mysql_fetch_array($result2);
-					$row['v_categories_name_'.$lid] = $row2['categories_name'].$category_delimiter.$row['v_categories_name_'.$lid];
-				} // foreach
-				*/
-			
 				// look for parent categories ID
 				$sql3 = 'SELECT parent_id FROM '.TABLE_CATEGORIES.' WHERE categories_id = '.$thecategory_id;
 				$result3 = ep_4_query($sql3);
@@ -178,7 +161,7 @@ if ($ep_dlmethod == 'stream' or  $ep_dlmethod == 'tempfile') { // DOWNLOAD FILE
 			} // foreach
 		} // if() delimited categories path
 
-		// MANUFACTURERS DOWNLOAD
+		// MANUFACTURERS EXPORT
 		// if the filelayout says we need a manfacturers name, get it for download file
 		if (isset($filelayout['v_manufacturers_name'])) {
 			if ( ($row['v_manufacturers_id'] != '0') && ($row['v_manufacturers_id'] != '') ) { // '0' is correct, but '' NULL is possible
@@ -292,11 +275,12 @@ if ($ep_dlmethod == 'stream' or  $ep_dlmethod == 'tempfile') { // DOWNLOAD FILE
 			header("Pragma: ");
 		}
 		header("Expires: 0");
-
+		
+		// benchmarking
 		$time_end = microtime(true);
 		$time = $time_end - $time_start;
 
-		echo $filestring.$time; // chadd
+		echo $filestring.$time; // chadd - script execution in seconds
 		die();
 	} else { // PUT FILE IN TEMP DIR
 		$tmpfpath = DIR_FS_CATALOG . '' . $tempdir . "$EXPORT_FILE" . (($csv_delimiter == ",")?".csv":".txt");

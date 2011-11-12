@@ -34,7 +34,7 @@ $ep_debug_logging_all = false; // do not comment out.. make false instead
 /* Initialise vars */
 
 // Current EP Version - Modded by Chadd
-$curver              = '4.0.13 - Beta 11-08-2011';
+$curver              = '4.0.14 - Beta 11-10-2011';
 $display_output      = ''; // results of import displayed after script run
 $ep_dltype           = NULL;
 $ep_dlmethod         = NULL;
@@ -133,9 +133,13 @@ if (mysql_num_rows($epdlanguage_query)) {
 
 $langcode = ep_4_get_languages(); // array of currently used language codes
 
-require_once('easypopulate_4_export.php'); // this file contains all data export code
-
-require_once('easypopulate_4_import.php'); // this file contains all data import code
+// only include the code we need for either import/export
+if ( isset($_GET['dltype']) ) {
+	include_once('easypopulate_4_export.php'); // this file contains all data export code
+}
+if ( isset($_POST['localfile']) OR isset($_FILES['usrfl']) ) {
+	include_once('easypopulate_4_import.php'); // this file contains all data import code
+}
 
 // if we had an SQL error anywhere, let's tell the user - maybe they can sort out why
 if ($ep_stack_sql_error == true) $messageStack->add(EASYPOPULATE_4_MSGSTACK_ERROR_SQL, 'caution');
