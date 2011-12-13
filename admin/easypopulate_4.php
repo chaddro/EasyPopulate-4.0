@@ -10,17 +10,27 @@ $excel_safe_output = true; // this forces enclosure in quotes
 
 // START INITIALIZATION
 require_once ('includes/application_top.php');
-@set_time_limit(300); // if possible, let's try for 5 minutes before timeouts
 
 /* Configuration Variables from Admin Interface  */
 $tempdir            = EASYPOPULATE_4_CONFIG_TEMP_DIR;
 $ep_date_format     = EASYPOPULATE_4_CONFIG_FILE_DATE_FORMAT;
 $ep_raw_time        = EASYPOPULATE_4_CONFIG_DEFAULT_RAW_TIME;
 $ep_debug_logging = ((EASYPOPULATE_4_CONFIG_DEBUG_LOGGING == 'true') ? true : false);
-$maxrecs            = EASYPOPULATE_4_CONFIG_SPLIT_MAX;
+$ep_split_records   = (int)EASYPOPULATE_4_CONFIG_SPLIT_RECORDS;
 $price_with_tax   = ((EASYPOPULATE_4_CONFIG_PRICE_INC_TAX == 'true') ? true : false);
 $strip_smart_tags = ((EASYPOPULATE_4_CONFIG_SMART_TAGS == 'true') ? true : false);
 $max_qty_discounts  = EASYPOPULATE_4_CONFIG_MAX_QTY_DISCOUNTS;
+$ep_feedback      = ((EASYPOPULATE_4_CONFIG_VERBOSE == 'true') ? true : false);
+$ep_execution     = (int)EASYPOPULATE_4_CONFIG_EXECUTION_TIME;
+
+@set_time_limit($ep_execution);  // executin limit in seconds. 300 = 5 minutes before timeout, 0 means no timelimit
+
+if (!$error) { 
+  $upload_max_filesize=ini_get("upload_max_filesize");
+  if (preg_match("/([0-9]+)K/i",$upload_max_filesize,$tempregs)) $upload_max_filesize=$tempregs[1]*1024;
+  if (preg_match("/([0-9]+)M/i",$upload_max_filesize,$tempregs)) $upload_max_filesize=$tempregs[1]*1024*1024;
+  if (preg_match("/([0-9]+)G/i",$upload_max_filesize,$tempregs)) $upload_max_filesize=$tempregs[1]*1024*1024*1024;
+}
 
 /* Test area start */
 // error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);//test purposes only
@@ -31,10 +41,8 @@ $ep_debug_logging_all = false; // do not comment out.. make false instead
 //$sql_fail_test == true; // used to cause an sql error on new product upload - tests error handling & logs
 /* Test area end */
 
-/* Initialise vars */
-
 // Current EP Version - Modded by Chadd
-$curver              = '4.0.14 - Beta 11-10-2011';
+$curver              = '4.0.16 - Beta 12-11-2011';
 $display_output      = ''; // results of import displayed after script run
 $ep_dltype           = NULL;
 $ep_dlmethod         = NULL;
@@ -50,7 +58,7 @@ $ep_supported_mods = array();
 $ep_keys = ep_4_setkeys();
 
 // default smart-tags setting when enabled. This can be added to.
-$smart_tags = array("\r\n|\r|\n" => '<br />', );
+$smart_tags = array("\r\n|\r|\n" => '<br />', ); // need to check into this more
 
 if (substr($tempdir, -1) != '/') $tempdir .= '/';
 if (substr($tempdir, 0, 1) == '/') $tempdir = substr($tempdir, 1);
@@ -89,31 +97,23 @@ if ($_GET['epinstaller'] == 'remove') { // remove easy populate configuration va
 $ep_supported_mods['psd'] = ep_4_check_table_column(TABLE_PRODUCTS_DESCRIPTION,'products_short_desc');
 $ep_supported_mods['uom'] = ep_4_check_table_column(TABLE_PRODUCTS,'products_price_uom'); // uom = unit of measure, added by Chadd
 $ep_supported_mods['upc'] = ep_4_check_table_column(TABLE_PRODUCTS,'products_upc');       // upc = UPC Code, added by Chadd
-$ep_supported_mods['gpc'] = ep_4_check_table_column(TABLE_PRODUCTS,'google_product_category'); // gpc = google product category for Google Merchant Center, added by Chadd 10-1-2011
+$ep_supported_mods['gpc'] = ep_4_check_table_column(TABLE_PRODUCTS,'products_gpc'); // gpc = google product category for Google Merchant Center, added by Chadd 10-1-2011
 // END: check for existance of various mods
 
 // maximum length for a category in this database
 $category_strlen_max = zen_field_length(TABLE_CATEGORIES_DESCRIPTION, 'categories_name');
 
 // maximum length for important fields
-$category_strlen_max = zen_field_length(TABLE_CATEGORIES_DESCRIPTION, 'categories_name'); // don't know what uses this
-$categories_name_max_len = $category_strlen_max; // my variables
+$categories_name_max_len = zen_field_length(TABLE_CATEGORIES_DESCRIPTION, 'categories_name');
 $manufacturers_name_max_len = zen_field_length(TABLE_MANUFACTURERS, 'manufacturers_name');
 $products_model_max_len = zen_field_length(TABLE_PRODUCTS, 'products_model');
 $products_name_max_len = zen_field_length(TABLE_PRODUCTS_DESCRIPTION, 'products_name');
+$products_url_max_len = zen_field_length(TABLE_PRODUCTS_DESCRIPTION, 'products_url');
 
 // test for Ajeh
-$ajeh_sql = 'SELECT * FROM '. TABLE_PRODUCTS .' WHERE '.TABLE_PRODUCTS.'.products_id NOT IN (SELECT '. TABLE_PRODUCTS_TO_CATEGORIES.'.products_id FROM '. TABLE_PRODUCTS_TO_CATEGORIES.')';
-$ajeh_result = ep_4_query($ajeh_sql);
+//$ajeh_sql = 'SELECT * FROM '. TABLE_PRODUCTS .' WHERE '.TABLE_PRODUCTS.'.products_id NOT IN (SELECT '. TABLE_PRODUCTS_TO_CATEGORIES.'.products_id FROM '. TABLE_PRODUCTS_TO_CATEGORIES.')';
+//$ajeh_result = ep_4_query($ajeh_sql);
 
-// model name length error handling - chadd - 12-10-2010 - why do we need to do this?
-$model_varchar = zen_field_length(TABLE_PRODUCTS, 'products_model');
-if (!isset($model_varchar)) {
-	$messageStack->add(EASYPOPULATE_4_MSGSTACK_MODELSIZE_DETECT_FAIL, 'warning');
-	$modelsize = 32;
-} else {
-	$modelsize = $model_varchar;
-}
 // Pre-flight checks finish here
 
 // check default language_id from configuration table DEFAULT_LANGUAGE
@@ -122,7 +122,7 @@ if (!isset($model_varchar)) {
 // default langauage should not be important since all installed languages are used $langcode[]
 // and we should iterate through that array (even if only 1 stored value)
 // $epdlanguage_id is used only in categories generation code since the products import code doesn't support multi-language categories
-$epdlanguage_query = ep_4_query("SELECT languages_id, name FROM " . TABLE_LANGUAGES . " WHERE code = '" . DEFAULT_LANGUAGE . "'");
+$epdlanguage_query = ep_4_query("SELECT languages_id, name FROM ".TABLE_LANGUAGES." WHERE code = '".DEFAULT_LANGUAGE."'");
 if (mysql_num_rows($epdlanguage_query)) {
 	$epdlanguage = mysql_fetch_array($epdlanguage_query);
 	$epdlanguage_id   = $epdlanguage['languages_id'];
@@ -131,18 +131,43 @@ if (mysql_num_rows($epdlanguage_query)) {
 	exit("EP4 FATAL ERROR: No default language set."); // this should never happen
 }
 
-$langcode = ep_4_get_languages(); // array of currently used language codes
+$langcode = ep_4_get_languages(); // array of currently used language codes ( 1, 2, 3, ...)
 
-// only include the code we need for either import/export
-if ( isset($_GET['dltype']) ) {
+if ( isset($_POST['filter']) OR isset($_GET['export'])  ) {
 	include_once('easypopulate_4_export.php'); // this file contains all data export code
 }
-if ( isset($_POST['localfile']) OR isset($_FILES['usrfl']) ) {
+if ( isset($_GET['import']) ) {
 	include_once('easypopulate_4_import.php'); // this file contains all data import code
+}
+if ( isset($_GET['split']) ) {
+	include_once('easypopulate_4_split.php'); // this file has split code
 }
 
 // if we had an SQL error anywhere, let's tell the user - maybe they can sort out why
 if ($ep_stack_sql_error == true) $messageStack->add(EASYPOPULATE_4_MSGSTACK_ERROR_SQL, 'caution');
+
+$upload_dir = DIR_FS_CATALOG . $tempdir;
+
+//  UPLOAD FILE isset($_FILES['usrfl'])
+if (isset($_FILES['uploadfile'])) {
+	$file = ep_4_get_uploaded_file('uploadfile'); 		
+	if (is_uploaded_file($file['tmp_name'])) {
+		ep_4_copy_uploaded_file($file, DIR_FS_CATALOG . $tempdir);
+	}
+	$messageStack->add(sprintf("File uploaded successfully: ".$file['name']), 'success');
+}
+
+// Handle file deletion (delete only in the current directory for security reasons)
+if (!$error && isset($_REQUEST["delete"]) && $_REQUEST["delete"]!=basename($_SERVER["SCRIPT_FILENAME"])) { 
+  if (preg_match("/(\.(sql|gz|csv|txt|log))$/i",$_REQUEST["delete"]) && @unlink($upload_dir.basename($_REQUEST["delete"]))) {
+	// $messageStack->add(sprintf($_REQUEST["delete"]." was deleted successfully"), 'success');
+	zen_redirect(zen_href_link(FILENAME_EASYPOPULATE_4));
+  }
+  else {
+	$messageStack->add(sprintf("Cannot delete file: ".$_REQUEST["delete"]), 'caution');
+	// zen_redirect(zen_href_link(FILENAME_EASYPOPULATE_4));
+  }
+}
 ?>
 
 <!doctype html public "-//W3C//DTD HTML 4.01 Transitional//EN">
@@ -154,6 +179,7 @@ if ($ep_stack_sql_error == true) $messageStack->add(EASYPOPULATE_4_MSGSTACK_ERRO
 	<link rel="stylesheet" type="text/css" href="includes/cssjsmenuhover.css" media="all" id="hoverJS">
 	<script language="javascript" src="includes/menu.js"></script>
 	<script language="javascript" src="includes/general.js"></script>
+	<!-- <script language="javascript" src="includes/ep4ajax.js"></script> -->
 	<script type="text/javascript">
 	<!--
 		function init()
@@ -167,143 +193,183 @@ if ($ep_stack_sql_error == true) $messageStack->add(EASYPOPULATE_4_MSGSTACK_ERRO
 		}
 	// -->
 	</script>
+    <style>
+		#epfiles tbody tr:hover { background:#CCCCCC; }
+	</style>
 </head>
 <body onLoad="init()">
-<!-- header -->
 <?php require(DIR_WS_INCLUDES . 'header.php'); ?>
-<!-- header_eof -->
 
 <!-- body -->
 <div style="padding:5px">
-	
 	<?php 	echo zen_draw_separator('pixel_trans.gif', '1', '10'); ?>
 	<div class="pageHeading"><?php echo "Easy Populate $curver"; ?></div>
     
 	<div style="text-align:right; float:right; width:25%"><a href="<?php echo zen_href_link(FILENAME_EASYPOPULATE_4, 'epinstaller=remove') ?>">Un-Install EP4</a>
     <? 
-		echo '<br>Temporary Directory: <b>'.$tempdir.'</b>'; 
-		echo '<br><b>Custom Products Fields:</b><br>';
+		echo '<br><b><u>Configuration Settings</u></b><br>';
+		echo 'Upload Directory: <b>'.$tempdir.'</b><br>'; 
+		echo 'Verbose Feedback: '.(($ep_feedback) ? "TRUE":"FALSE").'<br>';
+		echo 'Split Records: '.$ep_split_records.'<br>';
+		echo 'Execution Time: '.$ep_execution.'<br>';
+			
+		echo '<br><b><u>Custom Products Fields</u></b><br>';
 		echo 'Product Short Descriptions: '.(($ep_supported_mods['psd']) ? "TRUE":"FALSE").'<br>';
 		echo 'Product Unit of Measure: '.(($ep_supported_mods['uom']) ? "TRUE":"FALSE").'<br>';
 		echo 'Product UPC Code: '.(($ep_supported_mods['upc']) ? "TRUE":"FALSE").'<br>';
 		// Google Product Category for Google Merchant Center
 		echo 'Google Product Category: '.(($ep_supported_mods['gpc']) ? "TRUE":"FALSE").'<br>';		
-		echo '<b>Installed Languages:</b> <br>';
+		echo '<br><b><u>Installed Languages</u></b> <br>';
 		foreach ($langcode as $key => $lang) {
 			echo $lang['id'].'-'.$lang['code'].': '.$lang['name'].'<br>';
 		}
 		echo 'Default Language: '.	$epdlanguage_id .'-'. $epdlanguage_name.'<br>'; 
-
-		echo '<br><b>Fields Max Lenth:</b><br>';
+		
+		echo '<br><b><u>Database Field Lengths</u></b><br>';
 		echo 'categories_name:'.$categories_name_max_len.'<br>';
 		echo 'manufacturers_name:'.$manufacturers_name_max_len.'<br>';
 		echo 'products_model:'.$products_model_max_len.'<br>';
 		echo 'products_name:'.$products_name_max_len.'<br>';
 	
+	/*  // some error checking
 		echo '<br><br>Problem Data: '. mysql_num_rows($ajeh_result);
-	
-	
+		echo '<br>Memory Usage: '.memory_get_usage(); 
+		echo '<br>Memory Peak: '.memory_get_peak_usage();
+		echo '<br><br>';
+		print_r($langcode);
+		echo '<br><br>code: '.$langcode[1]['id'];
+	*/
 		//register_globals_vars_check_4(); // chadd testing
 	
 	?></div>
 
 	<?php echo zen_draw_separator('pixel_trans.gif', '1', '10'); ?>
 
-     <div style="text-align:left">
-     		<!-- import from browser upload -->
-            <form ENCTYPE="multipart/form-data" ACTION="easypopulate_4.php" METHOD="POST">
-                <div align = "left">
-                    <b>Upload EP File</b><br />
-                    <input TYPE="hidden" name="MAX_FILE_SIZE" value="100000000">
-                    <input name="usrfl" type="file" size="50">
-                    <input type="submit" name="buttoninsert" value="Import Data File">
-                    <br />
-                </div>
-            </form>
-            <!-- import from local file -->
-            <form ENCTYPE="multipart/form-data" ACTION="easypopulate_4.php" METHOD="POST">
-                <div align = "left">
-                    <b>Import from Temporary Directory: <? echo $tempdir; ?></b><br />
-                    <input TYPE="text" name="localfile" size="50">
-                    <input type="submit" name="buttoninsert" value="Import Data File">
-                    <br />
-                </div>
-				<br>
-            </form>
-			
-		  <?php echo zen_draw_form('custom', 'easypopulate_4.php', 'id="custom"', 'get'); ?>
-                <div align = "left">
-					<?php	
-					$manufacturers_array = array();
-					$manufacturers_array[] = array( "id" => '', 'text' => "Manufacturers" );
-					$manufacturers_query = mysql_query("SELECT manufacturers_id, manufacturers_name FROM " . TABLE_MANUFACTURERS . " ORDER BY manufacturers_name");
-					while ($manufacturers = mysql_fetch_array($manufacturers_query)) {
-						$manufacturers_array[] = array( "id" => $manufacturers['manufacturers_id'], 'text' => $manufacturers['manufacturers_name'] );
-					}
-					$status_array = array(array( "id" => '1', 'text' => "status" ),array( "id" => '1', 'text' => "active" ),array( "id" => '0', 'text' => "inactive" ));
-					echo "Filter Complete Download by: " . zen_draw_pull_down_menu('ep_category_filter', array_merge(array( 0 => array( "id" => '', 'text' => "Categories" )), zen_get_category_tree()));
-					echo ' ' . zen_draw_pull_down_menu('ep_manufacturer_filter', $manufacturers_array) . ' ';
-					echo ' ' . zen_draw_pull_down_menu('ep_status_filter', $status_array) . ' ';
+	<div style="text-align:left">
+            
+    <form ENCTYPE="multipart/form-data" ACTION="easypopulate_4.php" METHOD="POST">
+        <div align = "left"><br>
+            <b>Upload EP File</b><br />
+            <?php echo "Http Max Upload File Size: $upload_max_filesize bytes (".round($upload_max_filesize/1024/1024)." Mbytes)<br>";?>
+            <input TYPE="hidden" name="MAX_FILE_SIZE" value="<?php echo $upload_max_filesize; ?>">
+            <input name="uploadfile" type="file" size="50">
+            <input type="submit" name="buttoninsert" value="Upload File">
+            <br /><br><br>
+        </div>
+    </form>
 
-					$download_array = array(array( "id" => 'download', 'text' => "download" ),array( "id" => 'stream', 'text' => "stream" ),array( "id" => 'tempfile', 'text' => "tempfile" ));
-					echo ' ' . zen_draw_pull_down_menu('download', $download_array) . ' ';
-
-					echo zen_draw_input_field('dltype', 'full', ' style="padding: 0px"', false, 'submit');
-					?>				
-                    <br />
-                </div>
-				<br>
-
-            <b>Easy Populate Download Options:</b>
-            <br /><br />
-            <!-- Download file links -->
-            <a href="easypopulate_4.php?download=stream&dltype=full"><b>Complete Products</b> (with Metatags)</a><br />
-            <a href="easypopulate_4.php?download=stream&dltype=priceqty"><b>Model/Price/Qty</b> (with Specials)</a><br />
-            <a href="easypopulate_4.php?download=stream&dltype=pricebreaks"><b>Model/Price/Breaks</b></a><br />
-            <a href="easypopulate_4.php?download=stream&dltype=category"><b>Model/Category</b> </a><br />
-            <a href="easypopulate_4.php?download=stream&dltype=categorymeta"><b>Categories Only</b> (with Metatags)</a><br />
-			<br>
-			<br>Under Construction - Note: DIAGNOSTIC EXPORTS, NOT FOR IMPORTING ATTRIBUTES YET!<br>
-            <a href="easypopulate_4.php?download=stream&dltype=attrib"><b>Detailed Products Attributes</b> (detailed multi-line)</a><br />
-            <a href="easypopulate_4.php?download=stream&dltype=attrib_basic_detailed"><b>Basic Products Attributes</b> (detailed multi-line)</a><br />
-            <a href="easypopulate_4.php?download=stream&dltype=attrib_basic_simple"><b>Basic Products Attributes</b> (single-line)</a><br />
-            <a href="easypopulate_4.php?download=stream&dltype=options"><b>Attribute Options Names</b> </a><br />
-            <a href="easypopulate_4.php?download=stream&dltype=values"><b>Attribute Options Values</b> </a><br />
-            <a href="easypopulate_4.php?download=stream&dltype=optionvalues"><b>Attribute Options-Names-to-Values</b> </a><br />
+	<?php 
+	// echo zen_draw_form('custom', 'easypopulate_4.php', 'id="custom"', 'get'); 
+	echo zen_draw_form('custom', 'easypopulate_4.php', 'id="custom"', 'post'); 
+	?>
 	
-	        <?php /* 
-			<br /><br />
-            <b>Create Easy Populate Files in Temp Directory (<? echo $tempdir; ?>)</b>
-            <br /><br />
-            <a href="easypopulate_4.php?download=tempfile&dltype=full">Create <b>Complete</b> </a>
-            <span class="fieldRequired"> (Attributes Not Included)</span>
-            <br />
-            <a href="easypopulate_4.php?download=tempfile&dltype=priceqty">Create <b>Model/Price/Qty</b> </a><br />
-            <a href="easypopulate_4.php?download=tempfile&dltype=pricebreaks">Create <b>Model/Price/Breaks</b> </a><br />
-            <a href="easypopulate_4.php?download=tempfile&dltype=category">Create <b>Model/Category</b> </a><br />
-			<br>
-            <a href="easypopulate_4.php?download=tempfile&dltype=attrib">Create <b>Products Attributes</b> </a><br />
-            <a href="easypopulate_4.php?download=tempfile&dltype=options">Create <b>Attribute Optoins/Values</b> </a><br />
-			*/ ?>
+    <div align = "left">
+		<?php	
+		$manufacturers_array = array();
+		$manufacturers_array[] = array( "id" => '', 'text' => "Manufacturers" );
+		$manufacturers_query = mysql_query("SELECT manufacturers_id, manufacturers_name FROM " . TABLE_MANUFACTURERS . " ORDER BY manufacturers_name");
+		while ($manufacturers = mysql_fetch_array($manufacturers_query)) {
+			$manufacturers_array[] = array( "id" => $manufacturers['manufacturers_id'], 'text' => $manufacturers['manufacturers_name'] );
+		}
+		$status_array = array(array( "id" => '1', 'text' => "status" ),array( "id" => '1', 'text' => "active" ),array( "id" => '0', 'text' => "inactive" ));
+		echo "<b>Filter Complete Export by:</b><br>";
+		echo zen_draw_pull_down_menu('ep_category_filter', array_merge(array( 0 => array( "id" => '', 'text' => "Categories" )), zen_get_category_tree()));
+		echo ' ' . zen_draw_pull_down_menu('ep_manufacturer_filter', $manufacturers_array) . ' ';
+		echo ' ' . zen_draw_pull_down_menu('ep_status_filter', $status_array) . ' ';
+		echo zen_draw_input_field('filter', 'full', ' style="padding: 0px"', false, 'submit');
+		?>				
+    <br /><br>
+    </div>
 
-	</div>
-	
-	<?php
-        echo '<br />' . $printsplit; // our files splitting matrix
-        echo $display_output; // upload results
-        if (strlen($specials_print) > strlen(EASYPOPULATE_4_SPECIALS_HEADING)) {
-            echo '<br />' . $specials_print . EASYPOPULATE_4_SPECIALS_FOOTER; // specials summary
-        }	
-    ?>
-    
-<!-- body_text_eof -->
+    <b>Full Export Options:</b><br />
+    <!-- Download file links -->
+    <a href="easypopulate_4.php?export=full"><b>Complete Products</b> (with Metatags)</a><br />
+    <a href="easypopulate_4.php?export=priceqty"><b>Model/Price/Qty</b> (with Specials)</a><br />
+    <a href="easypopulate_4.php?export=pricebreaks"><b>Model/Price/Breaks</b></a><br />
+    <a href="easypopulate_4.php?export=category"><b>Model/Category</b> </a><br />
+    <a href="easypopulate_4.php?export=categorymeta"><b>Categories Only</b> (with Metatags)</a><br />
+    <br>
+    <br>Under Construction - Note: DIAGNOSTIC EXPORTS, NOT FOR IMPORTING ATTRIBUTES YET!<br>
+    <a href="easypopulate_4.php?export=attrib"><b>Detailed Products Attributes</b> (detailed multi-line)</a><br />
+    <a href="easypopulate_4.php?export=attrib_basic_detailed"><b>Basic Products Attributes</b> (detailed multi-line)</a><br />
+    <a href="easypopulate_4.php?export=attrib_basic_simple"><b>Basic Products Attributes</b> (single-line)</a><br />
+    <a href="easypopulate_4.php?export=options"><b>Attribute Options Names</b> </a><br />
+    <a href="easypopulate_4.php?export=values"><b>Attribute Options Values</b> </a><br />
+    <a href="easypopulate_4.php?export=optionvalues"><b>Attribute Options-Names-to-Values</b> </a><br />
+
+	<?php   
+    // List uploaded files in multifile mode
+	// Table header
+	echo '<br><br>';
+	echo "<table id=\"epfiles\"    width=\"80%\" border=1 cellspacing=\"2\" cellpadding=\"2\">\n";
+	echo "<tr><th>File Name</th><th>Size</th><th>Date &amp; Time</th><th>Type</th><th>Split</th><th>Import</th><th>Delete</th><th>Download</th>\n";
+    // $upload_dir = DIR_FS_CATALOG.$tempdir; // defined above
+	if ($dirhandle = opendir($upload_dir)) {
+		$files = array();
+		while (false !== ($files[] = readdir($dirhandle))); // get directory contents
+		closedir($dirhandle);
+		$file_count = 0;
+		sort($files);
+		foreach ($files as $dirfile) { 
+			if ( ($dirfile != ".") && ($dirfile != "..") && preg_match("/\.(sql|gz|csv|txt|log)$/i",$dirfile) ) {
+				$file_count++;
+				echo '<tr><td>'.$dirfile.'</td>
+					<td align="right">'.filesize($upload_dir.$dirfile).'</td>
+					<td align="center">'.date ("Y-m-d H:i:s", filemtime($upload_dir.$dirfile)).'</td>';
+				$ext = strtolower(end(explode('.', $dirfile)));
+				// file type
+				switch ($ext) {
+					case 'sql':
+						echo '<td align=center>SQL</td>';
+						break;
+					case 'gz':
+						echo '<td align=center>GZip</td>';
+						break;
+					case 'csv':
+						echo '<td align=center>CSV</td>';
+						break;
+					case 'txt':
+						echo '<td align=center>TXT</td>';
+						break;
+					case 'log':
+					echo '<td align=center>LOG</td>';
+						break;
+					default:
+				}
+				// file management
+				if ($ext == 'csv') {
+					echo "<td align=center><a href=\"".$_SERVER["PHP_SELF"]."?split=".$dirfile."\">Split</a></td>\n";
+					echo "<td align=center><a href=\"".$_SERVER["PHP_SELF"]."?import=".$dirfile."\">Import</a></td>\n";
+					echo "<td align=center><a href=\"".$_SERVER["PHP_SELF"]."?delete=".urlencode($dirfile)."\">Delete file</a></td>";
+					echo "<td align=center><a href=".DIR_WS_CATALOG.$tempdir.$dirfile." target=_blank>Download</a></td></tr>\n";
+				} else {		  
+					echo "<td>&nbsp;</td>\n";
+					echo "<td>&nbsp;</td>\n";
+					echo "<td align=center><a href=\"".$_SERVER["PHP_SELF"]."?delete=".urlencode($dirfile)."\">Delete file</a></td>";
+					echo "<td align=center><a href=".DIR_WS_CATALOG.$tempdir.$dirfile." target=_blank>Download</a></td></tr>\n";
+				}
+			} // if (file types)
+		} // foreach
+		if ( $file_count == 0 ) {
+			echo "<tr><td COLSPAN=8><font color='red'><b>No Supported Data Files</b></font></td></tr>\n";
+		} // if (sizeof($files)>0)
+	} else { // can't open directory
+		echo "<tr><td COLSPAN=8><font color='red'><b>Error Opening Upload Directory:</b></font> ".$tempdir."</td></tr>\n";
+		$error=true;
+	} // opendir()
+	echo "</table>\n";
+	?>
 </div>
-<!-- body_eof -->
-
+<div id='results'></div>
+<?php
+	echo $display_output; // upload results
+	if (strlen($specials_print) > strlen(EASYPOPULATE_4_SPECIALS_HEADING)) {
+		echo '<br />' . $specials_print . EASYPOPULATE_4_SPECIALS_FOOTER; // specials summary
+	}	
+?>
+</div>
 <br />
-<!-- footer -->
 <?php require(DIR_WS_INCLUDES . 'footer.php'); ?>
-<!-- footer_eof -->
 </body>
 </html>
 <?php require(DIR_WS_INCLUDES . 'application_bottom.php'); ?>

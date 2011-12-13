@@ -1,67 +1,110 @@
 <?php
 // get download type
-$ep_dltype = (isset($_GET['dltype'])) ? $_GET['dltype'] : $ep_dltype;
+$ep_dltype = (isset($_POST['filter'])) ? $_POST['filter'] : $ep_dltype;
+$display_output = '';
+if (isset($_POST['filter'])) {
+	$ep_dltype = $_POST['filter'];
+}
 
+if (isset($_GET['export'])) {
+	$ep_dltype = $_GET['export'];
+}
+
+if ($ep_dltype == '') {
+   die("error: no export type set"); // need better handler
+}
+
+$ep_export_count = 0;
 // BEGIN: File Download Layouts
 // if dltype is set, then create the filelayout.  Otherwise filelayout is read from the uploaded file.
 // depending on the type of the download the user wanted, create a file layout for it.
-if (zen_not_null($ep_dltype)) {
-	// build filters
-	$sql_filter = '';
-	if (!empty($_GET['ep_category_filter'])) {
-		$sub_categories = array();
-		$categories_query_addition = 'ptoc.categories_id = ' . (int)$_GET['ep_category_filter'] . '';
-		zen_get_sub_categories($sub_categories, $_GET['ep_category_filter']);
-		foreach ($sub_categories AS $key => $category ) {
-			$categories_query_addition .= ' OR ptoc.categories_id = ' . (int)$category . '';
-		}
-		$sql_filter .= ' AND (' . $categories_query_addition . ')';
+$time_start = microtime(true); // benchmarking
+// build export filters
+$sql_filter = '';
+if (!empty($_POST['ep_category_filter'])) {
+	$sub_categories = array();
+	$categories_query_addition = 'ptoc.categories_id = '.(int)$_POST['ep_category_filter'].'';
+	zen_get_sub_categories($sub_categories, $_POST['ep_category_filter']);
+	foreach ($sub_categories AS $key => $category ) {
+		$categories_query_addition .= ' OR ptoc.categories_id = '.(int)$category.'';
 	}
-	if ($_GET['ep_manufacturer_filter']!='') { $sql_filter .= ' and p.manufacturers_id = ' . (int)$_GET['ep_manufacturer_filter']; }
-	if ($_GET['ep_status_filter']!='') { $sql_filter .= ' AND p.products_status = ' . (int)$_GET['ep_status_filter']; }
-	if ($_GET['dltype']!='') { $ep_dltype = $_GET['dltype']; }
+	$sql_filter .= ' AND ('.$categories_query_addition.')';
+}
+if ($_POST['ep_manufacturer_filter']!='') { $sql_filter .= ' and p.manufacturers_id = '.(int)$_POST['ep_manufacturer_filter']; }
+if ($_POST['ep_status_filter']!='') { $sql_filter .= ' AND p.products_status = '.(int)$_POST['ep_status_filter']; }
+if ($_POST['dltype']!='') { $ep_dltype = $_POST['dltype']; }
 
-	$filelayout = array();
-	$fileheaders = array();
-	
-	$filelayout_sql = '';
-	
-	$time_start = microtime(true); // benchmarking
- 
-	$filelayout = ep_4_set_filelayout($ep_dltype,  $filelayout_sql, $sql_filter, $langcode, $ep_supported_mods); 
+$filelayout = array();
+$filelayout_sql = '';
+$filelayout = ep_4_set_filelayout($ep_dltype,  $filelayout_sql, $sql_filter, $langcode, $ep_supported_mods); 
+$filelayout = array_flip($filelayout);
 
-	$filelayout = array_flip($filelayout);
-	$fileheaders = array_flip($fileheaders);
-} // END: File Download Layouts
+// END: File Download Layouts
 
-$ep_dlmethod = isset($_GET['download']) ? $_GET['download'] : $ep_dlmethod;
-if ($ep_dlmethod == 'stream' or  $ep_dlmethod == 'tempfile') { // DOWNLOAD FILE
-	$filestring	= ""; // file name
-	$result		= ep_4_query($filelayout_sql);
+// Create export file name
+switch ($ep_dltype) { // chadd - changed to use $EXPORT_FILE
+	case 'full':
+	$EXPORT_FILE = 'Full-EP';
+	break;
+	case 'priceqty':
+	$EXPORT_FILE = 'PriceQty-EP';
+	break;
+	case 'pricebreaks':
+	$EXPORT_FILE = 'PriceBreaks-EP';
+	break;
+	case 'category':
+	$EXPORT_FILE = 'Category-EP';
+	break;
+	case 'categorymeta': // chadd - added 12-02-2010
+	$EXPORT_FILE = 'CategoryMeta-EP';
+	break;
+	case 'attrib':
+	$EXPORT_FILE = 'Attrib-Full-EP';
+	break;
+	case 'attrib_basic_detailed':
+	$EXPORT_FILE = 'Attrib-Basic-Detailed-EP';
+	break;
+	case 'attrib_basic_simple':
+	$EXPORT_FILE = 'Attrib-Basic-Simple-EP';
+	break;
+	case 'options':
+	$EXPORT_FILE = 'Options-EP';
+	break;
+	case 'values':
+	$EXPORT_FILE = 'Values-EP';
+	break;
+	case 'optionvalues':
+	$EXPORT_FILE = 'OptVals-EP';
+	break;
+}
+$EXPORT_FILE .= strftime('%Y%b%d-%H%M%S'); // chadd - changed for hour.minute.second
 
-	// 09-30-09 - chadd - no custom header mapping code elsewhere, just use:
-	$filelayout_header = $filelayout; 
-	
-	// prepare the table heading with layout values
-	foreach( $filelayout_header as $key => $value ) {
-		$filestring .= $key . $csv_delimiter;
-	}
-	// Remove trailing tab
-	$filestring = substr($filestring, 0, strlen($filestring)-1);
-	
-	// one record per line, end with newline
-	$filestring .= "\n"; 
-	
+// create file name and path and prepare for writing
+$tmpfpath = DIR_FS_CATALOG . '' . $tempdir . "$EXPORT_FILE" . (($csv_delimiter == ",")?".csv":".txt");
+$fp = fopen( $tmpfpath, "w+"); 
+
+$column_headers	= ""; // column headers
+
+// 09-30-09 - chadd - no custom header mapping code elsewhere, just use:
+$filelayout_header = $filelayout; 
+
+// prepare the table heading with layout values
+foreach( $filelayout_header as $key => $value ) {
+	$column_headers .= $key.$csv_delimiter;
+}
+// Trim trailing tab then append end-of-line
+$column_headers = rtrim($column_headers, $csv_delimiter)."\n";
+fwrite($fp, $column_headers); // write column headers
+
+	$result = ep_4_query($filelayout_sql);
 	while ($row = mysql_fetch_array($result)) {
-	
-		// PRODUCTS IMAGE
+		// Products Image
 		if (isset($filelayout['v_products_image'])) { 
 			$products_image = (($row['v_products_image'] == PRODUCTS_IMAGE_NO_IMAGE) ? '' : $row['v_products_image']);
 		}
-		
-		// LANGUAGES AND DESCRIPTIONS
+		// Multi-Lingual Meta-Tage, Products Name, Products Description, Products URL, and Products Short Descriptions
 		if ($ep_dltype == 'full') {
-			// names and descriptions require that we loop thru all languages that are turned on in the store
+			// names and descriptions require that we loop thru all installed languages
 			foreach ($langcode as $key => $lang) {
 				$lid = $lang['id'];
 				// metaData start
@@ -101,7 +144,7 @@ if ($ep_dlmethod == 'stream' or  $ep_dlmethod == 'tempfile') { // DOWNLOAD FILE
 			}
 		} // END: Specials
 		
-		// CATEGORIES LANGUAGE, DESCRIPTIONS AND MetaTags added 12-02-2010
+		// Multi-Lingual Categories, Categories Meta, Categories Descriptions
 		if ($ep_dltype == 'categorymeta') {
 			// names and descriptions require that we loop thru all languages that are turned on in the store
 			foreach ($langcode as $key => $lang) {
@@ -136,8 +179,8 @@ if ($ep_dlmethod == 'stream' or  $ep_dlmethod == 'tempfile') { // DOWNLOAD FILE
 			// if parent_id is not null ('0'), then follow it up.
 			while (!empty($thecategory_id)) {
 				// mult-lingual categories start - for each language, get category description and name
-				  $sql2 =  'SELECT * FROM '.TABLE_CATEGORIES_DESCRIPTION.' WHERE categories_id = '.$thecategory_id.' ORDER BY language_id';
-				  $result2 = ep_4_query($sql2);
+				$sql2 =  'SELECT * FROM '.TABLE_CATEGORIES_DESCRIPTION.' WHERE categories_id = '.$thecategory_id.' ORDER BY language_id';
+				$result2 = ep_4_query($sql2);
 				while ($row2 = mysql_fetch_array($result2)) {
 					$lid = $row2['language_id'];
 					$row['v_categories_name_'.$lid] = $row2['categories_name'].$category_delimiter.$row['v_categories_name_'.$lid];
@@ -154,14 +197,14 @@ if ($ep_dlmethod == 'stream' or  $ep_dlmethod == 'tempfile') { // DOWNLOAD FILE
 				}
 			} // while
 			
-			// trim off trailing delimiter
+			// trim off trailing category delimiter '^'
 			foreach ($langcode as $key => $lang) {
 				$lid = $lang['id'];
-				$row['v_categories_name_'.$lid] = substr($row['v_categories_name_'.$lid],0,strlen($row['v_categories_name_'.$lid])-1); 		
+				$row['v_categories_name_'.$lid] = rtrim($row['v_categories_name_'.$lid], "^");		
 			} // foreach
 		} // if() delimited categories path
 
-		// MANUFACTURERS EXPORT
+		// MANUFACTURERS EXPORT - THIS NEEDS MULTI-LINGUAL SUPPORT!
 		// if the filelayout says we need a manfacturers name, get it for download file
 		if (isset($filelayout['v_manufacturers_name'])) {
 			if ( ($row['v_manufacturers_id'] != '0') && ($row['v_manufacturers_id'] != '') ) { // '0' is correct, but '' NULL is possible
@@ -175,7 +218,7 @@ if ($ep_dlmethod == 'stream' or  $ep_dlmethod == 'tempfile') { // DOWNLOAD FILE
 			}
 		}
 		
-		// Price/Qty/Discounts - chadd - updated 12-02-2010 to remove discount_id from export
+		// Price/Qty/Discounts
 		$discount_index = 1;
 		while (isset($filelayout['v_discount_qty_'.$discount_index])) {
 			if ($row['v_products_discount_type'] != '0') { // if v_products_discount_type == 0 then there are no quantity breaks
@@ -196,99 +239,45 @@ if ($ep_dlmethod == 'stream' or  $ep_dlmethod == 'tempfile') { // DOWNLOAD FILE
 		$row['v_tax_class_title'] = zen_get_tax_class_title($row['v_tax_class_id']);
 		$row['v_products_price']  = round($row['v_products_price'] + ($price_with_tax * $row['v_products_price'] * $row_tax_multiplier / 100),2);
 
-		// Now set the status to a word the user specd in the config vars
-		// Clean the texts that could confuse EasyPopulate
-		// chadd - i think something in NOT correct here
-		$therow = '';
+		// Clean the texts that could break CSV file formatting
+		$dataRow ='';
+		$problem_chars = array("\r", "\n", "\t"); // carriage return, newline, tab
 		foreach($filelayout as $key => $value) {
 			$thetext = $row[$key];
-			// remove carriage returns and tabs in the descriptions
-			// chadd - why? what if I want those in the file????
-			$thetext = str_replace("\r",' ',$thetext);
-			$thetext = str_replace("\n",' ',$thetext);
-			$thetext = str_replace("\t",' ',$thetext);
+			// remove carriage returns, newlines, and tabs - needs review
+			$thetext = str_replace($problem_chars,' ',$thetext);
+			// $thetext = str_replace("\r",' ',$thetext);
+			// $thetext = str_replace("\n",' ',$thetext);
+			// $thetext = str_replace("\t",' ',$thetext);
 			
-			// chadd - I do not know if this is actually needed like this, instead of safe mode, force quotes???
-			if ($excel_safe_output == true) {
+			// encapsulate data in quotes, and escape embedded quotes in data
+			$dataRow .= '"'.str_replace('"','""',$thetext).'"'.$csv_delimiter;
+			/*
+			if ($excel_safe_output == true) { // encapsulate field data with quotes
 			  // use quoted values and escape the embedded quotes for excel safe output.
-			  $therow .= '"'.str_replace('"','""',$thetext).'"' . $csv_delimiter;
+			  $dataRow .= '"'.str_replace('"','""',$thetext).'"' . $csv_delimiter;
 			} else {
 			  // and put the text into the output separated by $csv_delimiter defined above
-			  $therow .= $thetext . $csv_delimiter;
-			}
+			  $dataRow .= $thetext . $csv_delimiter;
+			} */
 		}
-
 		// Remove trailing tab, then append the end-of-line
-		$therow = substr($therow,0,strlen($therow)-1) . "\n";
+		$dataRow = rtrim($dataRow,$csv_delimiter)."\n";
 
-		$filestring .= $therow;
+
+		fwrite($fp, $dataRow); // write 1 line of csv data (this can be slow...)
+		$ep_export_count++;	
 	} // while ($row)
-	
-	// Create export file name
-	switch ($ep_dltype) { // chadd - changed to use $EXPORT_FILE
-		case 'full':
-		$EXPORT_FILE = 'Full-EP';
-		break;
-		case 'priceqty':
-		$EXPORT_FILE = 'PriceQty-EP';
-		break;
-		case 'pricebreaks':
-		$EXPORT_FILE = 'PriceBreaks-EP';
-		break;
-		case 'category':
-		$EXPORT_FILE = 'Category-EP';
-		break;
-		case 'categorymeta': // chadd - added 12-02-2010
-		$EXPORT_FILE = 'CategoryMeta-EP';
-		break;
-		case 'attrib':
-		$EXPORT_FILE = 'Attrib-Full-EP';
-		break;
-		case 'attrib_basic_detailed':
-		$EXPORT_FILE = 'Attrib-Basic-Detailed-EP';
-		break;
-		case 'attrib_basic_simple':
-		$EXPORT_FILE = 'Attrib-Basic-Simple-EP';
-		break;
-		case 'options':
-		$EXPORT_FILE = 'Options-EP';
-		break;
-		case 'values':
-		$EXPORT_FILE = 'Values-EP';
-		break;
-		case 'optionvalues':
-		$EXPORT_FILE = 'OptVals-EP';
-		break;
-	}
-	$EXPORT_FILE .= strftime('%Y%b%d-%H%M%S'); // chadd - changed for hour.minute.second
+fclose($fp); // close output file
 
+$display_output .= '<br><u><h3>Export Results</h3></u><br>';
+$display_output .= sprintf(EASYPOPULATE_4_MSGSTACK_FILE_EXPORT_SUCCESS, $EXPORT_FILE, $tempdir);	
+$display_output .= '<br>Records Exported: '.$ep_export_count.'<br>';
+$display_output .= '<br>Memory Usage: '.memory_get_usage(); 
+$display_output .= '<br>Memory Peak: '.memory_get_peak_usage();
 
-	// either stream it to them or put it in the temp directory
-	if ($ep_dlmethod == 'stream') { // Stream File
-		header("Content-type: application/vnd.ms-excel");
-//		header("Content-disposition: attachment; filename=$EXPORT_FILE" . (($excel_safe_output == true)?".csv":".txt")); // this should check the delimiter instead!
-		header("Content-disposition: attachment; filename=$EXPORT_FILE" . (($csv_delimiter == ",")?".csv":".txt")); // this should check the delimiter instead!
-		// Changed if using SSL, helps prevent program delay/timeout (add to backup.php also)
-		if ($request_type== 'NONSSL'){
-			header("Pragma: no-cache");
-		} else {
-			header("Pragma: ");
-		}
-		header("Expires: 0");
-		
-		// benchmarking
-		$time_end = microtime(true);
-		$time = $time_end - $time_start;
-
-		echo $filestring.$time; // chadd - script execution in seconds
-		die();
-	} else { // PUT FILE IN TEMP DIR
-		$tmpfpath = DIR_FS_CATALOG . '' . $tempdir . "$EXPORT_FILE" . (($csv_delimiter == ",")?".csv":".txt");
-		$fp = fopen( $tmpfpath, "w+");
-		fwrite($fp, $filestring);
-		
-		fclose($fp);
-		$messageStack->add(sprintf(EASYPOPULATE_4_MSGSTACK_FILE_EXPORT_SUCCESS, $EXPORT_FILE, $tempdir), 'success');
-	}
-} // END: Download Section
+// benchmarking
+$time_end = microtime(true);
+$time = $time_end - $time_start;	
+$display_output .= '<br>Execution Time: '. $time . ' seconds.';
 ?>

@@ -1,26 +1,21 @@
 <?php
 // BEGIN: Data Import Module
-if ( isset($_POST['localfile']) OR isset($_FILES['usrfl']) ) {
-
+if ( isset($_GET['import']) ) {
+	$time_start = microtime(true); // benchmarking
 	$display_output .= EASYPOPULATE_4_DISPLAY_HEADING;
 
-	//  UPLOAD FILE
-	if (isset($_FILES['usrfl']) ) {
-		$file = ep_4_get_uploaded_file('usrfl'); 		
-		if (is_uploaded_file($file['tmp_name'])) {
-			ep_4_copy_uploaded_file($file, DIR_FS_CATALOG . $tempdir);
-		}
-		$display_output .= sprintf(EASYPOPULATE_4_DISPLAY_UPLOADED_FILE_SPEC, $file['tmp_name'], $file['name'], $file['size']);
-	}
+	$file = array('name' => $_GET['import']);
+	$display_output .= sprintf(EASYPOPULATE_4_DISPLAY_LOCAL_FILE_SPEC, $file['name']);
 	
-	if ( isset($_POST['localfile']) ) { 
-		$file = ep_4_get_uploaded_file('localfile');
-		$display_output .= sprintf(EASYPOPULATE_4_DISPLAY_LOCAL_FILE_SPEC, $file['name']);
-	}
-	
+	$ep_update_count = 0; // product records updated 
+	$ep_import_count = 0; // new products records imported
+	$ep_error_count = 0; // errors detected during import
+	$ep_warning_count = 0; // warning detected during import
+
 	// When updating products info, these values are used for exisint data
 	// This allows a reduced number of columns to be used on updates 
 	// otherwise these would have to be exported/imported every time
+	// this ONLY applies to when a column is MISSING
 	$default_these = array();
 	$default_these[] = 'v_products_image';
 	$default_these[] = 'v_categories_id';
@@ -32,7 +27,7 @@ if ( isset($_POST['localfile']) OR isset($_FILES['usrfl']) ) {
 		$default_these[] = 'v_products_upc';
 	}
 	if ($ep_supported_mods['gpc'] == true) { // Google Product Category for Google Merchant Center - chadd 10-1-2011
-		$default_these[] = 'v_google_product_category';
+		$default_these[] = 'v_products_gpc';
 	} 
 	$default_these[] = 'v_products_quantity';
 	$default_these[] = 'v_products_weight';
@@ -57,82 +52,77 @@ if ( isset($_POST['localfile']) OR isset($_FILES['usrfl']) ) {
 	$default_these[] = 'v_metatags_title_tagline_status';
 
 	$file_location = DIR_FS_CATALOG . $tempdir . $file['name'];
-	
-	// if no error, retreive header row
+	// Error Checking
 	if (!file_exists($file_location)) {
-		$display_output .="<b>ERROR: file doesn't exist</b>";
+		$display_output .='<font color="red"><b>ERROR: Import file does not exist:'.$file_location.'</b></font><br>';
 	} else if ( !($handle = fopen($file_location, "r"))) {
-		$display_output .="<b>ERROR: Can't open file</b>";
-	} else if($filelayout = array_flip(fgetcsv($handle, 0, $csv_delimiter, $csv_enclosure))) { // read header row
+		$display_output .= '<font color="red"><b>ERROR: Cannot open import file:'.$file_location.'</b></font><br>';
+	}
 	
-/////////
-/////////	
+	// Read Column Headers
+	if ($filelayout = array_flip(fgetcsv($handle, 0, $csv_delimiter, $csv_enclosure))) {
 	
 	// Attributes Import
-	if ( substr($file['name'],0,9) == "Attrib-EP") {
+	if (substr($file['name'],0,9) == "Attrib-EP") {
 		require_once('easypopulate_4_attrib.php');
 	} // Attributes Import	
 
-////////
-
-// CATEGORIES1
+	// CATEGORIES1
 	// This Category MetaTags import routine only deals with existing Categories. It does not create or modify the tree.
-	// This code is used to Edit Categories image, description, and metatags data only.
+	// This code is ONLY used to Edit Categories image, description, and metatags data!
 	// Categories are updated via the categories_id NOT the Name!! Very important distinction here!
-	if ( substr($file['name'],0,15) == "CategoryMeta-EP") {
+	if (substr($file['name'],0,15) == "CategoryMeta-EP") {
 		while ($items = fgetcsv($handle, 0, $csv_delimiter, $csv_enclosure)) { // read 1 line of data
 			// $items[$filelayout['v_categories_id']];
 			// $items[$filelayout['v_categories_image']];
-			$sql = "SELECT `categories_id` FROM ".TABLE_CATEGORIES." WHERE 
-				(`categories_id` = ".$items[$filelayout['v_categories_id']]." )";
+			$sql = 'SELECT categories_id FROM '.TABLE_CATEGORIES.' WHERE (categories_id = '.$items[$filelayout['v_categories_id']].') LIMIT 1';
 			$result = ep_4_query($sql);
 			if ($row = mysql_fetch_array($result)) {
 				// UPDATE
 				$sql = "UPDATE ".TABLE_CATEGORIES." SET 
-					`categories_image` = '".zen_db_input($items[$filelayout['v_categories_image']])."',
-					`last_modified`    = CURRENT_TIMESTAMP 
-					WHERE 
-					(`categories_id` = ".$items[$filelayout['v_categories_id']]." ) ";
+					categories_image = '".addslashes($items[$filelayout['v_categories_image']])."',
+					last_modified    = CURRENT_TIMESTAMP 
+					WHERE (categories_id = ".$items[$filelayout['v_categories_id']].")";
 				$result = ep_4_query($sql);
-
 				foreach ($langcode as $key => $lang) {
 					$lid = $lang['id'];
 					// $items[$filelayout['v_categories_name_'.$lid]];
 					// $items[$filelayout['v_categories_description_'.$lid]];
 					$sql = "UPDATE ".TABLE_CATEGORIES_DESCRIPTION." SET 
-						`categories_name`        = '".zen_db_input($items[$filelayout['v_categories_name_'.$lid]])."',
-						`categories_description` = '".zen_db_input($items[$filelayout['v_categories_description_'.$lid]])."'
+						categories_name        = '".addslashes($items[$filelayout['v_categories_name_'.$lid]])."',
+						categories_description = '".addslashes($items[$filelayout['v_categories_description_'.$lid]])."'
 						WHERE 
-						(`categories_id` = ".$items[$filelayout['v_categories_id']]." AND `language_id` = ".$lid.")";
+						(categories_id = ".$items[$filelayout['v_categories_id']]." AND language_id = ".$lid.")";
 					$result = ep_4_query($sql);
 				
 					// $items[$filelayout['v_metatags_title_'.$lid]];
 					// $items[$filelayout['v_metatags_keywords_'.$lid]];
 					// $items[$filelayout['v_metatags_description_'.$lid]];
 					// Categories Meta Start
-					$sql = "SELECT `categories_id` FROM ".TABLE_METATAGS_CATEGORIES_DESCRIPTION." WHERE 
-						(`categories_id` =  ".$items[$filelayout['v_categories_id']]." AND `language_id` = ".$lid.")";
+					$sql = "SELECT categories_id FROM ".TABLE_METATAGS_CATEGORIES_DESCRIPTION." WHERE 
+						(categories_id = ".$items[$filelayout['v_categories_id']]." AND language_id = ".$lid.") LIMIT 1";
 					$result = ep_4_query($sql);
 					if ($row = mysql_fetch_array($result)) {
 						// UPDATE
 						$sql = "UPDATE ".TABLE_METATAGS_CATEGORIES_DESCRIPTION." SET 
-						`metatags_title`		= '".zen_db_input($items[$filelayout['v_metatags_title_'.$lid]])."',
-						`metatags_keywords`		= '".zen_db_input($items[$filelayout['v_metatags_keywords_'.$lid]])."',
-						`metatags_description`	= '".zen_db_input($items[$filelayout['v_metatags_description_'.$lid]])."'
+						metatags_title			= '".addslashes($items[$filelayout['v_metatags_title_'.$lid]])."',
+						metatags_keywords		= '".addslashes($items[$filelayout['v_metatags_keywords_'.$lid]])."',
+						metatags_description	= '".addslashes($items[$filelayout['v_metatags_description_'.$lid]])."'
 						WHERE 
-						(`categories_id` = ".$items[$filelayout['v_categories_id']]." AND `language_id` = ".$lid.")";
+						(categories_id = ".$items[$filelayout['v_categories_id']]." AND language_id = ".$lid.")";
 					} else {
-						// NEW
+						// NEW - this should not happen
 						$sql = "INSERT INTO ".TABLE_METATAGS_CATEGORIES_DESCRIPTION." SET 
-							`metatags_title`		= '".zen_db_input($items[$filelayout['v_metatags_title_'.$lid]])."',
-							`metatags_keywords`		= '".zen_db_input($items[$filelayout['v_metatags_keywords_'.$lid]])."',
-							`metatags_description`	= '".zen_db_input($items[$filelayout['v_metatags_description_'.$lid]])."',
-							`categories_id`			= '".$items[$filelayout['v_categories_id']]."',
-							`language_id` 			= '$lid' ";
+							metatags_title			= '".addslashes($items[$filelayout['v_metatags_title_'.$lid]])."',
+							metatags_keywords		= '".addslashes($items[$filelayout['v_metatags_keywords_'.$lid]])."',
+							metatags_description	= '".addslashes($items[$filelayout['v_metatags_description_'.$lid]])."',
+							categories_id			= '".$items[$filelayout['v_categories_id']]."',
+							language_id 			= '".$lid."'";
 					}
 					$result = ep_4_query($sql);					
-				} // foreach()
+				} 
 			} else { // error
+				// die("Category ID not Found");
 				$display_output .= sprintf('<br /><font color="red"><b>SKIPPED! - Category ID: </b>%s - Not Found!</font>', $items[$filelayout['v_categories_id']]);
 			} // if category found
 		} // while
@@ -140,7 +130,7 @@ if ( isset($_POST['localfile']) OR isset($_FILES['usrfl']) ) {
 
 if ((substr($file['name'],0,15) <> "CategoryMeta-EP") && (substr($file['name'],0,9) <> "Attrib-EP")){ //  temporary solution here... 12-06-2010
 	
-	// Main IMPORT loop For Product Related Data. v_products_id is the main key here.
+	// Main IMPORT loop For Product Related Data. v_products_id is the main key
 	while ($items = fgetcsv($handle, 0, $csv_delimiter, $csv_enclosure)) { // read 1 line of data
 	
 		// now do a query to get the record's current contents
@@ -152,13 +142,13 @@ if ((substr($file['name'],0,15) <> "CategoryMeta-EP") && (substr($file['name'],0
 			p.products_price				as v_products_price,';
 			
 		if ($ep_supported_mods['uom'] == true) { // price UOM mod - chadd
-			$sql .= 'p.products_price_uom as v_products_price_uom,'; // chadd
+			$sql .= 'p.products_price_uom as v_products_price_uom,';
 		} 
 		if ($ep_supported_mods['upc'] == true) { // UPC Code mod- chadd
 			$sql .= 'p.products_upc as v_products_upc,'; 
 		}
 		if ($ep_supported_mods['gpc'] == true) { // Google Product Category for Google Merhant Center - chadd 10-1-2011
-			$sql .= 'p.google_product_category as v_google_product_category,'; 
+			$sql .= 'p.products_gpc as v_products_gpc,'; 
 		}
 
 		$sql .= 'p.products_weight			as v_products_weight,
@@ -186,10 +176,10 @@ if ((substr($file['name'],0,15) <> "CategoryMeta-EP") && (substr($file['name'],0
 			TABLE_PRODUCTS_TO_CATEGORIES." as ptoc
 			WHERE
 			p.products_id      = ptoc.products_id AND
-			p.products_model   = '". zen_db_input($items[$filelayout['v_products_model']]) . "' AND
-			ptoc.categories_id = subc.categories_id";
+			p.products_model   = '".addslashes($items[$filelayout['v_products_model']])."' AND
+			ptoc.categories_id = subc.categories_id LIMIT 1";
 			
-		$result			= ep_4_query($sql);
+		$result	= ep_4_query($sql);
 		$product_is_new = true;
 		
 		// this appears to get default values for current v_products_model
@@ -211,24 +201,22 @@ if ((substr($file['name'],0,15) <> "CategoryMeta-EP") && (substr($file['name'],0
 			
 			// Default values for each language products name, description, url and optional short description
 			foreach ($langcode as $key => $lang) {
-				$sql2 = 'SELECT * FROM '.TABLE_PRODUCTS_DESCRIPTION.' WHERE products_id = '. 
-					$row['v_products_id'] . " AND language_id = '" . $lang['id'] . "'";
+				$sql2 = 'SELECT * FROM '.TABLE_PRODUCTS_DESCRIPTION.' WHERE products_id = '.$row['v_products_id'].' AND language_id = '.$lang['id'];
 				$result2 = ep_4_query($sql2);
 				$row2 = mysql_fetch_array($result2);
-				
-				$row['v_products_name_' . $lang['id']] = $row2['products_name'];
+				$row['v_products_name_'.$lang['id']] = $row2['products_name'];
 				$row['v_products_description_' . $lang['id']] = $row2['products_description']; // description assigned
 				// if short descriptions exist
 				if ($ep_supported_mods['psd'] == true) {
-					$row['v_products_short_desc_' . $lang['id']] = $row2['products_short_desc'];
+					$row['v_products_short_desc_'.$lang['id']] = $row2['products_short_desc'];
 				}
-				$row['v_products_url_' . $lang['id']] = $row2['products_url']; // url assigned
+				$row['v_products_url_'.$lang['id']] = $row2['products_url']; // url assigned
 			}
 			
 			// Default values for manufacturers name if exist
 			// Note: need to test for '0' and NULL for best compatibility with older version of EP that set blank manufacturers to NULL
 			if (($row['v_manufacturers_id'] != '0') && ($row['v_manufacturers_id'] != '') ) { // if 0, no manufacturer set
-				$sql2 = 'SELECT manufacturers_name FROM '.TABLE_MANUFACTURERS.' WHERE manufacturers_id = ' . $row['v_manufacturers_id'];
+				$sql2 = 'SELECT manufacturers_name FROM '.TABLE_MANUFACTURERS.' WHERE manufacturers_id = '.$row['v_manufacturers_id'];
 				$result2 = ep_4_query($sql2);
 				$row2 = mysql_fetch_array($result2);
 				$row['v_manufacturers_name'] = $row2['manufacturers_name']; 
@@ -264,13 +252,14 @@ if ((substr($file['name'],0,15) <> "CategoryMeta-EP") && (substr($file['name'],0
 		}
 		
 		// NEW products must have a category, else error out
-		// 11-08-2011 NOTE: v_categories_name_1 is incorrect. If the default language is something other than "1" (english), this will fail.
+		// 11-08-2011 NOTE: v_categories_name_1 is incorrect. 
+		// If the default language is something other than "1" (english), this will fail.
 		// this should use $epdlanguage_id
 		if ($product_is_new == true) {
 			if (!zen_not_null(trim($items[$filelayout['v_categories_name_1']])) && zen_not_null($items[$filelayout['v_products_model']])) {
-			// let's skip this new product without a master category..
-			$display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_CATEGORY_NOT_FOUND, $items[$filelayout['v_products_model']], ' new');
-			continue;
+				// let's skip this new product without a master category..
+				$display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_CATEGORY_NOT_FOUND, $items[$filelayout['v_products_model']], ' new');
+				continue; // error, loop to next record
 			} else {
 				// minimum test for new product - model(already tested below), name, price, category, taxclass(?), status (defaults to active)
 				// to add
@@ -280,11 +269,11 @@ if ((substr($file['name'],0,15) <> "CategoryMeta-EP") && (substr($file['name'],0
 				// let's skip this existing product without a master category but has the column heading
 				// or should we just update it to result of $row (it's current category..)??
 				$display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_CATEGORY_NOT_FOUND, $items[$filelayout['v_products_model']], '');
-				foreach ($items as $col => $langer) {
+				foreach ($items as $col => $summary) {
 					if ($col == $filelayout['v_products_model']) continue;
-					$display_output .= print_el_4($langer);
+					$display_output .= print_el_4($summary);
 				}
-				continue;
+				continue; // error, loop to next record
 			}
 		} // End data checking
 
@@ -303,19 +292,30 @@ if ((substr($file['name'],0,15) <> "CategoryMeta-EP") && (substr($file['name'],0
 			$l_id = $lang['id'];
 			// products meta tags
 			if ( isset($filelayout['v_metatags_title_' . $l_id ]) ) { 
-				$v_metatags_title[$l_id] = $items[$filelayout['v_metatags_title_' . $l_id]];
-				$v_metatags_keywords[$l_id] = $items[$filelayout['v_metatags_keywords_' . $l_id]];
-				$v_metatags_description[$l_id] = $items[$filelayout['v_metatags_description_' . $l_id]];
+				$v_metatags_title[$l_id] = $items[$filelayout['v_metatags_title_'.$l_id]];
+				$v_metatags_keywords[$l_id] = $items[$filelayout['v_metatags_keywords_'.$l_id]];
+				$v_metatags_description[$l_id] = $items[$filelayout['v_metatags_description_'.$l_id]];
 			}
 			// products name, description, url, and optional short description
+			// smart_tags_4 ... removed - chadd 11-18-2011 - will look into this feature at a future date
+			// chadd 12-09-2011 - added some error checking on field lengths
 			if (isset($filelayout['v_products_name_' . $l_id ])) { // do for each language in our upload file if exist
-				$v_products_name[$l_id]        = smart_tags_4($items[$filelayout['v_products_name_' . $l_id]],$smart_tags,$cr_replace,false);
-				$v_products_description[$l_id] = smart_tags_4($items[$filelayout['v_products_description_' . $l_id ]],$smart_tags,$cr_replace,$strip_smart_tags);
-				// if short descriptions exist
-				if ($ep_supported_mods['psd'] == true) {
-					$v_products_short_desc[$l_id] = smart_tags_4($items[$filelayout['v_products_short_desc_' . $l_id ]],$smart_tags,$cr_replace,$strip_smart_tags);
+				$v_products_name[$l_id] = $items[$filelayout['v_products_name_'.$l_id]];
+				// check products name length and display warning on error, but still process record
+				if (strlen($v_products_name[$l_id]) > $products_name_max_len) { 
+					$display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_PRODUCTS_NAME_LONG, $v_products_model, $v_products_name[$l_id], $products_name_max_len);
+					$ep_warning_count++;
 				}
-				$v_products_url[$l_id] = smart_tags_4($items[$filelayout['v_products_url_' . $l_id ]],$smart_tags,$cr_replace,false);
+				$v_products_description[$l_id] = $items[$filelayout['v_products_description_'.$l_id]];
+				if ($ep_supported_mods['psd'] == true) { // if short descriptions exist
+					$v_products_short_desc[$l_id] = $items[$filelayout['v_products_short_desc_'.$l_id]];
+				}
+				$v_products_url[$l_id] = $items[$filelayout['v_products_url_'.$l_id]];
+				// check products url length and display warning on error, but still process record
+				if (strlen($v_products_url[$l_id]) > $products_url_max_len) { 
+					$display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_PRODUCTS_URL_LONG, $v_products_model, $v_products_url[$l_id], $products_url_max_len);
+					$ep_warning_count++;
+				}
 			}
 		}
 
@@ -364,51 +364,59 @@ if ((substr($file['name'],0,15) <> "CategoryMeta-EP") && (substr($file['name'],0
 		}
 
 		// check for empty $v_products_image
+		// if the v_products_image column exists and no image is set, then
+		// apply the default "no image" image.
 		if (trim($v_products_image) == '') {
 			$v_products_image = PRODUCTS_IMAGE_NO_IMAGE;
 		}
 
-		// check size of v_products_model
-		if (strlen($v_products_model) > $modelsize) {
-			$display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_MODEL_NAME_LONG, $v_products_model);
+		// check size of v_products_model, loop on error
+		if (strlen($v_products_model) > $products_model_max_len) {
+			$display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_PRODUCTS_MODEL_LONG, $v_products_model, $products_model_max_len);
+			$ep_error_count++;
 			continue; // short-circuit on error
 		}
 		
 		// BEGIN: Manufacturer's Name
 		// convert the manufacturer's name into id's for the database
-		if ( isset($v_manufacturers_name) && ($v_manufacturers_name != '') ) {
-			$sql = "SELECT man.manufacturers_id as manID FROM ".TABLE_MANUFACTURERS." as man WHERE man.manufacturers_name = '" .zen_db_input($v_manufacturers_name) . "' LIMIT 1";
+		if ( isset($v_manufacturers_name) && ($v_manufacturers_name != '') && (strlen($v_manufacturers_name) <= $manufacturers_name_max_len) ) {
+			$sql = "SELECT man.manufacturers_id AS manID FROM ".TABLE_MANUFACTURERS." AS man WHERE man.manufacturers_name = '".addslashes($v_manufacturers_name)."' LIMIT 1";
 			$result = ep_4_query($sql);
 			if ( $row = mysql_fetch_array($result) ) {
-				$v_manufacturers_id = $row['manID'];
+				$v_manufacturers_id = $row['manID']; // this id goes into the products table
 			} else { // It is set to autoincrement, do not need to fetch max id
-				$sql = "INSERT INTO " . TABLE_MANUFACTURERS . "( manufacturers_name, date_added, last_modified )
-					VALUES ( '" . zen_db_input($v_manufacturers_name) . "',	CURRENT_TIMESTAMP, CURRENT_TIMESTAMP )";
+				$sql = "INSERT INTO ".TABLE_MANUFACTURERS." (manufacturers_name, date_added, last_modified)
+					VALUES ('".addslashes($v_manufacturers_name)."', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
 				$result = ep_4_query($sql);
 				$v_manufacturers_id = mysql_insert_id(); // id is auto_increment, so can use this function
+				
+				// BUG FIX: TABLE_MANUFACTURERS_INFO need an entry for each installed language! chadd 11-14-2011
+				foreach ($langcode as $lang) {
+					$l_id = $lang['id'];
+					$sql = "INSERT INTO ".TABLE_MANUFACTURERS_INFO." (manufacturers_id, languages_id, manufacturers_url)
+						VALUES ('".addslashes($v_manufacturers_id) . "',".(int)$l_id.",'')"; // seems we are skipping manufacturers url
+					$result = ep_4_query($sql);
+				}
 			}
-		} else { // $v_manufacturers_name == ''
+		} else { // $v_manufacturers_name == '' or name length violation
+			if (strlen($v_manufacturers_name) > $manufacturers_name_max_len) {
+				$display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_MANUFACTURER_NAME_LONG, $v_manufacturers_name, $manufacturers_name_max_len);
+				$ep_error_count++;
+				continue;
+			}
 			$v_manufacturers_id = 0; // chadd - zencart uses manufacturer's id = '0' for no assisgned manufacturer
 		} // END: Manufacturer's Name
 	
-// CATEGORIES2 ==================================================================================================================================	
+// BEGIN: CATEGORIES2 ==================================================================================================================================	
 
-		// Note: 11-08-2011: This is incomplete. It assumes language id = 1, english is the default
-		// this should instead cycle through all installed languages like in meta tags above.		
+		// Improving support for multiple language import - chadd 11-15-2011
+		// start with first defined language... does not have to be 1 since TABLE_LANGUAGES order can be changed by sort_order!
+		$lid = $langcode[1]['id'];	
 
-// $xxx = 1;
-// $v_discount_qty_var   = 'v_discount_qty_'.$xxx;
-// while (isset($$v_discount_qty_var)) { 
-
-	// adding support for multiple language import - chadd 11-10-2011
-	//foreach ($langcode as $key => $lang) {
-		$lid = 1; // $lang['id'];
-		// $items[$filelayout['v_categories_name_'.$lid]];
-		// $items[$filelayout['v_categories_description_'.$lid]];	
 		// create our column header variable 	
 		$v_categories_name_var = 'v_categories_name_'.$lid; // $$v_categories_name_var >> $v_categories_name_1, $v_categories_name_2, etc.
 		
-		if (isset($$v_categories_name_var)) {
+		if (isset($$v_categories_name_var)) { // does column header exist?
 			// start from the highest possible category and work our way down from the parent
 			$v_categories_id = 0;
 			$theparent_id = 0; // 0 is top level parent
@@ -422,11 +430,20 @@ if ((substr($file['name'],0,15) <> "CategoryMeta-EP") && (substr($file['name'],0
 			$categories_count = count($categories_names_array);
 		//	echo '<br>categories_count: '.$categories_count.'<br>Now print walk of array:<br>';
 
-		// test walk of array
+			// test walk of array
 		//	for ( $category_index=0; $category_index<$categories_count; $category_index++ ) {
 		//		$thiscategoryname = $categories_names_array[$category_index]; // category name
 		//		echo '<br>'.$thiscategoryname.' -> '.$category_index;
-		//	}			
+		//	}	
+		
+			// check for category name length violation. abort import or update on error 
+			for ( $category_index=0; $category_index<$categories_count; $category_index++ ) {
+				if ( strlen($categories_names_array[$category_index]) > $categories_name_max_len ) {
+					$display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_CATEGORY_NAME_LONG, $v_products_model, $categories_names_array[$category_index], $categories_name_max_len);
+					$ep_error_count++;
+					continue 2; // short-circuit on error and go to next record
+				}
+			}				
 			
 			for ( $category_index=0; $category_index<$categories_count; $category_index++ ) {
 				$thiscategoryname = $categories_names_array[$category_index]; // category name
@@ -434,13 +451,13 @@ if ((substr($file['name'],0,15) <> "CategoryMeta-EP") && (substr($file['name'],0
 				// note: use of $eplanguage_id is "contant" 1 at this time
 				// $eplanguage_id must now be changed to $lid - chadd 11-10-2011
 				$sql = "SELECT cat.categories_id
-					FROM ".TABLE_CATEGORIES." as cat, 
-						 ".TABLE_CATEGORIES_DESCRIPTION." as des
+					FROM ".TABLE_CATEGORIES." AS cat, 
+						 ".TABLE_CATEGORIES_DESCRIPTION." AS des
 					WHERE
 						cat.categories_id = des.categories_id AND
-						des.language_id = " . $lid . " AND
-						cat.parent_id = " . $theparent_id . " AND
-						des.categories_name = '" . zen_db_input($thiscategoryname) . "' LIMIT 1";
+						des.language_id = ".$lid." AND
+						cat.parent_id = ".$theparent_id." AND
+						des.categories_name = '".addslashes($thiscategoryname)."' LIMIT 1";
 				$result = ep_4_query($sql);
 				$row = mysql_fetch_array($result);
 				// if $row is not null, we found entry, so retrive info
@@ -448,10 +465,7 @@ if ((substr($file['name'],0,15) <> "CategoryMeta-EP") && (substr($file['name'],0
 					foreach( $row as $item ) {
 						$thiscategoryid = $item; // array of data
 					}
-				// otherwise add new category 
-				} else { 
-				
-				
+				} else { // otherwise add new category
 					// get next available categoies_id
 					$sql = "SELECT MAX(categories_id) max FROM ".TABLE_CATEGORIES;
 					$result = ep_4_query($sql);
@@ -462,7 +476,19 @@ if ((substr($file['name'],0,15) <> "CategoryMeta-EP") && (substr($file['name'],0
 						$max_category_id=1;
 					}
 					// TABLE_CATEGORIES HAS ONE ENTRY PER CATEGORY ID
-					$sql = "INSERT INTO ".TABLE_CATEGORIES."(
+					
+					// this isn't working
+					/*
+					$sql = "INSERT INTO ".TABLE_CATEGORIES." SET
+						categories_id = '".$max_category_id."',
+						categories_image = '',
+						parent_id = '".$theparent_id."',
+						sort_order = 0,
+						date_added = CURRENT_TIMESTAMP,
+						last_modified = CURRENT_TIMESTAMP";
+						*/
+						
+$sql = "INSERT INTO ".TABLE_CATEGORIES."(
 						categories_id,
 						categories_image,
 						parent_id,
@@ -476,21 +502,20 @@ if ((substr($file['name'],0,15) <> "CategoryMeta-EP") && (substr($file['name'],0
 						0,
 						CURRENT_TIMESTAMP,
 						CURRENT_TIMESTAMP
-						)";
+						)";						
+						
+						
+						
 					$result = ep_4_query($sql);
 					// TABLE_CATEGORIES_DESCRIPTION HAS ENTRY FOR EACH LANGUAGE INSTALLED
 					// must have an entry in TABLE_CATEGORIES_DESCRIPTION for each language installed, or categories break! chadd 11-10-2011					
+					// temp fix: additional entries are created, but assigned the main defined language id values
 					foreach ($langcode as $key => $lang) {
 						$cat_lang_id = $lang['id'];
-						$sql = "INSERT INTO ".TABLE_CATEGORIES_DESCRIPTION."(
-							categories_id,
-							language_id,
-							categories_name
-							) VALUES (
-							$max_category_id,
-							'$cat_lang_id',
-							'".zen_db_input($thiscategoryname)."'
-							)";
+						$sql = "INSERT INTO ".TABLE_CATEGORIES_DESCRIPTION." SET 
+							categories_id   = '".$max_category_id."',
+							language_id     = '".$cat_lang_id."',
+							categories_name = '".addslashes($thiscategoryname)."'";
 						$result = ep_4_query($sql);
 					}
 					$thiscategoryid = $max_category_id;
@@ -501,14 +526,12 @@ if ((substr($file['name'],0,15) <> "CategoryMeta-EP") && (substr($file['name'],0
 				$v_categories_id = $thiscategoryid; 
 			}
 		}
-	// } // foreach ($langcode as $key => $lang)	
-
-// CATEGORIES2 ==================================================================================================================================			
+// END: CATEGORIES2 ==================================================================================================================================			
 		
 		// insert new, or update existing, product
 		if ($v_products_model != "") { // products_model exists!
 			// First we check to see if this is a product in the current db.
-			$result = ep_4_query("SELECT products_id FROM ".TABLE_PRODUCTS." WHERE (products_model = '" . zen_db_input($v_products_model) . "')");
+			$result = ep_4_query("SELECT products_id FROM ".TABLE_PRODUCTS." WHERE (products_model = '".addslashes($v_products_model)."') LIMIT 1");
 			if (mysql_num_rows($result) == 0)  { // new item, insert into products
 				$v_date_added	= ($v_date_added == 'NULL') ? CURRENT_TIMESTAMP : $v_date_added;
 				$sql			= "SHOW TABLE STATUS LIKE '".TABLE_PRODUCTS."'";
@@ -520,52 +543,61 @@ if ((substr($file['name'],0,15) <> "CategoryMeta-EP") && (substr($file['name'],0
 				}
 				$v_products_id = $max_product_id;
 				
-				$query = "INSERT INTO " . TABLE_PRODUCTS . " SET
-					products_model					= '".zen_db_input($v_products_model)."',
-					products_price					= '".zen_db_input($v_products_price)."',";
+				$query = "INSERT INTO ".TABLE_PRODUCTS." SET
+					products_model					= '".addslashes($v_products_model)."',
+					products_price					= '".$v_products_price."',";
 				if ($ep_supported_mods['uom'] == true) { // price UOM mod
-					$query .= "products_price_uom = '".zen_db_input($v_products_price_uom)."',"; 
+					$query .= "products_price_uom = '".$v_products_price_uom."',"; 
 				} 
 				if ($ep_supported_mods['upc'] == true) { // UPC Code mod
-					$query .= "products_upc = '".zen_db_input($v_products_upc)."',";
+					$query .= "products_upc = '".addslashes($v_products_upc)."',";
 				}
 				if ($ep_supported_mods['gpc'] == true) { // Google Product Category for Google Merhcant Center - chadd 10-1-2011
-					$query .= "google_product_category = '".zen_db_input($v_google_product_category)."',";
+					$query .= "products_gpc = '".addslashes($v_products_gpc)."',";
 				}
 				 
-				$query .= "products_image			= '".zen_db_input($v_products_image)."',
-					products_weight					= '".zen_db_input($v_products_weight)."',
-					products_discount_type          = '".zen_db_input($v_products_discount_type)."',
-					products_discount_type_from     = '".zen_db_input($v_products_discount_type_from)."',
-					product_is_call                 = '".zen_db_input($v_product_is_call)."',
-					products_sort_order             = '".zen_db_input($v_products_sort_order)."',
-					products_quantity_order_min     = '".zen_db_input($v_products_quantity_order_min)."',
-					products_quantity_order_units   = '".zen_db_input($v_products_quantity_order_units)."',
-					products_tax_class_id			= '".zen_db_input($v_tax_class_id)."',
+				$query .= "products_image			= '".addslashes($v_products_image)."',
+					products_weight					= '".$v_products_weight."',
+					products_discount_type          = '".$v_products_discount_type."',
+					products_discount_type_from     = '".$v_products_discount_type_from."',
+					product_is_call                 = '".$v_product_is_call."',
+					products_sort_order             = '".$v_products_sort_order."',
+					products_quantity_order_min     = '".$v_products_quantity_order_min."',
+					products_quantity_order_units   = '".$v_products_quantity_order_units."',
+					products_tax_class_id			= '".$v_tax_class_id."',
 					products_date_available			= $v_date_avail, 
 					products_date_added				= $v_date_added,
 					products_last_modified			= CURRENT_TIMESTAMP,
-					products_quantity				= '".zen_db_input($v_products_quantity)."',
-					master_categories_id			= '".zen_db_input($v_categories_id)."',
+					products_quantity				= '".$v_products_quantity."',
+					master_categories_id			= '".$v_categories_id."',
 					manufacturers_id				= '".$v_manufacturers_id."',
-					products_status					= '".zen_db_input($v_db_status)."',
-					metatags_title_status			= '".zen_db_input($v_metatags_title_status)."',
-					metatags_products_name_status	= '".zen_db_input($v_metatags_products_name_status)."',
-					metatags_model_status			= '".zen_db_input($v_metatags_model_status)."',
-					metatags_price_status			= '".zen_db_input($v_metatags_price_status)."',
-					metatags_title_tagline_status	= '".zen_db_input($v_metatags_title_tagline_status)."'";	
+					products_status					= '".$v_db_status."',
+					metatags_title_status			= '".$v_metatags_title_status."',
+					metatags_products_name_status	= '".$v_metatags_products_name_status."',
+					metatags_model_status			= '".$v_metatags_model_status."',
+					metatags_price_status			= '".$v_metatags_price_status."',
+					metatags_title_tagline_status	= '".$v_metatags_title_tagline_status."'";	
 
 				$result = ep_4_query($query);
 				if ($result == true) {
-					$display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_NEW_PRODUCT, $v_products_model);
+					// need to change to an log file, this is gobbling up memory! chadd 11-14-2011
+					if ($ep_feedback == true) {
+						$display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_NEW_PRODUCT, $v_products_model);
+					}
+					$ep_import_count++;
 				} else {
 					$display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_NEW_PRODUCT_FAIL, $v_products_model);
-					continue; // langer - any new categories however have been created by now..Adding into product table needs to be 1st action?
+					$ep_error_count++;
+					continue; // new categories however have been created by now... Adding into product table needs to be 1st action?
 				}
-				foreach ($items as $col => $langer) {
-					if ($col == $filelayout['v_products_model']) continue;
-					$display_output .= print_el_4($langer);
+				// needs to go into log file chadd 11-14-2011
+				if ($ep_feedback == true) {
+					foreach ($items as $col => $summary) {
+						if ($col == $filelayout['v_products_model']) continue;
+						$display_output .= print_el_4($summary);
+					}
 				}
+				
 			} else { // existing product, get the id from the query and update the product data
 				// if date added is null, let's keep the existing date in db..
 				$v_date_added = ($v_date_added == 'NULL') ? $row['v_date_added'] : $v_date_added; // if NULL, use date in db
@@ -574,73 +606,79 @@ if ((substr($file['name'],0,15) <> "CategoryMeta-EP") && (substr($file['name'],0
 				$v_products_id = $row['products_id'];
 				$row = mysql_fetch_array($result); 
 				// CHADD - why is master_categories_id not being set on update???
-				$query = "UPDATE " . TABLE_PRODUCTS . " SET
-					products_price					=	'" . zen_db_input($v_products_price)."',";
+				$query = "UPDATE ".TABLE_PRODUCTS." SET
+					products_price = '".$v_products_price."',";
 					
 				if ($ep_supported_mods['uom'] == true) { // price UOM mod
-					$query .= "products_price_uom = '".zen_db_input($v_products_price_uom)."',"; 
+					$query .= "products_price_uom = '".$v_products_price_uom."',"; 
 				} 
 				if ($ep_supported_mods['upc'] == true) { // UPC Code mod
-					$query .= "products_upc = '".zen_db_input($v_products_upc)."',";
+					$query .= "products_upc = '".addslashes($v_products_upc)."',";
 				}
 				if ($ep_supported_mods['gpc'] == true) { // Google Product Category for Google Merhcant Center - chadd 10-1-2011
-					$query .= "google_product_category = '".zen_db_input($v_google_product_category)."',";
+					$query .= "products_gpc = '".addslashes($v_products_gpc)."',";
 				}
 					
-				$query .= "products_image			= '".zen_db_input($v_products_image)."',
-					products_weight					= '".zen_db_input($v_products_weight)."',
-					products_discount_type			= '".zen_db_input($v_products_discount_type)."',
-					products_discount_type_from		= '".zen_db_input($v_products_discount_type_from)."',
-					product_is_call					= '".zen_db_input($v_product_is_call)."',
-					products_sort_order				= '".zen_db_input($v_products_sort_order)."',
-					products_quantity_order_min		= '".zen_db_input($v_products_quantity_order_min)."',
-					products_quantity_order_units	= '".zen_db_input($v_products_quantity_order_units)."',				
-					products_tax_class_id			= '".zen_db_input($v_tax_class_id)."',
+				$query .= "products_image			= '".addslashes($v_products_image)."',
+					products_weight					= '".$v_products_weight."',
+					products_discount_type			= '".$v_products_discount_type."',
+					products_discount_type_from		= '".$v_products_discount_type_from."',
+					product_is_call					= '".$v_product_is_call."',
+					products_sort_order				= '".$v_products_sort_order."',
+					products_quantity_order_min		= '".$v_products_quantity_order_min."',
+					products_quantity_order_units	= '".$v_products_quantity_order_units."',				
+					products_tax_class_id			= '".$v_tax_class_id."',
 					products_date_available			= $v_date_avail,
 					products_date_added				= $v_date_added,
 					products_last_modified			= CURRENT_TIMESTAMP,
-					products_quantity				= '".zen_db_input($v_products_quantity)."',
+					products_quantity				= '".$v_products_quantity."',
 					manufacturers_id				= '".$v_manufacturers_id."',
-					products_status					= '".zen_db_input($v_db_status)."',
-					metatags_title_status			= '".zen_db_input($v_metatags_title_status)."',
-					metatags_products_name_status	= '".zen_db_input($v_metatags_products_name_status)."',
-					metatags_model_status			= '".zen_db_input($v_metatags_model_status)."',
-					metatags_price_status			= '".zen_db_input($v_metatags_price_status)."',
-					metatags_title_tagline_status	= '".zen_db_input($v_metatags_title_tagline_status)."'".
-					" WHERE ( products_id = '". $v_products_id . "' )";
+					products_status					= '".$v_db_status."',
+					metatags_title_status			= '".$v_metatags_title_status."',
+					metatags_products_name_status	= '".$v_metatags_products_name_status."',
+					metatags_model_status			= '".$v_metatags_model_status."',
+					metatags_price_status			= '".$v_metatags_price_status."',
+					metatags_title_tagline_status	= '".$v_metatags_title_tagline_status."'".
+					" WHERE (products_id = '".$v_products_id."')";
 				
 				$result = ep_4_query($query);
 				if ($result == true) {
+					// needs to go into a log file chadd 11-14-2011
+					if ($ep_feedback == true) {
 					$display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_UPDATE_PRODUCT, $v_products_model);
-					foreach ($items as $col => $langer) {
-						if ($col == $filelayout['v_products_model']) continue;
-						$display_output .= print_el_4($langer);
+						foreach ($items as $col => $summary) {
+							if ($col == $filelayout['v_products_model']) continue;
+							$display_output .= print_el_4($summary);
+						}
 					}
+					$ep_update_count++;				
 				} else {
 					$display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_UPDATE_PRODUCT_FAIL, $v_products_model);
+					$ep_error_count++;
 				}
 			}
 			
 			// START: Product MetaTags
 			if (isset($v_metatags_title)){
 				foreach ( $v_metatags_title as $key => $metaData ) {
-					$sql = "SELECT `products_id` FROM ".TABLE_META_TAGS_PRODUCTS_DESCRIPTION." WHERE (`products_id` = '$v_products_id' AND `language_id` = '$key') LIMIT 1 ";
+					$sql = "SELECT products_id FROM ".TABLE_META_TAGS_PRODUCTS_DESCRIPTION." WHERE 
+						(products_id = '$v_products_id' AND language_id = '$key') LIMIT 1 ";
 					$result = ep_4_query($sql);
 					if ($row = mysql_fetch_array($result)) {
 						// UPDATE
 						$sql = "UPDATE ".TABLE_META_TAGS_PRODUCTS_DESCRIPTION." SET 
-							`metatags_title`		= '".zen_db_input($v_metatags_title[$key])."',
-							`metatags_keywords`		= '".zen_db_input($v_metatags_keywords[$key])."',
-							`metatags_description`	= '".zen_db_input($v_metatags_description[$key])."'
-							WHERE (`products_id` = '$v_products_id' AND `language_id` = '$key') ";
+							metatags_title = '".addslashes($v_metatags_title[$key])."',
+							metatags_keywords = '".addslashes($v_metatags_keywords[$key])."',
+							metatags_description = '".addslashes($v_metatags_description[$key])."'
+							WHERE (products_id = '".$v_products_id."' AND language_id = '".$key."')";
 					} else {
 						// NEW
 						$sql = "INSERT INTO ".TABLE_META_TAGS_PRODUCTS_DESCRIPTION." SET 
-							`metatags_title`		= '".zen_db_input($v_metatags_title[$key])."',
-							`metatags_keywords`		= '".zen_db_input($v_metatags_keywords[$key])."',
-							`metatags_description`	= '".zen_db_input($v_metatags_description[$key])."',
-							`products_id` 			= '$v_products_id',
-							`language_id` 			= '$key' ";
+							metatags_title = '".addslashes($v_metatags_title[$key])."',
+							metatags_keywords = '".addslashes($v_metatags_keywords[$key])."',
+							metatags_description = '".addslashes($v_metatags_description[$key])."',
+							products_id = '".$v_products_id."',
+							language_id = '".$key."'";
 					}
 					$result = ep_4_query($sql);
 				}
@@ -663,14 +701,14 @@ if ( substr($file['name'],0,14) == "PriceBreaks-EP") {
 
 			if ($v_products_discount_type != '0') { // if v_products_discount_type == 0 then there are no quantity breaks
 				if ($v_products_model != "") { // we check to see if this is a product in the current db, must have product model number
-					$result = ep_4_query("SELECT products_id FROM ".TABLE_PRODUCTS." WHERE (products_model = '" . zen_db_input($v_products_model) . "')");
+					$result = ep_4_query("SELECT products_id FROM ".TABLE_PRODUCTS." WHERE (products_model = '".addslashes($v_products_model)."') LIMIT 1");
 					if (mysql_num_rows($result) != 0)  { // found entry
 						$row3 =  mysql_fetch_array($result);
 						$v_products_id = $row3['products_id'];
 
 						// remove all old associated quantity discounts
 						// this simplifies the below code to JUST insert all the new values
-						$db->Execute("delete from " . TABLE_PRODUCTS_DISCOUNT_QUANTITY . " where products_id = '" . (int)$v_products_id . "'");
+						$db->Execute("DELETE FROM ".TABLE_PRODUCTS_DISCOUNT_QUANTITY." WHERE products_id = '".(int)$v_products_id."'");
 
 						// initialize quantity discount variables
 						$xxx = 1;
@@ -680,21 +718,14 @@ if ( substr($file['name'],0,14) == "PriceBreaks-EP") {
 						while (isset($$v_discount_qty_var)) { 
 							// INSERT price break
 							if ($$v_discount_price_var != "") { // check for empty price
-								$sql = 'INSERT INTO ' . TABLE_PRODUCTS_DISCOUNT_QUANTITY . "(
-									products_id,
-									discount_id,
-									discount_qty,
-									discount_price
-								) VALUES (
-									'$v_products_id',
-									'".zen_db_input($xxx)."',
-									'".zen_db_input($$v_discount_qty_var)."',
-									'".zen_db_input($$v_discount_price_var)."')";
+								$sql = "INSERT INTO ".TABLE_PRODUCTS_DISCOUNT_QUANTITY." SET
+									products_id    = '".$v_products_id."',
+									discount_id    = '".$xxx."',
+									discount_qty   = '".$$v_discount_qty_var."',
+									discount_price = '".$$v_discount_price_var."'";
 								$result = ep_4_query($sql);
 							} // end: check for empty price
-			
 							$xxx++; 
-							// $v_discount_id_var    = 'v_discount_id_'.$xxx ;  // chadd - now redundant, just input $xxx index value
 							$v_discount_qty_var   = 'v_discount_qty_'.$xxx;
 							$v_discount_price_var = 'v_discount_price_'.$xxx;
 						} // while (isset($$v_discount_id_var)
@@ -703,14 +734,12 @@ if ( substr($file['name'],0,14) == "PriceBreaks-EP") {
 				} // if ($v_products_model)
 			} else { // products_discount_type == 0, so remove any old quantity_discounts
 				if ($v_products_model != "") { // we check to see if this is a product in the current db, must have product model number
-					$result = ep_4_query("SELECT products_id FROM ".TABLE_PRODUCTS." WHERE (products_model = '" . zen_db_input($v_products_model) . "')");
-
+					$result = ep_4_query("SELECT products_id FROM ".TABLE_PRODUCTS." WHERE (products_model = '".addslashes($v_products_model)."') LIMIT 1");
 					if (mysql_num_rows($result) != 0)  { // found entry
 						$row3 =  mysql_fetch_array($result);
 						$v_products_id = $row3['products_id'];
-						
 						// remove all associated quantity discounts
-						$db->Execute("delete from " . TABLE_PRODUCTS_DISCOUNT_QUANTITY . " where products_id = '" . (int)$v_products_id . "'");
+						$db->Execute("DELETE FROM ".TABLE_PRODUCTS_DISCOUNT_QUANTITY." WHERE products_id = '".(int)$v_products_id."'");
 					}
 				}
 			} // if ($v_products_discount_type != '0')
@@ -723,12 +752,24 @@ if ( substr($file['name'],0,14) == "PriceBreaks-EP") {
 				foreach( $v_products_name as $key => $name) {
 					if ($name!='') {
 						$sql = "SELECT * FROM ".TABLE_PRODUCTS_DESCRIPTION." WHERE
-								products_id = $v_products_id AND
-								language_id = " . $key;
+								products_id = ".$v_products_id." AND
+								language_id = ".$key;
 						$result = ep_4_query($sql);
+						
 						if (mysql_num_rows($result) == 0) {
 							// nope, this is a new product description
-							$sql = "INSERT INTO ".TABLE_PRODUCTS_DESCRIPTION."(
+							$sql = "INSERT INTO ".TABLE_PRODUCTS_DESCRIPTION." SET
+									products_id          ='".$v_products_id."',
+									language_id          ='".$key.",
+									products_name        ='".addslashes($name)."',
+									products_description ='".addslashes($v_products_description[$key])."',";
+							if ($ep_supported_mods['psd'] == true) {
+								$sql .= "products_short_desc ='".addslashes($v_products_short_desc[$key])."',";
+							}
+							$sql .= " products_url = '".addslashes($v_products_url[$key])."'";
+							
+							// old way of sql 
+							$sql = "INSERT INTO ".TABLE_PRODUCTS_DESCRIPTION." (
 									products_id,
 									language_id,
 									products_name,
@@ -738,27 +779,31 @@ if ( substr($file['name'],0,14) == "PriceBreaks-EP") {
 							}
 							$sql .= " products_url )
 									VALUES (
-										'" . $v_products_id . "',
-										" . $key . ",
-										'" . zen_db_input($name) . "',
-										'" . zen_db_input($v_products_description[$key]) . "',";
+										'".$v_products_id."',
+										".$key.",
+										'".addslashes($name)."',
+										'".addslashes($v_products_description[$key])."',";
 							if ($ep_supported_mods['psd'] == true) {
-								$sql .= "'" . zen_db_input($v_products_short_desc[$key]) . "',";
+								$sql .= "'".addslashes($v_products_short_desc[$key])."',";
 							}
-								$sql .= "'" . zen_db_input($v_products_url[$key]) . "')";
+								$sql .= "'".addslashes($v_products_url[$key])."')";
+							
+							
+							
+							
+							
+							
+							
 							$result = ep_4_query($sql);
 						} else { // already in the description, update it
 							$sql = "UPDATE ".TABLE_PRODUCTS_DESCRIPTION." SET
-									products_name='" . zen_db_input($name) . "',
-									products_description='" . zen_db_input($v_products_description[$key]) . "',
-									";
+									products_name        ='".addslashes($name)."',
+									products_description ='".addslashes($v_products_description[$key])."',";
 							if ($ep_supported_mods['psd'] == true) {
-								$sql .= " products_short_desc='" . zen_db_input($v_products_short_desc[$key]) . "',";
+								$sql .= " products_short_desc = '".addslashes($v_products_short_desc[$key])."',";
 							}
-							$sql .= " products_url='" . zen_db_input($v_products_url[$key]) . "'
-								WHERE
-									products_id = '$v_products_id' AND
-									language_id = '$key'";
+							$sql .= " products_url='".addslashes($v_products_url[$key])."'
+								WHERE products_id = '".$v_products_id."' AND language_id = '".$key."'";
 							$result = ep_4_query($sql);
 						}
 					}
@@ -767,8 +812,8 @@ if ( substr($file['name'],0,14) == "PriceBreaks-EP") {
 			
 
 //==================================================================================================================================			
-			// langer - Assign product to category if linked
-			// chadd - this is buggy as instances occur when the master category id is INCORRECT!
+			// Assign product to category if linked
+			// chadd - this is buggy as instances occur when the master category id is INCORRECT!?
 			if (isset($v_categories_id)) { // find out if this product is listed in the category given
 				$result_incategory = ep_4_query('SELECT
 					'.TABLE_PRODUCTS_TO_CATEGORIES.'.products_id,
@@ -781,7 +826,7 @@ if ( substr($file['name'],0,14) == "PriceBreaks-EP") {
 	
 				if (mysql_num_rows($result_incategory) == 0) { // nope, this is a new category for this product
 					$res1 = ep_4_query('INSERT INTO '.TABLE_PRODUCTS_TO_CATEGORIES.' (products_id, categories_id)
-								VALUES ("' . $v_products_id . '", "' . $v_categories_id . '")');
+								VALUES ("'.$v_products_id.'", "'.$v_categories_id.'")');
 				} else { // already in this category, nothing to do!
 				}
 			}
@@ -831,44 +876,64 @@ if ( substr($file['name'],0,14) == "PriceBreaks-EP") {
 					$specials_print .= sprintf(EASYPOPULATE_4_SPECIALS_NEW, $v_products_model, substr(strip_tags($v_products_name[$epdlanguage_id]), 0, 10), $v_products_price , $v_specials_price);
 				} else { // existing product
 					if ($v_specials_price == '0') { // delete of existing requested
-						$db->Execute("delete from " . TABLE_SPECIALS . " where products_id = '" . (int)$v_products_id . "'");
+						$db->Execute("DELETE FROM ".TABLE_SPECIALS." WHERE products_id = '".(int)$v_products_id."'");
 						$specials_print .= sprintf(EASYPOPULATE_4_SPECIALS_DELETE, $v_products_model);
 						continue;
 					}
 					// just make an update
 					$sql = "UPDATE " . TABLE_SPECIALS . " SET
-						specials_new_products_price	= '" . $v_specials_price . "',
+						specials_new_products_price	= '".$v_specials_price."',
 						specials_last_modified		= now(),
-						specials_date_available		= '" . $v_specials_date_avail . "',
-						expires_date				= '" . $v_specials_expires_date . "',
+						specials_date_available		= '".$v_specials_date_avail."',
+						expires_date				= '".$v_specials_expires_date."',
 						status						= '1'
-						WHERE products_id			= '" . (int)$v_products_id . "'";
+						WHERE products_id			= '".(int)$v_products_id."'";
 					ep_4_query($sql);
 					$specials_print .= sprintf(EASYPOPULATE_4_SPECIALS_UPDATE, $v_products_model, substr(strip_tags($v_products_name[$epdlanguage_id]), 0, 10), $v_products_price , $v_specials_price);
 				} // we still have our special here
 			} // end specials for this product
+			
+			// this is a test chadd - 12-08-2011
+			// why not just update price_sorter after each product?
+			// better yet, why not ONLY call if pricing was updated
+			// ALL these affect pricing: products_tax_class_id, products_price, products_priced_by_attribute, product_is_free, product_is_call
+			zen_update_products_price_sorter($v_products_id);
+			
 		} else {
 			// this record is missing the product_model
 			$display_output .= EASYPOPULATE_4_DISPLAY_RESULT_NO_MODEL;
-			foreach ($items as $col => $langer) {
+			foreach ($items as $col => $summary) {
 				if ($col == $filelayout['v_products_model']) continue;
-				$display_output .= print_el_4($langer);
+				$display_output .= print_el_4($summary);
 			}
 		} // end of row insertion code
 	} // end of Mail While Loop
 	} // conditional IF statement
 	
-	$display_output .= EASYPOPULATE_4_DISPLAY_RESULT_UPLOAD_COMPLETE;
+	$display_output .= '<br>Finished Processing Import File';
+	
+	$display_output .= '<br>Updated records: '.$ep_update_count;
+	$display_output .= '<br>New Imported records: '.$ep_import_count;
+	$display_output .= '<br>Errors Detected: '.$ep_error_count;
+	$display_output .= '<br>Warnings Detected: '.$ep_warning_count;
+	
+	$display_output .= '<br>Memory Usage: '.memory_get_usage(); 
+	$display_output .= '<br>Memory Peak: '.memory_get_peak_usage();
+	
+	// benchmarking
+	$time_end = microtime(true);
+	$time = $time_end - $time_start;	
+	$display_output .= '<br>Execution Time: '. $time . ' seconds.';
 }	
 	
 	// Post-upload tasks start
-	ep_4_update_prices(); // update price sorter
+	// ep_4_update_prices(); // update price sorter - THIS IS A PROBLEM WITH WEBSITE WITH MASSIVE DATA!
 	
 	// specials status = 0 if date_expires is past.
+	// HEY!!! THIS ALSO CALLS zen_update_products_price_sorter($v_products_id); !!!!!!
 	if ($has_specials == true) { // specials were in upload so check for expired specials
 		zen_expire_specials();
 	}
 	// Post-upload tasks end
 } // END FILE UPLOADS
-
 ?>
