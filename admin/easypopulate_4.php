@@ -42,7 +42,7 @@ $ep_debug_logging_all = false; // do not comment out.. make false instead
 /* Test area end */
 
 // Current EP Version - Modded by Chadd
-$curver              = '4.0.16 - Beta 12-11-2011';
+$curver              = '4.0.17 - Beta 12-15-2011';
 $display_output      = ''; // results of import displayed after script run
 $ep_dltype           = NULL;
 $ep_dlmethod         = NULL;
@@ -53,9 +53,6 @@ $has_specials        = false;
 
 // all mods go in this array as 'name' => 'true' if exist. eg $ep_supported_mods['psd'] => true means it exists.
 $ep_supported_mods = array();
-
-// config keys array - must contain any expired keys to ensure they are deleted on install or removal
-$ep_keys = ep_4_setkeys();
 
 // default smart-tags setting when enabled. This can be added to.
 $smart_tags = array("\r\n|\r|\n" => '<br />', ); // need to check into this more

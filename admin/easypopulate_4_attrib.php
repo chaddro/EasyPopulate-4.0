@@ -14,11 +14,11 @@ $products_options_values_id = 1;
 
 			// READ products_id and products_model from TABLE_PRODUCTS
 			// Since products_model must be unique (for EP4 at least), this query can be LIMIT 1 
-			$query ="SELECT * FROM ".TABLE_PRODUCTS." WHERE (products_model = '" . zen_db_input($v_products_model) . "') LIMIT 1";
+			$query ="SELECT * FROM ".TABLE_PRODUCTS." WHERE (products_model = '" . addslashes($v_products_model) . "') LIMIT 1";
 			$result = ep_4_query($query);
 
 			if (mysql_num_rows($result) == 0)  { // products_model is not in TABLE_PRODUCTS
-				echo "SKIPPED. model not found:".$v_products_model."<br>"; // NEED TO ERROR OUT OF LOOP AND GIVE WARNING, CONTINUE ON REST OF FILE
+				echo "SKIPPED: model not found:".$v_products_model."<br>"; // NEED TO ERROR OUT OF LOOP AND GIVE WARNING, CONTINUE ON REST OF FILE
 				continue; // skip current record (returns to while #1)
 			}
 
@@ -59,19 +59,19 @@ $products_options_values_id = 1;
 				// Zencart, however, will let you define multiple option names with the same products_options_name value.
 				// This works in zencart because products_options_name is not the key, products_options_id is the key.
 				// To auto populate the attributes it is easier to use just products_options_name uniquely, otherwise you will have to also define the key.
-				// This CAN be done, but it adds to the complexity if the import logic.
+				// This CAN be done, but it adds to the complexity of the import logic.
 				// 
 					$query  = "SELECT products_options_id, products_options_name FROM ".TABLE_PRODUCTS_OPTIONS." WHERE (products_options_name = '" . $v_products_options_name . "')";
 					$result = ep_4_query($query);
 		
 				// insert new products_options_name
 					if ($row = mysql_fetch_array($result))  { 
-							$v_products_options_id = $row['products_options_id'];
+						$v_products_options_id = $row['products_options_id'];
 				// get current products_options_id
 					} else { // products_options_name is not in TABLE_PRODUCTS so ADD it
 						$sql_max = "SELECT MAX(products_options_id) FROM ".TABLE_PRODUCTS_OPTIONS;
-						$result_max  = ep_4_query($sql_max);
-						$row_max    = mysql_fetch_array($result_max);
+						$result_max = ep_4_query($sql_max);
+						$row_max = mysql_fetch_array($result_max);
 						
 						$v_products_options_id = $row_max[0]+1;
 						
@@ -80,12 +80,21 @@ $products_options_values_id = 1;
 							$v_products_options_id=1; 
 						}
 						
-						// echo '<br>v_product_options_id max value: '.$v_products_options_id.'<br>';
-											
-						$sql = "INSERT INTO ".TABLE_PRODUCTS_OPTIONS." 
-							(products_options_id, language_id, products_options_name, products_options_type)
-							VALUES ('$v_products_options_id', '$language_id', '" .$v_products_options_name. "', '" .zen_db_input($v_products_options_type). "')";
-						$errorcheck = ep_4_query($sql); 
+						// echo '<br>v_product_options_id max value: '.$v_products_options_id.'<br>';					
+						// HERE ======> This resolves the missing entries for additionally defined languages beyond [1]			
+						foreach ($langcode as $key => $lang) {
+							$sql = "INSERT INTO ".TABLE_PRODUCTS_OPTIONS." 
+								(products_options_id, language_id, products_options_name, products_options_type)
+								VALUES
+								('$v_products_options_id', '".$lang['id']."', '".$v_products_options_name."', '".zen_db_input($v_products_options_type)."')";
+							$errorcheck = ep_4_query($sql);
+						}
+		/* old code 
+		$sql = "INSERT INTO ".TABLE_PRODUCTS_OPTIONS." 
+			(products_options_id, language_id, products_options_name, products_options_type)
+			VALUES ('$v_products_options_id', '$language_id', '".$v_products_options_name."', '".zen_db_input($v_products_options_type)."')";
+		$errorcheck = ep_4_query($sql);
+		*/
 					}
 //
 // BEGIN: PRODUCTS OPTIONS VALUES
@@ -98,19 +107,20 @@ $products_options_values_id = 1;
 			// Get max index id for TABLE_PRODUCTS_OPTIONS_VALUES_TO_PRODUCTS_OPTIONS
 					$sql_max2 = "SELECT MAX(products_options_values_to_products_options_id) max FROM ".TABLE_PRODUCTS_OPTIONS_VALUES_TO_PRODUCTS_OPTIONS;
  					$result2 = ep_4_query($sql_max2);
-					$row2    = mysql_fetch_array($result2);
+					$row2 = mysql_fetch_array($result2);
 					$products_options_values_to_products_options_id = $row2['max']+1;
-					if (!is_numeric($products_options_values_to_products_options_id) ) { 
+					if ( !is_numeric($products_options_values_to_products_options_id) ) { 
 						$products_options_values_to_products_options_id=1; }
 					// echo '<br>products_options_values_to_products_options_id: '.$products_options_values_to_products_options_id.'<br>' ;
 						
 			// Get max index id for TABLE_PRODUCTS_OPTIONS_VALUES
 					$sql_max3 = "SELECT MAX(products_options_values_id) max FROM ".TABLE_PRODUCTS_OPTIONS_VALUES;
  					$result3 = ep_4_query($sql_max3);
-					$row3    = mysql_fetch_array($result3);
+					$row3 = mysql_fetch_array($result3);
 					$products_options_values_id = $row3['max']+1;
 					if (!is_numeric($products_options_values_id) ) { 
-						$products_options_values_id=1; }						
+						$products_options_values_id=1;
+					}						
 					// echo '<br>products_options_values_id: '.$products_options_values_id.'<br>' ;
 
 					$exclude_array = array(1, 4); // exclude 1=TEXT, 4=FILE are special cases and are assigned products_options_values=0
@@ -129,27 +139,43 @@ $products_options_values_id = 1;
 								b.products_options_values_id,
 								b.products_options_values_name
 								FROM "
-								.TABLE_PRODUCTS_OPTIONS_VALUES_TO_PRODUCTS_OPTIONS. " as a, "
-								.TABLE_PRODUCTS_OPTIONS_VALUES. " as b 
+								.TABLE_PRODUCTS_OPTIONS_VALUES_TO_PRODUCTS_OPTIONS." as a, "
+								.TABLE_PRODUCTS_OPTIONS_VALUES." as b 
 								WHERE 
 								a.products_options_id = '".$v_products_options_id."' AND
 								a.products_options_values_id   = b.products_options_values_id AND
-								b.products_options_values_name = '". $values_names[$values_names_index]."'";
+								b.products_options_values_name = '".$values_names[$values_names_index]."'";
 
  							$result4 = ep_4_query($sql);
 			 				// if $result4 == 0, products_options_values_name not found
 							if (mysql_num_rows($result4) == 0)  { // products_options_name is not in TABLE_PRODUCTS_OPTIONS_VALUES
 								// insert New products_options_values_name
-								$errorcheck = ep_4_query("INSERT INTO ".TABLE_PRODUCTS_OPTIONS_VALUES." 
+								// HERE ===========> changed to add language entries for all defined languages					
+								foreach ($langcode as $key => $lang) {
+								$sql = "INSERT INTO ".TABLE_PRODUCTS_OPTIONS_VALUES." 
 									(products_options_values_id, 
 									language_id, 
 									products_options_values_name, 
 									products_options_values_sort_order)
 									VALUES ( 
 									'$products_options_values_id', 
-									'$language_id', 
+									'".$lang['id']."', 
 									'".$values_names[$values_names_index]."',
-									'$products_options_values_sort_order')");
+									'$products_options_values_sort_order')";
+									$errorcheck = ep_4_query($sql);
+								}
+					/* old code
+							$errorcheck = ep_4_query("INSERT INTO ".TABLE_PRODUCTS_OPTIONS_VALUES." 
+								(products_options_values_id, 
+								language_id, 
+								products_options_values_name, 
+								products_options_values_sort_order)
+								VALUES ( 
+								'$products_options_values_id', 
+								'$language_id', 
+								'".$values_names[$values_names_index]."',
+								'$products_options_values_sort_order')");
+					*/
 							} else { // this is an existing products_options_values_name assisgned to this products_options_name
 							}
 						}
@@ -192,9 +218,9 @@ $products_options_values_id = 1;
 							$result5 = ep_4_query($sql5);
 			 				// if $result5 == 0, combination not found
 							if (mysql_num_rows($result5) == 0)  { // combination is not in TABLE_PRODUCTS_OPTIONS_VALUES_TO_PRODUCTS_OPTIONS
-							  $errorcheck = ep_4_query("INSERT INTO ".TABLE_PRODUCTS_OPTIONS_VALUES_TO_PRODUCTS_OPTIONS."
-								  (products_options_values_to_products_options_id, products_options_id, products_options_values_id) 
-								  VALUES('$products_options_values_to_products_options_id', '$v_products_options_id', '$products_options_values_id')");
+								$errorcheck = ep_4_query("INSERT INTO ".TABLE_PRODUCTS_OPTIONS_VALUES_TO_PRODUCTS_OPTIONS."
+									(products_options_values_to_products_options_id, products_options_id, products_options_values_id) 
+									VALUES('$products_options_values_to_products_options_id', '$v_products_options_id', '$products_options_values_id')");
 							} else { // duplicate entry, skip
 							}
 						}
@@ -203,9 +229,9 @@ $products_options_values_id = 1;
 						// TABLE: products_attributes
 						// Finish up by associating the correct set of options with as an attribute_id
 						if (in_array($v_products_options_type, $exclude_array)) { // 
-								$errorcheck = ep_4_query("INSERT INTO ".TABLE_PRODUCTS_ATTRIBUTES."
-								(products_id, options_id, options_values_id) 
-								VALUES ('".$v_products_id."', '".$v_products_options_id."','0')");
+							$errorcheck = ep_4_query("INSERT INTO ".TABLE_PRODUCTS_ATTRIBUTES."
+							(products_id, options_id, options_values_id) 
+							VALUES ('".$v_products_id."', '".$v_products_options_id."','0')");
 						} else {
 							$sql5 = "SELECT 
 								a.products_options_id,

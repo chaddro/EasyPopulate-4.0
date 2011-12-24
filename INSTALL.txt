@@ -13,6 +13,10 @@ INSTALLATION:
 2. Upload all files in the "admin" directory to your site maintaining directory structure.
    No core files are changed.
 
+	a) If you are using zencart 1.3.8/1.3.9, you need to also upload the additional files in the "zencart 1.3 extra files" folder. 
+
+	b)  If you are using zencart 1.5, you need to also upload the additional files in the "zencart 1.5 extra files" folder. 
+
 3. Login to your store's admin. Under Tools you will see a new entry "Easy Populate 4". 
    (If you do not see this entry, you did not upload your files correctly.)
 

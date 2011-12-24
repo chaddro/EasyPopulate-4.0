@@ -38,7 +38,6 @@ $filelayout = array();
 $filelayout_sql = '';
 $filelayout = ep_4_set_filelayout($ep_dltype,  $filelayout_sql, $sql_filter, $langcode, $ep_supported_mods); 
 $filelayout = array_flip($filelayout);
-
 // END: File Download Layouts
 
 // Create export file name
@@ -165,6 +164,26 @@ fwrite($fp, $column_headers); // write column headers
 				$row['v_categories_description_'.$lid] = $row2['categories_description'];
 			} // foreach
 		} // if ($ep_dltype ...
+	
+		// Multi-Lingual products_options_name and products_options_values_name
+		if ($ep_dltype == 'attrib_basic_simple') {
+			// names and descriptions require that we loop thru all languages that are turned on in the store
+			foreach ($langcode as $key => $lang) {
+				$lid = $lang['id'];
+				// products_options_name
+				$sqlMeta = 'SELECT * FROM '.TABLE_PRODUCTS_OPTIONS.' WHERE products_options_id = '.$row['v_products_options_id'].' AND language_id = '.$lid.' '; // removed LIMIT 1
+				$resultMeta = ep_4_query($sqlMeta) or die(mysql_error());
+				$rowMeta    = mysql_fetch_array($resultMeta);
+				$row['v_products_options_name_'. $lid] = $rowMeta['products_options_name'];
+
+				// products_options_values_name
+				$sql2    = 'SELECT * FROM '.TABLE_PRODUCTS_OPTIONS_VALUES.' WHERE products_options_values_id = '.$row['v_products_options_values_id'].' AND language_id = '.$lid.' '; // removed limit 1
+				$result2 = ep_4_query($sql2);
+				$row2    = mysql_fetch_array($result2);
+				$row['v_products_options_name_'.$lid]        = $row2['products_options_name'];
+			} // foreach
+		} // if ($ep_dltype ...	
+		
 		
 		
 		// CATEGORIES EXPORT
@@ -204,7 +223,7 @@ fwrite($fp, $column_headers); // write column headers
 			} // foreach
 		} // if() delimited categories path
 
-		// MANUFACTURERS EXPORT - THIS NEEDS MULTI-LINGUAL SUPPORT!
+		// MANUFACTURERS EXPORT - THIS NEEDS MULTI-LINGUAL SUPPORT LIKE EVERYTHING ELSE!
 		// if the filelayout says we need a manfacturers name, get it for download file
 		if (isset($filelayout['v_manufacturers_name'])) {
 			if ( ($row['v_manufacturers_id'] != '0') && ($row['v_manufacturers_id'] != '') ) { // '0' is correct, but '' NULL is possible

@@ -2,7 +2,7 @@
 
 function ep_4_get_languages() {
 	$langcode = array();
-	$languages_query = ep_4_query("SELECT languages_id, name, code FROM " . TABLE_LANGUAGES . " ORDER BY sort_order");
+	$languages_query = ep_4_query("SELECT languages_id, name, code FROM ".TABLE_LANGUAGES." ORDER BY sort_order");
 	$i = 1;
 	while ($ep_languages = mysql_fetch_array($languages_query)) {
 		$ep_languages_array[$i++] = array(
@@ -21,15 +21,14 @@ function ep_4_set_filelayout($ep_dltype, &$filelayout_sql, $sql_filter, $langcod
 		// The file layout is dynamically made depending on the number of languages
 		$filelayout[] = 'v_products_model';
 		$filelayout[] = 'v_products_image';
-		$filelayout[] = 'v_products_image_upload'; // boolean 1-upload, 0-skip (default)
 		foreach ($langcode as $key => $lang) { // create variables for each language id
 			$l_id = $lang['id'];
-			$filelayout[] = 'v_products_name_' . $l_id;
-			$filelayout[] = 'v_products_description_' . $l_id;
+			$filelayout[] = 'v_products_name_'.$l_id;
+			$filelayout[] = 'v_products_description_'.$l_id;
 			if ($ep_supported_mods['psd'] == true) { // products short description mod
-				$filelayout[] = 'v_products_short_desc_' . $l_id;
+				$filelayout[] = 'v_products_short_desc_'.$l_id;
 			}
-			$filelayout[] = 'v_products_url_' . $l_id;
+			$filelayout[] = 'v_products_url_'.$l_id;
 		} 
 		$filelayout[] = 'v_specials_price';
 		$filelayout[] = 'v_specials_date_avail';
@@ -57,7 +56,7 @@ function ep_4_set_filelayout($ep_dltype, &$filelayout_sql, $sql_filter, $langcod
 		// NEW code for 'unlimited' category depth - 1 Category Column for each installed Language
 		foreach ($langcode as $key => $lang) { // create categories variables for each language id
 			$l_id = $lang['id'];
-			$filelayout[] = 'v_categories_name_' . $l_id;
+			$filelayout[] = 'v_categories_name_'.$l_id;
 		} 
 		$filelayout[] = 'v_tax_class_title';
 		$filelayout[] = 'v_status'; // this should be v_products_status for clarity
@@ -69,9 +68,9 @@ function ep_4_set_filelayout($ep_dltype, &$filelayout_sql, $sql_filter, $langcod
 		$filelayout[] = 'v_metatags_title_tagline_status';
 		foreach ($langcode as $key => $lang) { // create variables for each language id
 			$l_id = $lang['id'];
-			$filelayout[] = 'v_metatags_title_' . $l_id;
-			$filelayout[] = 'v_metatags_keywords_' . $l_id;
-			$filelayout[] = 'v_metatags_description_' . $l_id;
+			$filelayout[] = 'v_metatags_title_'.$l_id;
+			$filelayout[] = 'v_metatags_keywords_'.$l_id;
+			$filelayout[] = 'v_metatags_description_'.$l_id;
 		} 
 		
 		$filelayout_sql = 'SELECT
@@ -132,7 +131,7 @@ function ep_4_set_filelayout($ep_dltype, &$filelayout_sql, $sql_filter, $langcod
 			p.products_price  as v_products_price,';
 
 		if ($ep_supported_mods['uom'] == true) { // price UOM mod
-			$filelayout_sql .=  'p.products_price_uom as v_products_price_uom,'; // to soon be changed to v_products_price_uom
+			$filelayout_sql .= 'p.products_price_uom as v_products_price_uom,'; // to soon be changed to v_products_price_uom
 		} 
 		$filelayout_sql .= 'p.products_tax_class_id as v_tax_class_id,
 			p.products_quantity as v_products_quantity
@@ -156,8 +155,8 @@ function ep_4_set_filelayout($ep_dltype, &$filelayout_sql, $sql_filter, $langcod
 		// must be a better way to get the maximum discounts used at any given time
 		for ($i=1;$i<EASYPOPULATE_4_CONFIG_MAX_QTY_DISCOUNTS+1;$i++) {
 			// $filelayout[] = 'v_discount_id_' . $i; // chadd - no longer needed
-			$filelayout[] = 'v_discount_qty_' . $i;
-			$filelayout[] = 'v_discount_price_' . $i;
+			$filelayout[] = 'v_discount_qty_'.$i;
+			$filelayout[] = 'v_discount_price_'.$i;
 		}
 		$filelayout_sql = 'SELECT
 			p.products_id     as v_products_id,
@@ -166,7 +165,7 @@ function ep_4_set_filelayout($ep_dltype, &$filelayout_sql, $sql_filter, $langcod
 			p.products_price  as v_products_price,';
 			
 		if ($ep_supported_mods['uom'] == true) { // price UOM mod
-			$filelayout_sql .=  'p.products_price_uom as v_products_price_uom,'; // to soon be changed to v_products_price_uom
+			$filelayout_sql .= 'p.products_price_uom as v_products_price_uom,'; // to soon be changed to v_products_price_uom
 		} 
 		$filelayout_sql .= 'p.products_discount_type as v_products_discount_type,
 			p.products_discount_type_from as v_products_discount_type_from
@@ -180,7 +179,7 @@ function ep_4_set_filelayout($ep_dltype, &$filelayout_sql, $sql_filter, $langcod
 		// NEW code for unlimited category depth - 1 Category Column for each installed Language
 		foreach ($langcode as $key => $lang) { // create categories variables for each language id
 			$l_id = $lang['id'];
-			$filelayout[] = 'v_categories_name_' . $l_id;
+			$filelayout[] = 'v_categories_name_'.$l_id;
 		} 
 		$filelayout_sql = 'SELECT
 			p.products_id      as v_products_id,
@@ -204,14 +203,14 @@ function ep_4_set_filelayout($ep_dltype, &$filelayout_sql, $sql_filter, $langcod
 		$filelayout[] = 'v_categories_image';
 		foreach ($langcode as $key => $lang) { // create categories variables for each language id
 			$l_id = $lang['id'];
-			$filelayout[] = 'v_categories_name_' . $l_id;
-			$filelayout[] = 'v_categories_description_' . $l_id;
+			$filelayout[] = 'v_categories_name_'.$l_id;
+			$filelayout[] = 'v_categories_description_'.$l_id;
 		} 
 		foreach ($langcode as $key => $lang) { // create metatags variables for each language id
 			$l_id = $lang['id'];
-			$filelayout[]   = 'v_metatags_title_' . $l_id;
-			$filelayout[]   = 'v_metatags_keywords_' . $l_id;
-			$filelayout[]   = 'v_metatags_description_' . $l_id;
+			$filelayout[]   = 'v_metatags_title_'.$l_id;
+			$filelayout[]   = 'v_metatags_keywords_'.$l_id;
+			$filelayout[]   = 'v_metatags_description_'.$l_id;
 		} 
 		$filelayout_sql = 'SELECT
 			c.categories_id          AS v_categories_id,
@@ -301,15 +300,24 @@ function ep_4_set_filelayout($ep_dltype, &$filelayout_sql, $sql_filter, $langcod
 			a.options_values_id = v.products_options_values_id';
 		break;
 
-	case 'attrib_basic_simple': // simplified sinlge-line attributes
+	case 'attrib_basic_simple': // simplified sinlge-line attributes ... eventually!
 		// $filelayout[] =	'v_products_attributes_id';
 		// $filelayout[] =	'v_products_id';
 		$filelayout[] =	'v_products_model'; // product model from table PRODUCTS
 		// $filelayout[] =	'v_options_id';
 		$filelayout[] =	'v_products_options_name'; // options name from table PRODUCTS_OPTIONS
+		foreach ($langcode as $key => $lang) { // create categories variables for each language id
+			$l_id = $lang['id'];
+			$filelayout[] = 'v_products_options_name_'.$l_id;
+		} 
 		$filelayout[] =	'v_products_options_type'; // 0-drop down, 1=text , 2=radio , 3=checkbox, 4=file, 5=read only 
 		// $filelayout[] =	'v_options_values_id';
+		
 		$filelayout[] =	'v_products_options_values_name'; // options values name from table PRODUCTS_OPTIONS_VALUES
+		foreach ($langcode as $key => $lang) { // create categories variables for each language id
+			$l_id = $lang['id'];
+			$filelayout[] = 'v_products_options_values_name_'.$l_id;
+		} 
 		// a = table PRODUCTS_ATTRIBUTES
 		// p = table PRODUCTS
 		// o = table PRODUCTS_OPTIONS
@@ -317,12 +325,12 @@ function ep_4_set_filelayout($ep_dltype, &$filelayout_sql, $sql_filter, $langcod
 		$filelayout_sql = 'SELECT
 			a.products_attributes_id            as v_products_attributes_id,
 			a.products_id                       as v_products_id,
-			p.products_model				    as v_products_model,
 			a.options_id                        as v_options_id,
+			a.options_values_id                 as v_options_values_id,
+			p.products_model				    as v_products_model,
 			o.products_options_id               as v_products_options_id,
 			o.products_options_name             as v_products_options_name,
 			o.products_options_type             as v_products_options_type,
-			a.options_values_id                 as v_options_values_id,
 			v.products_options_values_id        as v_products_options_values_id,
 			v.products_options_values_name      as v_products_options_values_name
 			FROM '
@@ -333,7 +341,8 @@ function ep_4_set_filelayout($ep_dltype, &$filelayout_sql, $sql_filter, $langcod
 			WHERE
 			a.products_id       = p.products_id AND
 			a.options_id        = o.products_options_id AND
-			a.options_values_id = v.products_options_values_id';
+			a.options_values_id = v.products_options_values_id AND
+			o.language_id       = v.language_id';
 		break;
 
 	case 'attrib_basic_detailed': // detailed multi-line attributes
@@ -444,16 +453,17 @@ return $filelayout;;
 
 
 if (!function_exists(zen_get_sub_categories)) {
-  function zen_get_sub_categories(&$categories, $categories_id) {
-    $sub_categories_query = mysql_query("select categories_id from " . TABLE_CATEGORIES . " where parent_id = '" . (int)$categories_id . "'");
-    while ($sub_categories = mysql_fetch_array($sub_categories_query)) {
-      if ($sub_categories['categories_id'] == 0) return true;
-      $categories[sizeof($categories)] = $sub_categories['categories_id'];
-      if ($sub_categories['categories_id'] != $categories_id) {
-        zen_get_sub_categories($categories, $sub_categories['categories_id']);
-      }
-    }
-  }
+	function zen_get_sub_categories(&$categories, $categories_id) {
+		$sub_categories_query = mysql_query("SELECT categories_id FROM ".TABLE_CATEGORIES.
+			" WHERE parent_id = '".(int)$categories_id."'");
+		while ($sub_categories = mysql_fetch_array($sub_categories_query)) {
+			if ($sub_categories['categories_id'] == 0) return true;
+			$categories[sizeof($categories)] = $sub_categories['categories_id'];
+			if ($sub_categories['categories_id'] != $categories_id) {
+				zen_get_sub_categories($categories, $sub_categories['categories_id']);
+			}
+		}
+	}
 }
 
 
@@ -495,7 +505,8 @@ function ep_4_copy_uploaded_file($filename, $target) {
 
 function ep_4_get_tax_class_rate($tax_class_id) {
 	$tax_multiplier = 0;
-	$tax_query = mysql_query("select SUM(tax_rate) as tax_rate from " . TABLE_TAX_RATES . " WHERE  tax_class_id = '" . zen_db_input($tax_class_id) . "' GROUP BY tax_priority");
+	$tax_query = mysql_query("SELECT SUM(tax_rate) AS tax_rate FROM ".TABLE_TAX_RATES.
+		" WHERE tax_class_id = '".zen_db_input($tax_class_id)."' GROUP BY tax_priority");
 	if (mysql_num_rows($tax_query)) {
 		while ($tax = mysql_fetch_array($tax_query)) {
 			$tax_multiplier += $tax['tax_rate'];
@@ -505,14 +516,15 @@ function ep_4_get_tax_class_rate($tax_class_id) {
 }
 
 function ep_4_get_tax_title_class_id($tax_class_title) {
-	$classes_query = mysql_query("select tax_class_id from " . TABLE_TAX_CLASS . " WHERE tax_class_title = '" . zen_db_input($tax_class_title) . "'" );
+	$classes_query = mysql_query("SELECT tax_class_id FROM ".TABLE_TAX_CLASS.
+		" WHERE tax_class_title = '".zen_db_input($tax_class_title)."'");
 	$tax_class_array = mysql_fetch_array($classes_query);
 	$tax_class_id = $tax_class_array['tax_class_id'];
 	return $tax_class_id ;
 }
 
 function print_el_4($item2) {
-	$output_display = substr(strip_tags($item2), 0, 10) . " | ";
+	$output_display = substr(strip_tags($item2), 0, 10)." | ";
 	return $output_display;
 }
 
@@ -521,6 +533,7 @@ function print_el1_4($item2) {
 	return $output_display;
 }
 
+// this function needs further review
 function smart_tags_4($string,$tags,$crsub,$doit) {
 	if ($doit == true) {
 		foreach ($tags as $tag => $new) {
@@ -547,72 +560,84 @@ function ep_4_check_table_column($table_name,$column_name) {
 }
 
 function ep_4_remove_product($product_model) {
-  global $db, $ep_debug_logging, $ep_debug_logging_all, $ep_stack_sql_error;
-  $sql = "select products_id from " . TABLE_PRODUCTS . " where products_model = '" . zen_db_input($product_model) . "'";
-  $products = $db->Execute($sql);
-  if (mysql_errno()) {
-	$ep_stack_sql_error = true;
-	if ($ep_debug_logging == true) {
-		$string = "MySQL error ".mysql_errno().": ".mysql_error()."\nWhen executing:\n$sql\n";
-		write_debug_log($string);
- 	  }
+ 	global $db, $ep_debug_logging, $ep_debug_logging_all, $ep_stack_sql_error;
+	$sql = "SELECT products_id FROM ".TABLE_PRODUCTS." WHERE products_model = '".zen_db_input($product_model)."'";
+	$products = $db->Execute($sql);
+	if (mysql_errno()) {
+		$ep_stack_sql_error = true;
+		if ($ep_debug_logging == true) {
+			$string = "MySQL error ".mysql_errno().": ".mysql_error()."\nWhen executing:\n$sql\n";
+			write_debug_log($string);
+		}
 	} elseif ($ep_debug_logging_all == true) {
 		$string = "MySQL PASSED\nWhen executing:\n$sql\n";
 		write_debug_log($string);
 	}
-  while (!$products->EOF) {
-    zen_remove_product($products->fields['products_id']);
-    $products->MoveNext();
-  }
-  return;
+	while (!$products->EOF) {
+		zen_remove_product($products->fields['products_id']);
+		$products->MoveNext();
+	}
+	return;
 }
 
-function ep_4_update_cat_ids() { // reset products master categories ID - I do not believe this works correctly - chadd
-  global $db;
-  $sql = "select products_id from " . TABLE_PRODUCTS;
-  $check_products = $db->Execute($sql);
-  while (!$check_products->EOF) {
-    $sql = "select products_id, categories_id from " . TABLE_PRODUCTS_TO_CATEGORIES . " where products_id='" . $check_products->fields['products_id'] . "'";
-    $check_category = $db->Execute($sql);
-    $sql = "update " . TABLE_PRODUCTS . " set master_categories_id='" . $check_category->fields['categories_id'] . "' where products_id='" . $check_products->fields['products_id'] . "'";
-    $update_viewed = $db->Execute($sql);
-    $check_products->MoveNext();
-  }
+// DEPRECATED: no calls to this function!
+// reset products master categories ID - I do not believe this works correctly - chadd
+/*
+function ep_4_update_cat_ids() { 
+	global $db;
+	$sql = "SELECT products_id FROM ".TABLE_PRODUCTS;
+	$check_products = $db->Execute($sql);
+	while (!$check_products->EOF) {
+		$sql = "SELECT products_id, categories_id FROM ".TABLE_PRODUCTS_TO_CATEGORIES.
+			" WHERE products_id='".$check_products->fields['products_id']."'";
+		$check_category = $db->Execute($sql);
+		$sql = "UPDATE ".TABLE_PRODUCTS." SET master_categories_id='".$check_category->fields['categories_id'].
+			"' WHERE products_id='".$check_products->fields['products_id']."'";
+		$update_viewed = $db->Execute($sql);
+		$check_products->MoveNext();
+	}
 }
+*/
 
-function ep_4_update_prices() { // reset products_price_sorter for searches etc. - does this run correctly? Why not use standard zencart call?
-  global $db;
-  $sql = "select products_id from " . TABLE_PRODUCTS;
-  $update_prices = $db->Execute($sql);
-  while (!$update_prices->EOF) {
-    zen_update_products_price_sorter($update_prices->fields['products_id']);
-    $update_prices->MoveNext();
-  }
+// DEPRECATED: no calls to this function!
+// Better to run: zen_update_products_price_sorter($v_products_id);
+// after each new or updated product
+/*
+function ep_4_update_prices() { 
+	global $db;
+	$sql = "SELECT products_id FROM ".TABLE_PRODUCTS;
+	$update_prices = $db->Execute($sql);
+	while (!$update_prices->EOF) {
+		zen_update_products_price_sorter($update_prices->fields['products_id']);
+		$update_prices->MoveNext();
+	}
 }
+*/
 
+// DEPRECATED: no calls to this function
+// I am writing all my own attribute processing code
 function ep_4_update_attributes_sort_order() {
 	global $db;
-	$all_products_attributes= $db->Execute("select p.products_id, pa.products_attributes_id from " .
-	TABLE_PRODUCTS . " p, " .
-	TABLE_PRODUCTS_ATTRIBUTES . " pa " . "
-	where p.products_id= pa.products_id"
-	);
+	$all_products_attributes = $db->Execute("select p.products_id, pa.products_attributes_id from ".
+		TABLE_PRODUCTS." p, ".
+		TABLE_PRODUCTS_ATTRIBUTES." pa "."
+		where p.products_id = pa.products_id");
 	while (!$all_products_attributes->EOF) {
-	  $count++;
-	  //$product_id_updated .= ' - ' . $all_products_attributes->fields['products_id'] . ':' . $all_products_attributes->fields['products_attributes_id'];
-	  zen_update_attributes_products_option_values_sort_order($all_products_attributes->fields['products_id']);
-	  $all_products_attributes->MoveNext();
+		$count++;
+		//$product_id_updated .= ' - ' . $all_products_attributes->fields['products_id'] . ':' . $all_products_attributes->fields['products_attributes_id'];
+		zen_update_attributes_products_option_values_sort_order($all_products_attributes->fields['products_id']);
+		$all_products_attributes->MoveNext();
 	}
 }
 
 
 function write_debug_log_4($string) {
 	global $ep_debug_log_path;
-	$logFile = $ep_debug_log_path . 'ep_debug_log.txt';
-  $fp = fopen($logFile,'ab');
-  fwrite($fp, $string);
-  fclose($fp);
-  return;
+	$logFile = $ep_debug_log_path.'ep_debug_log.txt';
+	$fp = fopen($logFile,'ab');
+	fwrite($fp, $string);
+	fclose($fp);
+	return;
 }
 
 function ep_4_query($query) {
@@ -631,56 +656,75 @@ function ep_4_query($query) {
 	return $result;
 }
 
-function ep_4_setkeys() { // Easypopulate_4 Configuration Keys
-	$ep_keys = array(
-		'EASYPOPULATE_4_CONFIG_TEMP_DIR',
-		'EASYPOPULATE_4_CONFIG_FILE_DATE_FORMAT',
-		'EASYPOPULATE_4_CONFIG_DEFAULT_RAW_TIME',
-		'EASYPOPULATE_4_CONFIG_PRICE_INC_TAX',
-		'EASYPOPULATE_4_CONFIG_ZERO_QTY_INACTIVE',
-		'EASYPOPULATE_4_CONFIG_SMART_TAGS',
-		'EASYPOPULATE_4_CONFIG_ADV_SMART_TAGS',
-		'EASYPOPULATE_4_CONFIG_DEBUG_LOGGING',
-		'EASYPOPULATE_4_CONFIG_MAX_QTY_DISCOUNTS'
-		);
-return $ep_keys;
-}
-
 function install_easypopulate_4() {
 	global $db;
-	$db->Execute("INSERT INTO ".TABLE_CONFIGURATION_GROUP." VALUES ('', 'Easy Populate 4', 'Configuration Options for Easy Populate 4', '1', '1')");
-	$group_id = mysql_insert_id();
-	$db->Execute("UPDATE ".TABLE_CONFIGURATION_GROUP." SET sort_order = ".$group_id." WHERE configuration_group_id = ".$group_id);
-	$db->Execute("INSERT INTO ".TABLE_CONFIGURATION." VALUES 
-		('', 'Uploads Directory',                  'EASYPOPULATE_4_CONFIG_TEMP_DIR', 'temp/', 'Name of directory for your uploads (default: temp/).', ".$group_id.", '0', NULL, now(), NULL, NULL),
-		('', 'Upload File Date Format',            'EASYPOPULATE_4_CONFIG_FILE_DATE_FORMAT', 'm-d-y', 'Choose order of date values that corresponds to your uploads file, usually generated by MS Excel. Raw dates in your uploads file (Eg 2005-09-26 09:00:00) are not affected, and will upload as they are.', ".$group_id.", '1', NULL, now(), NULL, 'zen_cfg_select_option(array(\"m-d-y\", \"d-m-y\", \"y-m-d\"),'),
-		('', 'Default Raw Time',                   'EASYPOPULATE_4_CONFIG_DEFAULT_RAW_TIME', '09:00:00', 'If no time value stipulated in upload file, use this value. Useful for ensuring specials begin after a specific time of the day (default: 09:00:00)', ".$group_id.", '2', NULL, now(), NULL, NULL),
-		('', 'Upload/Download Prices Include Tax', 'EASYPOPULATE_4_CONFIG_PRICE_INC_TAX', 'false', 'Choose to include or exclude tax, depending on how you manage prices outside of Zen Cart.', ".$group_id.", '5', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
-		('', 'Verbose Feedback',                   'EASYPOPULATE_4_CONFIG_VERBOSE', 'true', 'When importing, report all messages. Set to false for only warnings and errors. (default: true).', ".$group_id.", '6', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
-		('', 'Make Zero Qty Products Inactive',    'EASYPOPULATE_4_CONFIG_ZERO_QTY_INACTIVE', 'false', 'When uploading, make the status Inactive for products with zero qty (default: false).', ".$group_id.", '7', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
-		('', 'Smart Tags Replacement of Newlines', 'EASYPOPULATE_4_CONFIG_SMART_TAGS', 'true', 'Allows your description fields in your uploads file to have carriage returns and/or new-lines converted to HTML line-breaks on uploading, thus preserving some rudimentary formatting - Note: this legacy code is disabled until further review. (default: true).', " . $group_id . ", '8', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
-		('', 'Advanced Smart Tags',                'EASYPOPULATE_4_CONFIG_ADV_SMART_TAGS', 'false', 'Allow the use of complex regular expressions to format descriptions, making headings bold, add bullets, etc. Note: legacy code is disabled until further review. (default: false).', " . $group_id . ", '9', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
-		('', 'Debug Logging',                      'EASYPOPULATE_4_CONFIG_DEBUG_LOGGING', 'true', 'Allow Easy Populate to generate an error log on errors only (default: true)', ".$group_id.", '10', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
-		('', 'Maximum Quantity Discounts',         'EASYPOPULATE_4_CONFIG_MAX_QTY_DISCOUNTS', '3', 'Maximum number of quantity discounts (price breaks). Is the number of discount columns in downloaded file (default: 3).', " . $group_id . ", '11', NULL, now(), NULL, NULL),
-		('', 'Split On Number of Records',         'EASYPOPULATE_4_CONFIG_SPLIT_RECORDS', '2000', 'Number of records to split csv files. Used to break large import files into smaller files. Useful on servers with limited resourses. (default: 2000).', " . $group_id . ", '12', NULL, now(), NULL, NULL),
-		('', 'Script Execution Time',              'EASYPOPULATE_4_CONFIG_EXECUTION_TIME', '60', 'Number of seconds for script to run before timeout. May not work on some servers. (default: 60).', " . $group_id . ", '13', NULL, now(), NULL, NULL)
-	");
+	$project = PROJECT_VERSION_MAJOR.'.'.PROJECT_VERSION_MINOR;
+	if ( (substr($project,0,5) == "1.3.8") || (substr($project,0,5) == "1.3.9") ) {
+		$db->Execute("INSERT INTO ".TABLE_CONFIGURATION_GROUP." VALUES ('', 'Easy Populate 4', 'Configuration Options for Easy Populate 4', '1', '1')");
+		$group_id = mysql_insert_id();
+		$db->Execute("UPDATE ".TABLE_CONFIGURATION_GROUP." SET sort_order = ".$group_id." WHERE configuration_group_id = ".$group_id);
+		$db->Execute("INSERT INTO ".TABLE_CONFIGURATION." VALUES 
+			('', 'Uploads Directory',                  'EASYPOPULATE_4_CONFIG_TEMP_DIR', 'temp/', 'Name of directory for your uploads (default: temp/).', ".$group_id.", '0', NULL, now(), NULL, NULL),
+			('', 'Upload File Date Format',            'EASYPOPULATE_4_CONFIG_FILE_DATE_FORMAT', 'm-d-y', 'Choose order of date values that corresponds to your uploads file, usually generated by MS Excel. Raw dates in your uploads file (Eg 2005-09-26 09:00:00) are not affected, and will upload as they are.', ".$group_id.", '1', NULL, now(), NULL, 'zen_cfg_select_option(array(\"m-d-y\", \"d-m-y\", \"y-m-d\"),'),
+			('', 'Default Raw Time',                   'EASYPOPULATE_4_CONFIG_DEFAULT_RAW_TIME', '09:00:00', 'If no time value stipulated in upload file, use this value. Useful for ensuring specials begin after a specific time of the day (default: 09:00:00)', ".$group_id.", '2', NULL, now(), NULL, NULL),
+			('', 'Upload/Download Prices Include Tax', 'EASYPOPULATE_4_CONFIG_PRICE_INC_TAX', 'false', 'Choose to include or exclude tax, depending on how you manage prices outside of Zen Cart.', ".$group_id.", '5', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
+			('', 'Verbose Feedback',                   'EASYPOPULATE_4_CONFIG_VERBOSE', 'true', 'When importing, report all messages. Set to false for only warnings and errors. (default: true).', ".$group_id.", '6', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
+			('', 'Make Zero Qty Products Inactive',    'EASYPOPULATE_4_CONFIG_ZERO_QTY_INACTIVE', 'false', 'When uploading, make the status Inactive for products with zero qty (default: false).', ".$group_id.", '7', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
+			('', 'Smart Tags Replacement of Newlines', 'EASYPOPULATE_4_CONFIG_SMART_TAGS', 'true', 'Allows your description fields in your uploads file to have carriage returns and/or new-lines converted to HTML line-breaks on uploading, thus preserving some rudimentary formatting - Note: this legacy code is disabled until further review. (default: true).', " . $group_id . ", '8', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
+			('', 'Advanced Smart Tags',                'EASYPOPULATE_4_CONFIG_ADV_SMART_TAGS', 'false', 'Allow the use of complex regular expressions to format descriptions, making headings bold, add bullets, etc. Note: legacy code is disabled until further review. (default: false).', " . $group_id . ", '9', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
+			('', 'Debug Logging',                      'EASYPOPULATE_4_CONFIG_DEBUG_LOGGING', 'true', 'Allow Easy Populate to generate an error log on errors only (default: true)', ".$group_id.", '10', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
+			('', 'Maximum Quantity Discounts',         'EASYPOPULATE_4_CONFIG_MAX_QTY_DISCOUNTS', '3', 'Maximum number of quantity discounts (price breaks). Is the number of discount columns in downloaded file (default: 3).', " . $group_id . ", '11', NULL, now(), NULL, NULL),
+			('', 'Split On Number of Records',         'EASYPOPULATE_4_CONFIG_SPLIT_RECORDS', '2000', 'Number of records to split csv files. Used to break large import files into smaller files. Useful on servers with limited resourses. (default: 2000).', " . $group_id . ", '12', NULL, now(), NULL, NULL),
+			('', 'Script Execution Time',              'EASYPOPULATE_4_CONFIG_EXECUTION_TIME', '60', 'Number of seconds for script to run before timeout. May not work on some servers. (default: 60).', " . $group_id . ", '13', NULL, now(), NULL, NULL)
+		");
+	} elseif (substr($project,0,3) == "1.5") {
+		$db->Execute("INSERT INTO ".TABLE_CONFIGURATION_GROUP." VALUES ('', 'Easy Populate 4', 'Configuration Options for Easy Populate 4', '1', '1')");
+		$group_id = mysql_insert_id();
+		$db->Execute("UPDATE ".TABLE_CONFIGURATION_GROUP." SET sort_order = ".$group_id." WHERE configuration_group_id = ".$group_id);
+		
+        zen_register_admin_page('easypopulate_4_config', 'BOX_TOOLS_EASYPOPULATE_4','FILENAME_CONFIGURATION', 'gID='.$group_id, 'configuration', 'Y', 97);
+		$db->Execute("INSERT INTO ".TABLE_CONFIGURATION." VALUES 
+			('', 'Uploads Directory',                  'EASYPOPULATE_4_CONFIG_TEMP_DIR', 'temp/', 'Name of directory for your uploads (default: temp/).', ".$group_id.", '0', NULL, now(), NULL, NULL),
+			('', 'Upload File Date Format',            'EASYPOPULATE_4_CONFIG_FILE_DATE_FORMAT', 'm-d-y', 'Choose order of date values that corresponds to your uploads file, usually generated by MS Excel. Raw dates in your uploads file (Eg 2005-09-26 09:00:00) are not affected, and will upload as they are.', ".$group_id.", '1', NULL, now(), NULL, 'zen_cfg_select_option(array(\"m-d-y\", \"d-m-y\", \"y-m-d\"),'),
+			('', 'Default Raw Time',                   'EASYPOPULATE_4_CONFIG_DEFAULT_RAW_TIME', '09:00:00', 'If no time value stipulated in upload file, use this value. Useful for ensuring specials begin after a specific time of the day (default: 09:00:00)', ".$group_id.", '2', NULL, now(), NULL, NULL),
+			('', 'Upload/Download Prices Include Tax', 'EASYPOPULATE_4_CONFIG_PRICE_INC_TAX', 'false', 'Choose to include or exclude tax, depending on how you manage prices outside of Zen Cart.', ".$group_id.", '5', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
+			('', 'Verbose Feedback',                   'EASYPOPULATE_4_CONFIG_VERBOSE', 'true', 'When importing, report all messages. Set to false for only warnings and errors. (default: true).', ".$group_id.", '6', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
+			('', 'Make Zero Qty Products Inactive',    'EASYPOPULATE_4_CONFIG_ZERO_QTY_INACTIVE', 'false', 'When uploading, make the status Inactive for products with zero qty (default: false).', ".$group_id.", '7', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
+			('', 'Smart Tags Replacement of Newlines', 'EASYPOPULATE_4_CONFIG_SMART_TAGS', 'true', 'Allows your description fields in your uploads file to have carriage returns and/or new-lines converted to HTML line-breaks on uploading, thus preserving some rudimentary formatting - Note: this legacy code is disabled until further review. (default: true).', " . $group_id . ", '8', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
+			('', 'Advanced Smart Tags',                'EASYPOPULATE_4_CONFIG_ADV_SMART_TAGS', 'false', 'Allow the use of complex regular expressions to format descriptions, making headings bold, add bullets, etc. Note: legacy code is disabled until further review. (default: false).', " . $group_id . ", '9', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
+			('', 'Debug Logging',                      'EASYPOPULATE_4_CONFIG_DEBUG_LOGGING', 'true', 'Allow Easy Populate to generate an error log on errors only (default: true)', ".$group_id.", '10', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
+			('', 'Maximum Quantity Discounts',         'EASYPOPULATE_4_CONFIG_MAX_QTY_DISCOUNTS', '3', 'Maximum number of quantity discounts (price breaks). Is the number of discount columns in downloaded file (default: 3).', " . $group_id . ", '11', NULL, now(), NULL, NULL),
+			('', 'Split On Number of Records',         'EASYPOPULATE_4_CONFIG_SPLIT_RECORDS', '2000', 'Number of records to split csv files. Used to break large import files into smaller files. Useful on servers with limited resourses. (default: 2000).', " . $group_id . ", '12', NULL, now(), NULL, NULL),
+			('', 'Script Execution Time',              'EASYPOPULATE_4_CONFIG_EXECUTION_TIME', '60', 'Number of seconds for script to run before timeout. May not work on some servers. (default: 60).', " . $group_id . ", '13', NULL, now(), NULL, NULL)
+		");
+
+	} else { // unsupported version 
+	} 
 }
 
 function remove_easypopulate_4() {
-	global $db, $ep_keys;
-	$sql = "SELECT configuration_group_id FROM ".TABLE_CONFIGURATION_GROUP." WHERE configuration_group_title = 'Easy Populate 4'";
-	$result = ep_4_query($sql);
-	if (mysql_num_rows($result)) { // we have at least 1 EP group
-		$ep_groups =  mysql_fetch_array($result);
-		foreach ($ep_groups as $ep_group) {
-		    $db->Execute("DELETE FROM ".TABLE_CONFIGURATION_GROUP." WHERE configuration_group_id = '".(int)$ep_group."'");
+	global $db;
+	$project = PROJECT_VERSION_MAJOR.'.'.PROJECT_VERSION_MINOR;
+	if ( (substr($project,0,5) == "1.3.8") || (substr($project,0,5) == "1.3.9") ) {
+		$sql = "SELECT configuration_group_id FROM ".TABLE_CONFIGURATION_GROUP." WHERE configuration_group_title = 'Easy Populate 4' LIMIT 1";
+		$result = ep_4_query($sql);
+		if (mysql_num_rows($result)) { 
+			$ep_group_id =  mysql_fetch_array($result);
+			$db->Execute("DELETE FROM ".TABLE_CONFIGURATION." WHERE configuration_group_id = ".$ep_group_id[0]);
+			$db->Execute("DELETE FROM ".TABLE_CONFIGURATION_GROUP." WHERE configuration_group_id = ".$ep_group_id[0]);
 		}
-	}
-	// delete any EP keys found in config
-	foreach ($ep_keys as $ep_key) {
-		@$db->Execute("DELETE FROM ".TABLE_CONFIGURATION." WHERE configuration_key = '".$ep_key."'");
-	}
+	} elseif (substr($project,0,3) == "1.5") {
+		$sql = "SELECT configuration_group_id FROM ".TABLE_CONFIGURATION_GROUP." WHERE configuration_group_title = 'Easy Populate 4' LIMIT 1";
+		$result = ep_4_query($sql);
+		if (mysql_num_rows($result)) { 
+			$ep_group_id =  mysql_fetch_array($result);
+			$db->Execute("DELETE FROM ".TABLE_CONFIGURATION." WHERE configuration_group_id = ".$ep_group_id[0]);
+			$db->Execute("DELETE FROM ".TABLE_CONFIGURATION_GROUP." WHERE configuration_group_id = ".$ep_group_id[0]);
+			$db->Execute("DELETE FROM ".TABLE_ADMIN_PAGES." WHERE page_key = 'easypopulate_4'");
+			$db->Execute("DELETE FROM ".TABLE_ADMIN_PAGES." WHERE page_key = 'easypopulate_4_config'");
+		}
+	} else { // unsupported version 
+	} 
 }
 
 function ep_4_chmod_check($tempdir) {

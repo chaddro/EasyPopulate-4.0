@@ -177,16 +177,17 @@ if ((substr($file['name'],0,15) <> "CategoryMeta-EP") && (substr($file['name'],0
 			WHERE
 			p.products_id      = ptoc.products_id AND
 			p.products_model   = '".addslashes($items[$filelayout['v_products_model']])."' AND
-			ptoc.categories_id = subc.categories_id LIMIT 1";
+			ptoc.categories_id = subc.categories_id";
 			
 		$result	= ep_4_query($sql);
 		$product_is_new = true;
 		
+//============================================================================
 		// this appears to get default values for current v_products_model
 		// inputs: $items array (file data by column #); $filelayout array (headings by column #); 
 		// $row (current TABLE_PRODUCTS data by heading name)
 		while ( $row = mysql_fetch_array($result) ) { // chadd - this executes once?? why use while-loop??
-			$product_is_new = false;
+			$product_is_new = false; // we found products_model in database
 			// Get current products descriptions and categories for this model from database
 			// $row at present consists of current product data for above fields only (in $sql)
 
@@ -199,13 +200,14 @@ if ((substr($file['name'],0,15) <> "CategoryMeta-EP") && (substr($file['name'],0
 				continue 2; // short circuit to next row
 			}
 			
-			// Default values for each language products name, description, url and optional short description
+			// Create variables and assign default values for each language products name, description, url and optional short description
 			foreach ($langcode as $key => $lang) {
 				$sql2 = 'SELECT * FROM '.TABLE_PRODUCTS_DESCRIPTION.' WHERE products_id = '.$row['v_products_id'].' AND language_id = '.$lang['id'];
 				$result2 = ep_4_query($sql2);
 				$row2 = mysql_fetch_array($result2);
+				// create variables (v_products_name_1, v_products_name_2, etc. which corresponds to our column headers) and assign data
 				$row['v_products_name_'.$lang['id']] = $row2['products_name'];
-				$row['v_products_description_' . $lang['id']] = $row2['products_description']; // description assigned
+				$row['v_products_description_'.$lang['id']] = $row2['products_description']; // description assigned
 				// if short descriptions exist
 				if ($ep_supported_mods['psd'] == true) {
 					$row['v_products_short_desc_'.$lang['id']] = $row2['products_short_desc'];
@@ -215,6 +217,7 @@ if ((substr($file['name'],0,15) <> "CategoryMeta-EP") && (substr($file['name'],0
 			
 			// Default values for manufacturers name if exist
 			// Note: need to test for '0' and NULL for best compatibility with older version of EP that set blank manufacturers to NULL
+			// I find it very strange that the Manufacturer's Name is NOT multi-lingual, but he URL IS!
 			if (($row['v_manufacturers_id'] != '0') && ($row['v_manufacturers_id'] != '') ) { // if 0, no manufacturer set
 				$sql2 = 'SELECT manufacturers_name FROM '.TABLE_MANUFACTURERS.' WHERE manufacturers_id = '.$row['v_manufacturers_id'];
 				$result2 = ep_4_query($sql2);
@@ -240,6 +243,7 @@ if ((substr($file['name'],0,15) <> "CategoryMeta-EP") && (substr($file['name'],0
 				$$thisvar = $row[$thisvar];
 			}
 		} // while ( $row = mysql_fetch_array($result) )
+//============================================================================
 	
 		// basic error checking
 		
@@ -251,20 +255,30 @@ if ((substr($file['name'],0,15) <> "CategoryMeta-EP") && (substr($file['name'],0
 			continue;
 		}
 		
-		// NEW products must have a category, else error out
-		// 11-08-2011 NOTE: v_categories_name_1 is incorrect. 
-		// If the default language is something other than "1" (english), this will fail.
-		// this should use $epdlanguage_id
+		// NEW products must have a 'categories_name_'.$lang['id'] column header, else error out
 		if ($product_is_new == true) {
-			if (!zen_not_null(trim($items[$filelayout['v_categories_name_1']])) && zen_not_null($items[$filelayout['v_products_model']])) {
-				// let's skip this new product without a master category..
-				$display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_CATEGORY_NOT_FOUND, $items[$filelayout['v_products_model']], ' new');
-				continue; // error, loop to next record
+			if ( zen_not_null($items[$filelayout['v_products_model']]) ) { // must have products_model
+				// new products must have a categories_name to be added to the store.
+				$categories_name_exists = false; // assume no column defined
+				foreach ($langcode as $key => $lang) {
+					// test column headers for each language
+					if (zen_not_null(trim($items[$filelayout['v_categories_name_'.$lang['id']]])) ) { // import column found
+						$categories_name_exists = true;
+					}
+				}
+				if ( !$categories_name_exists ) {
+					// let's skip this new product without a master category..
+					$display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_CATEGORY_NOT_FOUND, $items[$filelayout['v_products_model']], ' new');
+					$ep_error_count++;
+					continue; // error, loop to next record
+				}
 			} else {
 				// minimum test for new product - model(already tested below), name, price, category, taxclass(?), status (defaults to active)
 				// to add
 			}
-		} else { // not new product
+		} else { // Product Exists
+			// I don't see why this is necessary
+			/*		
 			if (!zen_not_null(trim($items[$filelayout['v_categories_name_1']])) && isset($filelayout['v_categories_name_1'])) {
 				// let's skip this existing product without a master category but has the column heading
 				// or should we just update it to result of $row (it's current category..)??
@@ -275,6 +289,8 @@ if ((substr($file['name'],0,15) <> "CategoryMeta-EP") && (substr($file['name'],0
 				}
 				continue; // error, loop to next record
 			}
+			*/
+			
 		} // End data checking
 
 		// Assign new values, i.e. $v_products_model = new import value over writing existing data pulled above
@@ -291,7 +307,7 @@ if ((substr($file['name'],0,15) <> "CategoryMeta-EP") && (substr($file['name'],0
 		foreach ($langcode as $lang) {
 			$l_id = $lang['id'];
 			// products meta tags
-			if ( isset($filelayout['v_metatags_title_' . $l_id ]) ) { 
+			if ( isset($filelayout['v_metatags_title_'.$l_id ]) ) { 
 				$v_metatags_title[$l_id] = $items[$filelayout['v_metatags_title_'.$l_id]];
 				$v_metatags_keywords[$l_id] = $items[$filelayout['v_metatags_keywords_'.$l_id]];
 				$v_metatags_description[$l_id] = $items[$filelayout['v_metatags_description_'.$l_id]];
@@ -299,7 +315,7 @@ if ((substr($file['name'],0,15) <> "CategoryMeta-EP") && (substr($file['name'],0
 			// products name, description, url, and optional short description
 			// smart_tags_4 ... removed - chadd 11-18-2011 - will look into this feature at a future date
 			// chadd 12-09-2011 - added some error checking on field lengths
-			if (isset($filelayout['v_products_name_' . $l_id ])) { // do for each language in our upload file if exist
+			if (isset($filelayout['v_products_name_'.$l_id ])) { // do for each language in our upload file if exist
 				$v_products_name[$l_id] = $items[$filelayout['v_products_name_'.$l_id]];
 				// check products name length and display warning on error, but still process record
 				if (strlen($v_products_name[$l_id]) > $products_name_max_len) { 
@@ -315,6 +331,18 @@ if ((substr($file['name'],0,15) <> "CategoryMeta-EP") && (substr($file['name'],0
 				if (strlen($v_products_url[$l_id]) > $products_url_max_len) { 
 					$display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_PRODUCTS_URL_LONG, $v_products_model, $v_products_url[$l_id], $products_url_max_len);
 					$ep_warning_count++;
+				}
+			} else { // column doesn't exist in the IMPORT file
+				// and product is new
+				if ($product_is_new) {
+					// create language place holders
+					$v_products_name[$l_id] = "";
+					$v_products_description[$l_id] = "";
+					// if short descriptions exist
+					if ($ep_supported_mods['psd'] == true) {
+						$v_products_short_desc[$_id] = "";
+					}
+					$v_products_url[$l_id] = "";	
 				}
 			}
 		}
@@ -391,6 +419,7 @@ if ((substr($file['name'],0,15) <> "CategoryMeta-EP") && (substr($file['name'],0
 				$v_manufacturers_id = mysql_insert_id(); // id is auto_increment, so can use this function
 				
 				// BUG FIX: TABLE_MANUFACTURERS_INFO need an entry for each installed language! chadd 11-14-2011
+				// This is not a complete fix, since we are not importing manufacturers_url
 				foreach ($langcode as $lang) {
 					$l_id = $lang['id'];
 					$sql = "INSERT INTO ".TABLE_MANUFACTURERS_INFO." (manufacturers_id, languages_id, manufacturers_url)
@@ -407,49 +436,59 @@ if ((substr($file['name'],0,15) <> "CategoryMeta-EP") && (substr($file['name'],0
 			$v_manufacturers_id = 0; // chadd - zencart uses manufacturer's id = '0' for no assisgned manufacturer
 		} // END: Manufacturer's Name
 	
-// BEGIN: CATEGORIES2 ==================================================================================================================================	
+// BEGIN: CATEGORIES2 ===============================================================================================	
 
-		// Improving support for multiple language import - chadd 11-15-2011
-		// start with first defined language... does not have to be 1 since TABLE_LANGUAGES order can be changed by sort_order!
+		$categories_name_exists = false; // assume no column defined
+		foreach ($langcode as $key => $lang) {
+			// test column headers for each language
+			if (zen_not_null(trim($items[$filelayout['v_categories_name_'.$lang['id']]])) ) { // import column found
+				$categories_name_exists = true; // at least one language column defined
+			}
+		}
+		if ($categories_name_exists) { // we have at least 1 language column
+			// chadd - 12-14-2010 - $categories_names_array[] has our category names
+			$categories_delimiter = '^'; // add this to configuration variables
+			// get all defined categories
+			foreach ($langcode as $key => $lang) {
+				$categories_names_array[$lang['id']] = explode($categories_delimiter,trim($items[$filelayout['v_categories_name_'.$lang['id']]])); 
+				// get the number of tokens in $categories_names_array[]
+				$categories_count[$lang['id']] = count($categories_names_array[$lang['id']]);
+ 				// check category names for length violation. abort on error
+				if ($categories_count[$lang['id']] > 0) { // only check $categories_name_max_len if $categories_count[$lang['id']] > 0
+					for ( $category_index=0; $category_index<$categories_count[$lang['id']]; $category_index++ ) {
+						if ( strlen($categories_names_array[$lang['id']][$category_index]) > $categories_name_max_len ) {
+							$display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_CATEGORY_NAME_LONG, 
+								$v_products_model, $categories_names_array[$lang['id']][$category_index], $categories_name_max_len);
+							$ep_error_count++;
+							continue 3; // skip to next record
+						}
+					}
+				}
+			} // foreach
+			// need check on $categories_count to ensure all counts are equal
+			if (count($categories_count) > 1 ) { // check elements 
+				$categories_count_value = $categories_count[$langcode[1]['id']];
+				foreach ($langcode as $key => $lang) {
+					if ( ($categories_count_value != $categories_count[$lang['id']]) && ($categories_count[$lang['id']] != 0)   ) {
+						//$display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_CATEGORY_NAME_LONG, 
+							//$v_products_model, $categories_names_array[$lang['id']][$category_index], $categories_name_max_len);
+						$display_output .= "<br>Error: Unbalanced Categories defined in: ".trim($items[$filelayout['v_categories_name_'.$lang['id']]]);
+						$ep_error_count++;
+						continue 2; // skip to next record
+					}
+				}
+			}
+		}
+		// start with first defined language... (does not have to be 1)
 		$lid = $langcode[1]['id'];	
-
-		// create our column header variable 	
 		$v_categories_name_var = 'v_categories_name_'.$lid; // $$v_categories_name_var >> $v_categories_name_1, $v_categories_name_2, etc.
-		
 		if (isset($$v_categories_name_var)) { // does column header exist?
 			// start from the highest possible category and work our way down from the parent
 			$v_categories_id = 0;
 			$theparent_id = 0; // 0 is top level parent
-			//
-			// chadd - 12-14-2010 - $values_name[] has our categories (array index starts at zero!)
-			//
-			$categories_delimiter = '^';
-		//	$values_names = explode($categories_delimiter,$v_categories_name_1);
-			$categories_names_array = explode('^',$$v_categories_name_var);
-		//	print_r($categories_names_array);
-			$categories_count = count($categories_names_array);
-		//	echo '<br>categories_count: '.$categories_count.'<br>Now print walk of array:<br>';
-
-			// test walk of array
-		//	for ( $category_index=0; $category_index<$categories_count; $category_index++ ) {
-		//		$thiscategoryname = $categories_names_array[$category_index]; // category name
-		//		echo '<br>'.$thiscategoryname.' -> '.$category_index;
-		//	}	
-		
-			// check for category name length violation. abort import or update on error 
-			for ( $category_index=0; $category_index<$categories_count; $category_index++ ) {
-				if ( strlen($categories_names_array[$category_index]) > $categories_name_max_len ) {
-					$display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_CATEGORY_NAME_LONG, $v_products_model, $categories_names_array[$category_index], $categories_name_max_len);
-					$ep_error_count++;
-					continue 2; // short-circuit on error and go to next record
-				}
-			}				
-			
-			for ( $category_index=0; $category_index<$categories_count; $category_index++ ) {
-				$thiscategoryname = $categories_names_array[$category_index]; // category name
-			
-				// note: use of $eplanguage_id is "contant" 1 at this time
-				// $eplanguage_id must now be changed to $lid - chadd 11-10-2011
+			$categories_delimiter = '^'; // add this to configuration variables
+			for ( $category_index=0; $category_index<$categories_count[$lid]; $category_index++ ) {
+				$thiscategoryname = $categories_names_array[$lid][$category_index]; // category name
 				$sql = "SELECT cat.categories_id
 					FROM ".TABLE_CATEGORIES." AS cat, 
 						 ".TABLE_CATEGORIES_DESCRIPTION." AS des
@@ -461,9 +500,21 @@ if ((substr($file['name'],0,15) <> "CategoryMeta-EP") && (substr($file['name'],0
 				$result = ep_4_query($sql);
 				$row = mysql_fetch_array($result);
 				// if $row is not null, we found entry, so retrive info
-				if ( $row != '' ) {
+				if ( $row != '' ) { // category exists
 					foreach( $row as $item ) {
 						$thiscategoryid = $item; // array of data
+					}
+					foreach ($langcode as $key => $lang2) {
+						$v_categories_name_check = 'v_categories_name_'.$lang2['id']; 
+						if (isset($$v_categories_name_check)) { // update
+							$cat_lang_id = $lang2['id'];
+							$sql = "UPDATE ".TABLE_CATEGORIES_DESCRIPTION." SET 
+									categories_name = '".addslashes($categories_names_array[$cat_lang_id][$category_index])."'
+								WHERE
+									categories_id   = '".$thiscategoryid."' AND
+									language_id     = '".$cat_lang_id."'";
+							$result = ep_4_query($sql);
+						}
 					}
 				} else { // otherwise add new category
 					// get next available categoies_id
@@ -475,47 +526,32 @@ if ((substr($file['name'],0,15) <> "CategoryMeta-EP") && (substr($file['name'],0
 					if (!is_numeric($max_category_id) ) {
 						$max_category_id=1;
 					}
-					// TABLE_CATEGORIES HAS ONE ENTRY PER CATEGORY ID
-					
-					// this isn't working
-					/*
-					$sql = "INSERT INTO ".TABLE_CATEGORIES." SET
-						categories_id = '".$max_category_id."',
-						categories_image = '',
-						parent_id = '".$theparent_id."',
-						sort_order = 0,
-						date_added = CURRENT_TIMESTAMP,
-						last_modified = CURRENT_TIMESTAMP";
-						*/
-						
-$sql = "INSERT INTO ".TABLE_CATEGORIES."(
-						categories_id,
-						categories_image,
-						parent_id,
-						sort_order,
-						date_added,
-						last_modified
+					// TABLE_CATEGORIES has 1 entry per categories_id
+					$sql = "INSERT INTO ".TABLE_CATEGORIES."(categories_id, categories_image, parent_id, sort_order, date_added, last_modified
 						) VALUES (
-						$max_category_id,
-						'',
-						$theparent_id,
-						0,
-						CURRENT_TIMESTAMP,
-						CURRENT_TIMESTAMP
+						$max_category_id, '', $theparent_id, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 						)";						
-						
-						
-						
 					$result = ep_4_query($sql);
-					// TABLE_CATEGORIES_DESCRIPTION HAS ENTRY FOR EACH LANGUAGE INSTALLED
-					// must have an entry in TABLE_CATEGORIES_DESCRIPTION for each language installed, or categories break! chadd 11-10-2011					
-					// temp fix: additional entries are created, but assigned the main defined language id values
-					foreach ($langcode as $key => $lang) {
-						$cat_lang_id = $lang['id'];
-						$sql = "INSERT INTO ".TABLE_CATEGORIES_DESCRIPTION." SET 
-							categories_id   = '".$max_category_id."',
-							language_id     = '".$cat_lang_id."',
-							categories_name = '".addslashes($thiscategoryname)."'";
+					// TABLE_CATEGORIES_DESCRIPTION has an entry for EACH installed languag
+					// Check for multiple categories language. If a column is not defined, default to the main language:
+					// categories_name = '".addslashes($thiscategoryname)."'";
+					// else, set to that langauges category entry:
+					// categories_name = '".addslashes($categories_names_array[$lid][$category_index])."'";
+					foreach ($langcode as $key => $lang2) {
+						$v_categories_name_check = 'v_categories_name_'.$lang2['id']; 
+						if (isset($$v_categories_name_check)) { // update	
+							$cat_lang_id = $lang2['id'];
+							$sql = "INSERT INTO ".TABLE_CATEGORIES_DESCRIPTION." SET 
+								categories_id   = '".$max_category_id."',
+								language_id     = '".$cat_lang_id."',
+								categories_name = '".addslashes($categories_names_array[$cat_lang_id][$category_index])."'";
+						} else { // column is missing, so default to defined column's value
+							$cat_lang_id = $lang2['id'];
+							$sql = "INSERT INTO ".TABLE_CATEGORIES_DESCRIPTION." SET 
+								categories_id   = '".$max_category_id."',
+								language_id     = '".$cat_lang_id."',
+								categories_name = '".addslashes($thiscategoryname)."'";
+						}	
 						$result = ep_4_query($sql);
 					}
 					$thiscategoryid = $max_category_id;
@@ -524,9 +560,9 @@ $sql = "INSERT INTO ".TABLE_CATEGORIES."(
 				$theparent_id = $thiscategoryid;
 				// keep setting this, we need the lowest level category ID later
 				$v_categories_id = $thiscategoryid; 
-			}
-		}
-// END: CATEGORIES2 ==================================================================================================================================			
+			} // ( $category_index=0; $category_index<$catego.....
+		} // (isset($$v_categories_name_var))
+// END: CATEGORIES2 ===============================================================================================	
 		
 		// insert new, or update existing, product
 		if ($v_products_model != "") { // products_model exists!
@@ -687,7 +723,7 @@ $sql = "INSERT INTO ".TABLE_CATEGORIES."(
 
 		
 			// chadd: use this command to remove all old discount entries.
-			// $db->Execute("delete from " . TABLE_PRODUCTS_DISCOUNT_QUANTITY . " where products_id = '" . (int)$v_products_id . "'");
+			// $db->Execute("delete from ".TABLE_PRODUCTS_DISCOUNT_QUANTITY." where products_id = '".(int)$v_products_id."'");
 			
 			// this code does not check for existing quantity breaks, it simply updates or adds them. No algorithm for removal.
 			// update quantity price breaks - chadd
@@ -750,7 +786,11 @@ if ( substr($file['name'],0,14) == "PriceBreaks-EP") {
 			// the following is common in both the updating an existing product and creating a new product
 			if (isset($v_products_name)) {
 				foreach( $v_products_name as $key => $name) {
-					if ($name!='') {
+					
+					
+					// if ($name != '') {
+					
+					
 						$sql = "SELECT * FROM ".TABLE_PRODUCTS_DESCRIPTION." WHERE
 								products_id = ".$v_products_id." AND
 								language_id = ".$key;
@@ -758,6 +798,7 @@ if ( substr($file['name'],0,14) == "PriceBreaks-EP") {
 						
 						if (mysql_num_rows($result) == 0) {
 							// nope, this is a new product description
+							/*
 							$sql = "INSERT INTO ".TABLE_PRODUCTS_DESCRIPTION." SET
 									products_id          ='".$v_products_id."',
 									language_id          ='".$key.",
@@ -767,6 +808,7 @@ if ( substr($file['name'],0,14) == "PriceBreaks-EP") {
 								$sql .= "products_short_desc ='".addslashes($v_products_short_desc[$key])."',";
 							}
 							$sql .= " products_url = '".addslashes($v_products_url[$key])."'";
+							*/
 							
 							// old way of sql 
 							$sql = "INSERT INTO ".TABLE_PRODUCTS_DESCRIPTION." (
@@ -786,14 +828,7 @@ if ( substr($file['name'],0,14) == "PriceBreaks-EP") {
 							if ($ep_supported_mods['psd'] == true) {
 								$sql .= "'".addslashes($v_products_short_desc[$key])."',";
 							}
-								$sql .= "'".addslashes($v_products_url[$key])."')";
-							
-							
-							
-							
-							
-							
-							
+							$sql .= "'".addslashes($v_products_url[$key])."')";
 							$result = ep_4_query($sql);
 						} else { // already in the description, update it
 							$sql = "UPDATE ".TABLE_PRODUCTS_DESCRIPTION." SET
@@ -806,14 +841,17 @@ if ( substr($file['name'],0,14) == "PriceBreaks-EP") {
 								WHERE products_id = '".$v_products_id."' AND language_id = '".$key."'";
 							$result = ep_4_query($sql);
 						}
-					}
-				}
+					
+					// } // if ($name != '')
+				
+				
+				}		
 			} // END: Products Descriptions End
 			
 
 //==================================================================================================================================			
 			// Assign product to category if linked
-			// chadd - this is buggy as instances occur when the master category id is INCORRECT!?
+			// chadd - need to dig into further
 			if (isset($v_categories_id)) { // find out if this product is listed in the category given
 				$result_incategory = ep_4_query('SELECT
 					'.TABLE_PRODUCTS_TO_CATEGORIES.'.products_id,
@@ -850,7 +888,7 @@ if ( substr($file['name'],0,14) == "PriceBreaks-EP") {
 				$v_specials_expires_date = ($v_specials_expires_date == true) ? date("Y-m-d H:i:s",strtotime($v_specials_expires_date)) : "0001-01-01";
 				
 				// Check if this product already has a special
-				$special = ep_4_query("SELECT products_id FROM " . TABLE_SPECIALS . " WHERE products_id = ". $v_products_id);
+				$special = ep_4_query("SELECT products_id FROM ".TABLE_SPECIALS." WHERE products_id = ".$v_products_id);
 																
 				if (mysql_num_rows($special) == 0) { // not in db
 					if ($v_specials_price == '0') { // delete requested, but is not a special
@@ -858,7 +896,7 @@ if ( substr($file['name'],0,14) == "PriceBreaks-EP") {
 						continue;
 					}
 					// insert new into specials
-					$sql = "INSERT INTO " . TABLE_SPECIALS . "
+					$sql = "INSERT INTO ".TABLE_SPECIALS."
 						(products_id,
 						specials_new_products_price,
 						specials_date_added,
@@ -866,11 +904,11 @@ if ( substr($file['name'],0,14) == "PriceBreaks-EP") {
 						expires_date,
 						status)
 						VALUES (
-						'" . (int)$v_products_id . "',
-						'" . $v_specials_price . "',
+						'".(int)$v_products_id."',
+						'".$v_specials_price."',
 						now(),
-						'" . $v_specials_date_avail . "',
-						'" . $v_specials_expires_date . "',
+						'".$v_specials_date_avail."',
+						'".$v_specials_expires_date."',
 						'1')";
 					$result = ep_4_query($sql);
 					$specials_print .= sprintf(EASYPOPULATE_4_SPECIALS_NEW, $v_products_model, substr(strip_tags($v_products_name[$epdlanguage_id]), 0, 10), $v_products_price , $v_specials_price);
@@ -881,7 +919,7 @@ if ( substr($file['name'],0,14) == "PriceBreaks-EP") {
 						continue;
 					}
 					// just make an update
-					$sql = "UPDATE " . TABLE_SPECIALS . " SET
+					$sql = "UPDATE ".TABLE_SPECIALS." SET
 						specials_new_products_price	= '".$v_specials_price."',
 						specials_last_modified		= now(),
 						specials_date_available		= '".$v_specials_date_avail."',
@@ -910,7 +948,7 @@ if ( substr($file['name'],0,14) == "PriceBreaks-EP") {
 	} // end of Mail While Loop
 	} // conditional IF statement
 	
-	$display_output .= '<br>Finished Processing Import File';
+	$display_output .= '<h3>Finished Processing Import File</h3>';
 	
 	$display_output .= '<br>Updated records: '.$ep_update_count;
 	$display_output .= '<br>New Imported records: '.$ep_import_count;
@@ -926,14 +964,10 @@ if ( substr($file['name'],0,14) == "PriceBreaks-EP") {
 	$display_output .= '<br>Execution Time: '. $time . ' seconds.';
 }	
 	
-	// Post-upload tasks start
-	// ep_4_update_prices(); // update price sorter - THIS IS A PROBLEM WITH WEBSITE WITH MASSIVE DATA!
-	
 	// specials status = 0 if date_expires is past.
 	// HEY!!! THIS ALSO CALLS zen_update_products_price_sorter($v_products_id); !!!!!!
 	if ($has_specials == true) { // specials were in upload so check for expired specials
 		zen_expire_specials();
 	}
-	// Post-upload tasks end
 } // END FILE UPLOADS
 ?>
