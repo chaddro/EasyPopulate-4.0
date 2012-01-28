@@ -1,5 +1,55 @@
 <?php
 
+function ep_4_curly_quotes($curly_text) {
+	$clean_text = $curly_text;
+	$ep_curly_quotes = EASYPOPULATE_4_CONFIG_CURLY_QUOTES;
+	if ($ep_curly_quotes == 1) {				
+		$clean_text = str_replace(array("\xe2\x80\x98", "\xe2\x80\x99", "\xe2\x80\x9c", "\xe2\x80\x9d", "\xe2\x80\x93", "\xe2\x80\x94", "\xe2\x80\xa6"),
+ 						array("'", "'", '"', '"', '-', '--', '...'), $curly_text); 
+	} elseif ($ep_curly_quotes == 2) { 
+ 		$clean_text = str_replace(array("\xe2\x80\x98", "\xe2\x80\x99", "\xe2\x80\x9c", "\xe2\x80\x9d", "\xe2\x80\x93", "\xe2\x80\x94", "\xe2\x80\xa6"),
+			array("&lsquo;", "&rsquo;", '&ldquo;', '&rdquo;', '&ndash;', '&mdash;', '&hellip;'), $curly_text);
+ 	}	
+	return $clean_text;
+}
+
+/*
+  function metaColumns($zp_table) {
+    $sql = "SHOW COLUMNS from :tableName:";
+    $sql = $this->bindVars($sql, ':tableName:', $zp_table, 'noquotestring');
+    $res = $this->execute($sql);    
+    while (!$res->EOF) 
+    {
+      $obj [strtoupper($res->fields['Field'])] = new queryFactoryMeta($res->fields); 
+      $res->MoveNext();
+    }    
+    return $obj;
+  }
+  
+// function to return field length
+// uses $tbl = table name, $fld = field name
+  function zen_field_length($tbl, $fld) {
+    global $db;
+    $rs = $db->MetaColumns($tbl);
+    $length = $rs[strtoupper($fld)]->max_length;
+    return $length;
+  }
+*/
+
+// function to return field length
+// uses $tbl = table name, $fld = field name
+  function ep4_zen_field_length($tbl, $fld) {
+    global $db;
+	$meta = array();
+	$result = mysql_query("SELECT $fld FROM $tbl");
+	if (!$result) {
+    	echo 'Could not run query: ' . mysql_error();
+    	exit;
+	}
+	$length = mysql_field_len($result, 0);
+    return $length;
+  }
+
 function ep_4_get_languages() {
 	$langcode = array();
 	$languages_query = ep_4_query("SELECT languages_id, name, code FROM ".TABLE_LANGUAGES." ORDER BY sort_order");
@@ -43,6 +93,9 @@ function ep_4_set_filelayout($ep_dltype, &$filelayout_sql, $sql_filter, $langcod
 		if ($ep_supported_mods['gpc'] == true) { // Google Product Category for Google Merchant Center - chadd 10-1-2011
 			$filelayout[] = 'v_products_gpc'; 
 		}
+		if ($ep_supported_mods['msrp'] == true) { // Requested Mod Support - Manufacturer's Suggest Retail Price
+			$filelayout[] = 'v_products_msrp'; 
+		}
 		$filelayout[] = 'v_products_weight';
 		$filelayout[] = 'v_product_is_call';
 		$filelayout[] = 'v_products_sort_order';
@@ -85,8 +138,11 @@ function ep_4_set_filelayout($ep_dltype, &$filelayout_sql, $sql_filter, $langcod
 			$filelayout_sql .=  'p.products_upc as v_products_upc,'; 
 		}
 		if ($ep_supported_mods['gpc'] == true) { // Google Product Category for Google Merchant Center - chadd 10-1-2011
-			$filelayout_sql .=  'p._products_gpc as v_products_gpc,'; 
-		} 
+			$filelayout_sql .=  'p.products_gpc as v_products_gpc,'; 
+		}
+		if ($ep_supported_mods['msrp'] == true) { // // Requested Mod Support - Manufacturer's Suggest Retail Price
+			$filelayout_sql .=  'p.products_msrp as v_products_msrp,'; 
+		}
 		$filelayout_sql .= 'p.products_weight as v_products_weight,
 			p.product_is_call				as v_product_is_call,
 			p.products_sort_order			as v_products_sort_order, 
@@ -122,7 +178,10 @@ function ep_4_set_filelayout($ep_dltype, &$filelayout_sql, $sql_filter, $langcod
 		$filelayout[] = 'v_products_price';
 		if ($ep_supported_mods['uom'] == true) { // price UOM mod
 			$filelayout[] = 'v_products_price_uom'; // to soon be changed to v_products_price_uom
-		} 
+		}
+		if ($ep_supported_mods['msrp'] == true) { // Manufacturer's Suggested Retail Price
+			$filelayout[] = 'v_products_msrp'; 
+		}
 		$filelayout[] = 'v_products_quantity';
 		$filelayout_sql = 'SELECT
 			p.products_id     as v_products_id,
@@ -148,7 +207,10 @@ function ep_4_set_filelayout($ep_dltype, &$filelayout_sql, $sql_filter, $langcod
 		$filelayout[] =	'v_products_price';
 		if ($ep_supported_mods['uom'] == true) { // price UOM mod
 			$filelayout[] = 'v_products_price_uom'; // to soon be changed to v_products_price_uom
-		} 
+		}
+		if ($ep_supported_mods['msrp'] == true) { // Manufacturer's Suggested Retail Price
+			$filelayout[] = 'v_products_msrp'; 
+		}
 		$filelayout[] =	'v_products_discount_type';
 		$filelayout[] =	'v_products_discount_type_from';
 		// discount quantities base on $max_qty_discounts	
@@ -300,24 +362,28 @@ function ep_4_set_filelayout($ep_dltype, &$filelayout_sql, $sql_filter, $langcod
 			a.options_values_id = v.products_options_values_id';
 		break;
 
+
 	case 'attrib_basic_simple': // simplified sinlge-line attributes ... eventually!
 		// $filelayout[] =	'v_products_attributes_id';
 		// $filelayout[] =	'v_products_id';
 		$filelayout[] =	'v_products_model'; // product model from table PRODUCTS
+		$filelayout[] =	'v_products_options_type'; // 0-drop down, 1=text , 2=radio , 3=checkbox, 4=file, 5=read only 
+		
 		// $filelayout[] =	'v_options_id';
 		$filelayout[] =	'v_products_options_name'; // options name from table PRODUCTS_OPTIONS
-		foreach ($langcode as $key => $lang) { // create categories variables for each language id
+/*		foreach ($langcode as $key => $lang) { // create categories variables for each language id
 			$l_id = $lang['id'];
 			$filelayout[] = 'v_products_options_name_'.$l_id;
 		} 
-		$filelayout[] =	'v_products_options_type'; // 0-drop down, 1=text , 2=radio , 3=checkbox, 4=file, 5=read only 
+*/
 		// $filelayout[] =	'v_options_values_id';
 		
-		$filelayout[] =	'v_products_options_values_name'; // options values name from table PRODUCTS_OPTIONS_VALUES
+//		$filelayout[] =	'v_products_options_values_name'; // options values name from table PRODUCTS_OPTIONS_VALUES
 		foreach ($langcode as $key => $lang) { // create categories variables for each language id
 			$l_id = $lang['id'];
 			$filelayout[] = 'v_products_options_values_name_'.$l_id;
-		} 
+		}
+
 		// a = table PRODUCTS_ATTRIBUTES
 		// p = table PRODUCTS
 		// o = table PRODUCTS_OPTIONS
@@ -342,7 +408,7 @@ function ep_4_set_filelayout($ep_dltype, &$filelayout_sql, $sql_filter, $langcod
 			a.products_id       = p.products_id AND
 			a.options_id        = o.products_options_id AND
 			a.options_values_id = v.products_options_values_id AND
-			o.language_id       = v.language_id';
+			o.language_id       = v.language_id ORDER BY a.products_id, a.options_id';
 		break;
 
 	case 'attrib_basic_detailed': // detailed multi-line attributes
@@ -670,12 +736,13 @@ function install_easypopulate_4() {
 			('', 'Upload/Download Prices Include Tax', 'EASYPOPULATE_4_CONFIG_PRICE_INC_TAX', 'false', 'Choose to include or exclude tax, depending on how you manage prices outside of Zen Cart.', ".$group_id.", '5', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
 			('', 'Verbose Feedback',                   'EASYPOPULATE_4_CONFIG_VERBOSE', 'true', 'When importing, report all messages. Set to false for only warnings and errors. (default: true).', ".$group_id.", '6', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
 			('', 'Make Zero Qty Products Inactive',    'EASYPOPULATE_4_CONFIG_ZERO_QTY_INACTIVE', 'false', 'When uploading, make the status Inactive for products with zero qty (default: false).', ".$group_id.", '7', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
-			('', 'Smart Tags Replacement of Newlines', 'EASYPOPULATE_4_CONFIG_SMART_TAGS', 'true', 'Allows your description fields in your uploads file to have carriage returns and/or new-lines converted to HTML line-breaks on uploading, thus preserving some rudimentary formatting - Note: this legacy code is disabled until further review. (default: true).', " . $group_id . ", '8', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
-			('', 'Advanced Smart Tags',                'EASYPOPULATE_4_CONFIG_ADV_SMART_TAGS', 'false', 'Allow the use of complex regular expressions to format descriptions, making headings bold, add bullets, etc. Note: legacy code is disabled until further review. (default: false).', " . $group_id . ", '9', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
+			('', 'Smart Tags Replacement of Newlines', 'EASYPOPULATE_4_CONFIG_SMART_TAGS', 'true', 'Allows your description fields in your uploads file to have carriage returns and/or new-lines converted to HTML line-breaks on uploading, thus preserving some rudimentary formatting - Note: this legacy code is disabled until further review. (default: true).', ".$group_id.", '8', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
+			('', 'Advanced Smart Tags',                'EASYPOPULATE_4_CONFIG_ADV_SMART_TAGS', 'false', 'Allow the use of complex regular expressions to format descriptions, making headings bold, add bullets, etc. Note: legacy code is disabled until further review. (default: false).', ".$group_id.", '9', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
 			('', 'Debug Logging',                      'EASYPOPULATE_4_CONFIG_DEBUG_LOGGING', 'true', 'Allow Easy Populate to generate an error log on errors only (default: true)', ".$group_id.", '10', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
-			('', 'Maximum Quantity Discounts',         'EASYPOPULATE_4_CONFIG_MAX_QTY_DISCOUNTS', '3', 'Maximum number of quantity discounts (price breaks). Is the number of discount columns in downloaded file (default: 3).', " . $group_id . ", '11', NULL, now(), NULL, NULL),
-			('', 'Split On Number of Records',         'EASYPOPULATE_4_CONFIG_SPLIT_RECORDS', '2000', 'Number of records to split csv files. Used to break large import files into smaller files. Useful on servers with limited resourses. (default: 2000).', " . $group_id . ", '12', NULL, now(), NULL, NULL),
-			('', 'Script Execution Time',              'EASYPOPULATE_4_CONFIG_EXECUTION_TIME', '60', 'Number of seconds for script to run before timeout. May not work on some servers. (default: 60).', " . $group_id . ", '13', NULL, now(), NULL, NULL)
+			('', 'Maximum Quantity Discounts',         'EASYPOPULATE_4_CONFIG_MAX_QTY_DISCOUNTS', '3', 'Maximum number of quantity discounts (price breaks). Is the number of discount columns in downloaded file (default: 3).', ".$group_id.", '11', NULL, now(), NULL, NULL),
+			('', 'Split On Number of Records',         'EASYPOPULATE_4_CONFIG_SPLIT_RECORDS', '2000', 'Number of records to split csv files. Used to break large import files into smaller files. Useful on servers with limited resourses. (default: 2000).', ".$group_id.", '12', NULL, now(), NULL, NULL),
+			('', 'Script Execution Time',              'EASYPOPULATE_4_CONFIG_EXECUTION_TIME', '60', 'Number of seconds for script to run before timeout. May not work on some servers. (default: 60).', ".$group_id.", '13', NULL, now(), NULL, NULL),
+			('', 'Convert Curly Quotes, etc.',         'EASYPOPULATE_4_CONFIG_CURLY_QUOTES', '0', 'Convert Curly Quotes, Em-Dash, En-Dash and Ellipsis characters in Products Description (default 0).<br><br>0=No Change<br>1=Replace with Basic Characters<br>3=Replace with HMTL equivalants', ".$group_id.", '14', NULL, now(), NULL, 'zen_cfg_select_option(array(\"0\", \"1\", \"2\"),')
 		");
 	} elseif (substr($project,0,3) == "1.5") {
 		$db->Execute("INSERT INTO ".TABLE_CONFIGURATION_GROUP." VALUES ('', 'Easy Populate 4', 'Configuration Options for Easy Populate 4', '1', '1')");
@@ -690,14 +757,14 @@ function install_easypopulate_4() {
 			('', 'Upload/Download Prices Include Tax', 'EASYPOPULATE_4_CONFIG_PRICE_INC_TAX', 'false', 'Choose to include or exclude tax, depending on how you manage prices outside of Zen Cart.', ".$group_id.", '5', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
 			('', 'Verbose Feedback',                   'EASYPOPULATE_4_CONFIG_VERBOSE', 'true', 'When importing, report all messages. Set to false for only warnings and errors. (default: true).', ".$group_id.", '6', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
 			('', 'Make Zero Qty Products Inactive',    'EASYPOPULATE_4_CONFIG_ZERO_QTY_INACTIVE', 'false', 'When uploading, make the status Inactive for products with zero qty (default: false).', ".$group_id.", '7', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
-			('', 'Smart Tags Replacement of Newlines', 'EASYPOPULATE_4_CONFIG_SMART_TAGS', 'true', 'Allows your description fields in your uploads file to have carriage returns and/or new-lines converted to HTML line-breaks on uploading, thus preserving some rudimentary formatting - Note: this legacy code is disabled until further review. (default: true).', " . $group_id . ", '8', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
-			('', 'Advanced Smart Tags',                'EASYPOPULATE_4_CONFIG_ADV_SMART_TAGS', 'false', 'Allow the use of complex regular expressions to format descriptions, making headings bold, add bullets, etc. Note: legacy code is disabled until further review. (default: false).', " . $group_id . ", '9', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
+			('', 'Smart Tags Replacement of Newlines', 'EASYPOPULATE_4_CONFIG_SMART_TAGS', 'true', 'Allows your description fields in your uploads file to have carriage returns and/or new-lines converted to HTML line-breaks on uploading, thus preserving some rudimentary formatting - Note: this legacy code is disabled until further review. (default: true).', ".$group_id.", '8', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
+			('', 'Advanced Smart Tags',                'EASYPOPULATE_4_CONFIG_ADV_SMART_TAGS', 'false', 'Allow the use of complex regular expressions to format descriptions, making headings bold, add bullets, etc. Note: legacy code is disabled until further review. (default: false).', ".$group_id.", '9', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
 			('', 'Debug Logging',                      'EASYPOPULATE_4_CONFIG_DEBUG_LOGGING', 'true', 'Allow Easy Populate to generate an error log on errors only (default: true)', ".$group_id.", '10', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
-			('', 'Maximum Quantity Discounts',         'EASYPOPULATE_4_CONFIG_MAX_QTY_DISCOUNTS', '3', 'Maximum number of quantity discounts (price breaks). Is the number of discount columns in downloaded file (default: 3).', " . $group_id . ", '11', NULL, now(), NULL, NULL),
-			('', 'Split On Number of Records',         'EASYPOPULATE_4_CONFIG_SPLIT_RECORDS', '2000', 'Number of records to split csv files. Used to break large import files into smaller files. Useful on servers with limited resourses. (default: 2000).', " . $group_id . ", '12', NULL, now(), NULL, NULL),
-			('', 'Script Execution Time',              'EASYPOPULATE_4_CONFIG_EXECUTION_TIME', '60', 'Number of seconds for script to run before timeout. May not work on some servers. (default: 60).', " . $group_id . ", '13', NULL, now(), NULL, NULL)
+			('', 'Maximum Quantity Discounts',         'EASYPOPULATE_4_CONFIG_MAX_QTY_DISCOUNTS', '3', 'Maximum number of quantity discounts (price breaks). Is the number of discount columns in downloaded file (default: 3).', ".$group_id.", '11', NULL, now(), NULL, NULL),
+			('', 'Split On Number of Records',         'EASYPOPULATE_4_CONFIG_SPLIT_RECORDS', '2000', 'Number of records to split csv files. Used to break large import files into smaller files. Useful on servers with limited resourses. (default: 2000).', ".$group_id.", '12', NULL, now(), NULL, NULL),
+			('', 'Script Execution Time',              'EASYPOPULATE_4_CONFIG_EXECUTION_TIME', '60', 'Number of seconds for script to run before timeout. May not work on some servers. (default: 60).', ".$group_id.", '13', NULL, now(), NULL, NULL),
+			('', 'Convert Curly Quotes, etc.',         'EASYPOPULATE_4_CONFIG_CURLY_QUOTES', '0', 'Convert Curly Quotes, Em-Dash, En-Dash and Ellipsis characters in Products Description (default 0).<br><br>0=No Change<br>1=Replace with Basic Characters<br>3=Replace with HMTL equivalants', ".$group_id.", '14', NULL, now(), NULL, 'zen_cfg_select_option(array(\"0\", \"1\", \"2\"),')
 		");
-
 	} else { // unsupported version 
 	} 
 }

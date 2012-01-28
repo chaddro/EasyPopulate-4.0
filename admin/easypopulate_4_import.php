@@ -28,6 +28,9 @@ if ( isset($_GET['import']) ) {
 	}
 	if ($ep_supported_mods['gpc'] == true) { // Google Product Category for Google Merchant Center - chadd 10-1-2011
 		$default_these[] = 'v_products_gpc';
+	}
+	if ($ep_supported_mods['msrp'] == true) { // Manufacturer's Suggested Retail Price
+		$default_these[] = 'v_products_msrp';
 	} 
 	$default_these[] = 'v_products_quantity';
 	$default_these[] = 'v_products_weight';
@@ -150,7 +153,9 @@ if ((substr($file['name'],0,15) <> "CategoryMeta-EP") && (substr($file['name'],0
 		if ($ep_supported_mods['gpc'] == true) { // Google Product Category for Google Merhant Center - chadd 10-1-2011
 			$sql .= 'p.products_gpc as v_products_gpc,'; 
 		}
-
+		if ($ep_supported_mods['msrp'] == true) { // Manufacturer's Suggested Retail Price
+			$sql .= 'p.products_msrp as v_products_msrp,'; 
+		}
 		$sql .= 'p.products_weight			as v_products_weight,
 			p.products_discount_type		as v_products_discount_type,
 			p.products_discount_type_from   as v_products_discount_type_from,
@@ -207,7 +212,16 @@ if ((substr($file['name'],0,15) <> "CategoryMeta-EP") && (substr($file['name'],0
 				$row2 = mysql_fetch_array($result2);
 				// create variables (v_products_name_1, v_products_name_2, etc. which corresponds to our column headers) and assign data
 				$row['v_products_name_'.$lang['id']] = $row2['products_name'];
-				$row['v_products_description_'.$lang['id']] = $row2['products_description']; // description assigned
+				
+// utf-8 conversion of smart-quotes, em-dash, and ellipsis
+				$text = $row2['products_description'];
+				$text = str_replace(
+ array("\xe2\x80\x98", "\xe2\x80\x99", "\xe2\x80\x9c", "\xe2\x80\x9d", "\xe2\x80\x93", "\xe2\x80\x94", "\xe2\x80\xa6"),
+ array("'", "'", '"', '"', '-', '--', '...'),
+ $text);
+				$row['v_products_description_'.$lang['id']] = $text; // description assigned				
+				
+				//$row['v_products_description_'.$lang['id']] = $row2['products_description']; // description assigned
 				// if short descriptions exist
 				if ($ep_supported_mods['psd'] == true) {
 					$row['v_products_short_desc_'.$lang['id']] = $row2['products_short_desc'];
@@ -316,19 +330,20 @@ if ((substr($file['name'],0,15) <> "CategoryMeta-EP") && (substr($file['name'],0
 			// smart_tags_4 ... removed - chadd 11-18-2011 - will look into this feature at a future date
 			// chadd 12-09-2011 - added some error checking on field lengths
 			if (isset($filelayout['v_products_name_'.$l_id ])) { // do for each language in our upload file if exist
-				$v_products_name[$l_id] = $items[$filelayout['v_products_name_'.$l_id]];
+				$v_products_name[$l_id] = ep_4_curly_quotes($items[$filelayout['v_products_name_'.$l_id]]);
 				// check products name length and display warning on error, but still process record
-				if (strlen($v_products_name[$l_id]) > $products_name_max_len) { 
+				if (mb_strlen($v_products_name[$l_id]) > $products_name_max_len) { 
 					$display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_PRODUCTS_NAME_LONG, $v_products_model, $v_products_name[$l_id], $products_name_max_len);
 					$ep_warning_count++;
 				}
-				$v_products_description[$l_id] = $items[$filelayout['v_products_description_'.$l_id]];
+				// utf-8 conversion of smart-quotes, em-dash, en-dash, and ellipsis
+				$v_products_description[$l_id] = ep_4_curly_quotes($items[$filelayout['v_products_description_'.$l_id]]);
 				if ($ep_supported_mods['psd'] == true) { // if short descriptions exist
 					$v_products_short_desc[$l_id] = $items[$filelayout['v_products_short_desc_'.$l_id]];
 				}
 				$v_products_url[$l_id] = $items[$filelayout['v_products_url_'.$l_id]];
 				// check products url length and display warning on error, but still process record
-				if (strlen($v_products_url[$l_id]) > $products_url_max_len) { 
+				if (mb_strlen($v_products_url[$l_id]) > $products_url_max_len) { 
 					$display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_PRODUCTS_URL_LONG, $v_products_model, $v_products_url[$l_id], $products_url_max_len);
 					$ep_warning_count++;
 				}
@@ -399,7 +414,7 @@ if ((substr($file['name'],0,15) <> "CategoryMeta-EP") && (substr($file['name'],0
 		}
 
 		// check size of v_products_model, loop on error
-		if (strlen($v_products_model) > $products_model_max_len) {
+		if (mb_strlen($v_products_model) > $products_model_max_len) {
 			$display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_PRODUCTS_MODEL_LONG, $v_products_model, $products_model_max_len);
 			$ep_error_count++;
 			continue; // short-circuit on error
@@ -407,7 +422,7 @@ if ((substr($file['name'],0,15) <> "CategoryMeta-EP") && (substr($file['name'],0
 		
 		// BEGIN: Manufacturer's Name
 		// convert the manufacturer's name into id's for the database
-		if ( isset($v_manufacturers_name) && ($v_manufacturers_name != '') && (strlen($v_manufacturers_name) <= $manufacturers_name_max_len) ) {
+		if ( isset($v_manufacturers_name) && ($v_manufacturers_name != '') && (mb_strlen($v_manufacturers_name) <= $manufacturers_name_max_len) ) {
 			$sql = "SELECT man.manufacturers_id AS manID FROM ".TABLE_MANUFACTURERS." AS man WHERE man.manufacturers_name = '".addslashes($v_manufacturers_name)."' LIMIT 1";
 			$result = ep_4_query($sql);
 			if ( $row = mysql_fetch_array($result) ) {
@@ -428,7 +443,7 @@ if ((substr($file['name'],0,15) <> "CategoryMeta-EP") && (substr($file['name'],0
 				}
 			}
 		} else { // $v_manufacturers_name == '' or name length violation
-			if (strlen($v_manufacturers_name) > $manufacturers_name_max_len) {
+			if (mb_strlen($v_manufacturers_name) > $manufacturers_name_max_len) {
 				$display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_MANUFACTURER_NAME_LONG, $v_manufacturers_name, $manufacturers_name_max_len);
 				$ep_error_count++;
 				continue;
@@ -447,16 +462,21 @@ if ((substr($file['name'],0,15) <> "CategoryMeta-EP") && (substr($file['name'],0
 		}
 		if ($categories_name_exists) { // we have at least 1 language column
 			// chadd - 12-14-2010 - $categories_names_array[] has our category names
-			$categories_delimiter = '^'; // add this to configuration variables
+			$categories_delimiter = "^"; // add this to configuration variables
 			// get all defined categories
 			foreach ($langcode as $key => $lang) {
-				$categories_names_array[$lang['id']] = explode($categories_delimiter,trim($items[$filelayout['v_categories_name_'.$lang['id']]])); 
+				
+				// iso-8859-1
+				// $categories_names_array[$lang['id']] = explode($categories_delimiter,$items[$filelayout['v_categories_name_'.$lang['id']]]); 
+				// utf-8 
+				$categories_names_array[$lang['id']] = mb_split('\x5e',$items[$filelayout['v_categories_name_'.$lang['id']]]); 
+				
 				// get the number of tokens in $categories_names_array[]
 				$categories_count[$lang['id']] = count($categories_names_array[$lang['id']]);
  				// check category names for length violation. abort on error
 				if ($categories_count[$lang['id']] > 0) { // only check $categories_name_max_len if $categories_count[$lang['id']] > 0
 					for ( $category_index=0; $category_index<$categories_count[$lang['id']]; $category_index++ ) {
-						if ( strlen($categories_names_array[$lang['id']][$category_index]) > $categories_name_max_len ) {
+						if ( mb_strlen($categories_names_array[$lang['id']][$category_index]) > $categories_name_max_len ) {
 							$display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_CATEGORY_NAME_LONG, 
 								$v_products_model, $categories_names_array[$lang['id']][$category_index], $categories_name_max_len);
 							$ep_error_count++;
@@ -465,19 +485,25 @@ if ((substr($file['name'],0,15) <> "CategoryMeta-EP") && (substr($file['name'],0
 					}
 				}
 			} // foreach
+			
 			// need check on $categories_count to ensure all counts are equal
+			
 			if (count($categories_count) > 1 ) { // check elements 
 				$categories_count_value = $categories_count[$langcode[1]['id']];
 				foreach ($langcode as $key => $lang) {
-					if ( ($categories_count_value != $categories_count[$lang['id']]) && ($categories_count[$lang['id']] != 0)   ) {
-						//$display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_CATEGORY_NAME_LONG, 
+					$v_categories_name_check = 'v_categories_name_'.$lang['id']; 
+					if (isset($$v_categories_name_check)) {
+						if ( ($categories_count_value != $categories_count[$lang['id']]) && ($categories_count[$lang['id']] != 0) ) {
+							//$display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_CATEGORY_NAME_LONG, 
 							//$v_products_model, $categories_names_array[$lang['id']][$category_index], $categories_name_max_len);
-						$display_output .= "<br>Error: Unbalanced Categories defined in: ".trim($items[$filelayout['v_categories_name_'.$lang['id']]]);
-						$ep_error_count++;
-						continue 2; // skip to next record
+							$display_output .= "<br>Error: Unbalanced Categories defined in: ".$items[$filelayout['v_categories_name_'.$lang['id']]];
+							$ep_error_count++;
+							continue 2; // skip to next record
+						}
 					}
-				}
+				} // foreach
 			}
+			
 		}
 		// start with first defined language... (does not have to be 1)
 		$lid = $langcode[1]['id'];	
@@ -486,7 +512,7 @@ if ((substr($file['name'],0,15) <> "CategoryMeta-EP") && (substr($file['name'],0
 			// start from the highest possible category and work our way down from the parent
 			$v_categories_id = 0;
 			$theparent_id = 0; // 0 is top level parent
-			$categories_delimiter = '^'; // add this to configuration variables
+			// $categories_delimiter = "^"; // add this to configuration variables
 			for ( $category_index=0; $category_index<$categories_count[$lid]; $category_index++ ) {
 				$thiscategoryname = $categories_names_array[$lid][$category_index]; // category name
 				$sql = "SELECT cat.categories_id
@@ -591,7 +617,9 @@ if ((substr($file['name'],0,15) <> "CategoryMeta-EP") && (substr($file['name'],0
 				if ($ep_supported_mods['gpc'] == true) { // Google Product Category for Google Merhcant Center - chadd 10-1-2011
 					$query .= "products_gpc = '".addslashes($v_products_gpc)."',";
 				}
-				 
+				if ($ep_supported_mods['msrp'] == true) { // Manufacturer's Suggested Retail Price
+					$query .= "products_msrp = '".$v_products_msrp."',";
+				}
 				$query .= "products_image			= '".addslashes($v_products_image)."',
 					products_weight					= '".$v_products_weight."',
 					products_discount_type          = '".$v_products_discount_type."',
@@ -654,7 +682,9 @@ if ((substr($file['name'],0,15) <> "CategoryMeta-EP") && (substr($file['name'],0
 				if ($ep_supported_mods['gpc'] == true) { // Google Product Category for Google Merhcant Center - chadd 10-1-2011
 					$query .= "products_gpc = '".addslashes($v_products_gpc)."',";
 				}
-					
+				if ($ep_supported_mods['msrp'] == true) { // Manufacturer's Suggested Retail Price
+					$query .= "products_msrp = '".$v_products_msrp."',";
+				}
 				$query .= "products_image			= '".addslashes($v_products_image)."',
 					products_weight					= '".$v_products_weight."',
 					products_discount_type			= '".$v_products_discount_type."',

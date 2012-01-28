@@ -12,50 +12,50 @@
 09-29-09 - Created multiple exports for product attributes, option names, and option values
 09-29-09 - updates Price/Qty/Breaks export code to use while statement. Now allow for unlimited in number of price breaks! 
 10-01-09 - phazie's array definitions for filelayouts are more efficient and also more code readible and mod-able. array_merger() if very inefficient
-			this required some tweaking in other places
-		 - found some places in the download code that I replace with exclusion code to speed up downloads. No sense executing code that wasn't needed.
-		 - export time in now in 24-hour:minute:second which makes better sense to me
+           this required some tweaking in other places
+         - found some places in the download code that I replace with exclusion code to speed up downloads. No sense executing code that wasn't needed.
+         - export time in now in 24-hour:minute:second which makes better sense to me
 10-02-09 - added metatags for products as in phazie's csv version - so far testing is good
 10-05-09 - it is VERY important to have the correct delimiter set or the import of information will fail
 
 1.3.04 - 10-13-09 - Fixed function call errors and added filtering check for UPC and UOM mods when downloading files
 1.3.05 - 10-14-09 - Auto switching for file extention fixed dependant on delimitor <tab> or <comma>
-		  - Somehow when adding a new item with empty manufacturer, it was being assigned the previously imported manufactures id. Spelling error in code!
+                  - Somehow when adding a new item with empty manufacturer, it was being assigned the previously imported manufactures id. Spelling error in code!
 
 4.0.00 - 12-21-09 - Begin Move to 4.0.000 beta
 4.0.01 - 12-22-09 - Ha! Manufacturers weren't being created because I left off the "s" in manufacturers!
 4.0.02 - 06-03-10 - changed all price_as to price_uom for unit of measure. This is a logical correction. Databases updated
-			ALTER TABLE products ADD products_upc VARCHAR(32) AFTER products_model;
-			ALTER TABLE products ADD products_price_uom VARCHAR(2) AFTER products_price;
+                    ALTER TABLE products ADD products_upc VARCHAR(32) AFTER products_model;
+                    ALTER TABLE products ADD products_price_uom VARCHAR(2) AFTER products_price;
 4.0.03 - 11-19-2010 Fixed bug where v_date_avail (products_date_available) wasn't being set to NULL correctly.
 4.0.04 - 11-22-2010 worked on quantity discount import code. now removes old discounts when discount type or number of discounts changes
 4.0.05 - 11-23-2010 more work on quantity breaks. Eliminated the v_discount_id column since all discounts are entered at once fresh i'm just using loop index
          11-23-2010 added products_status to the Model/Price/Qty and Model/Price/Breaks
 4.0.06 - 12-02-2010 added uninstall button on form page, removed unnecessary tables from form page
-		 12-02-2010 removed 'v_discount_id_' from export file layout - no longer needed
-		 12-02-2010 add EASYPOPULATE_4_CONFIG_MAX_QTY_DISCOUNTS variable to configuration page
+         12-02-2010 removed 'v_discount_id_' from export file layout - no longer needed
+         12-02-2010 add EASYPOPULATE_4_CONFIG_MAX_QTY_DISCOUNTS variable to configuration page
 4.0.07 - 12-02-2010 adding categories image, description and metadata export/import
-	     12-03-2010 completing Categories image/description/metadata export/import feature!
+         12-03-2010 completing Categories image/description/metadata export/import feature!
 4.0.08 - 12-07-2010 found error: when uploading Model/Price/Qty to set Specials Pricing, quantity discounts are being wiped
 4.0.09 - 12-10-2010 time to start breaking this down and using more functional design (and hopefully lead toward an OO based design)
-	     12-10-2010 move all file layout to functions now using $filelayout = ep_4_set_filelayout();
-	     12-11-2010 broke out all export code into easypopulate_4_export.php - This is included with a require_once() statement.
-		   I am doing this so I can start to break this mod into more functional sections.
-    	 12-13-2010 broke out all import code into easypopulate_4_import.php
-	     12-13-2010 moved these notes to easypopulate_4_changelog.php
-	     12-13-2010 changing the way categories are imported and exported. now using single column for categories where categories are separated
-		    by a delimeter. Should allow "unlimited" category depth, but still a practical limit of 256 character for excel although
-		    OpenOffice is not restricted. Multi-lingual categories should be achievable now.
-	     12-14-2010 beginning work on category import using single delimeted column 
-	     12-15-2010 export of mult-lingual categories is now working. Export/Import of "categorymeta" works correctly to assing multi-lingual values
+         12-10-2010 move all file layout to functions now using $filelayout = ep_4_set_filelayout();
+         12-11-2010 broke out all export code into easypopulate_4_export.php - This is included with a require_once() statement.
+                    I am doing this so I can start to break this mod into more functional sections.
+         12-13-2010 broke out all import code into easypopulate_4_import.php
+         12-13-2010 moved these notes to easypopulate_4_changelog.php
+         12-13-2010 changing the way categories are imported and exported. now using single column for categories where categories are separated
+                    by a delimeter. Should allow "unlimited" category depth, but still a practical limit of 256 character for excel although
+                    OpenOffice is not restricted. Multi-lingual categories should be achievable now.
+         12-14-2010 beginning work on category import using single delimeted column 
+         12-15-2010 export of mult-lingual categories is now working. Export/Import of "categorymeta" works correctly to assing multi-lingual values
                     Have not tested "full" import with multi-lingual categories. Must look closely at code. I may have to make the "full" import
                     only work with default language, and use 'categorymeta' for updating other languages. 
                     Why? Because error checking on import may become to onerous.
-	     12-16-2010 fixed small error in configuration keys where key was misspelled; removed all references to now defunct $max_categories
+         12-16-2010 fixed small error in configuration keys where key was misspelled; removed all references to now defunct $max_categories
 4.0.10 - 12-16-2010 Simple single-line attribute import code merged into EP4. Initial testing is good.
-	     12-21-2010 Auto checking of installed mods by checking if table columns exist, new fuction for checking table column, old one didn't work
+         12-21-2010 Auto checking of installed mods by checking if table columns exist, new fuction for checking table column, old one didn't work
 4.0.11 - 03-09-2011 Removed EOREOR from export files, updated README with info about attribute importing, included example of Attrib-EP-xxx.CSV file.
-	     04-04-2011 Updated README.txt, added GPL license.txt file, added INSTALL.txt file. Replaced easypopulate_4_changelog.php with changelog.txt to avoid confusion.
+         04-04-2011 Updated README.txt, added GPL license.txt file, added INSTALL.txt file. Replaced easypopulate_4_changelog.php with changelog.txt to avoid confusion.
 4.0.12 - 11-04-2011 Fixed issue with export and import where legacy data may have NULL values set for manufacturers_id in the products table. This should be 0, but NULL was set in some earlier versions of EP.
 4.0.13 - 11-08-2011 Fixed bug where meta tags statuses were being changed when doing an import such at PriceQty-EP. Needed to add meta tags statuses to $default_these[] in the import file.
                     Added support for custom products field products_gpc for google product category. For use with custom version of google merchant feeder.
@@ -65,36 +65,36 @@
                     categories fails. This instead needs to cycle through each installed category, not start at "1".
          11-14-2011 BUG Fix: when importing a new manufacturer, the entry for each installed language for TABLE_MANUFACTURERS_INFO was not being created. If not created, this field is not editable within the admin. 
 4.0.15 - 11-15-2011 Performance Boost: Added a quick fix for better performance on Import by adding a boolean variable $ep_feedback. If set to false, EP4 will skip most
-		            reporting of new and updated products at end of script. This really saves on memory and execution time. All errors are still reported. 
-		 11-23-2011 More testing on performance of script. Export has been modified to ONLY export to the installed EP directory. This way I can write directly
-		            to the export file rather than building a massive string to stream to client machine. This also conserves a great deal of memory.
-					This same "fix" should be implemented into the Import code which would require you to first upload the file, then execute the import from the
-					remote directory.
-		 12-05-2011 Some major changes. Changing the work flow per the note above. Added code to manage the CSV file on the remote machine. 
-		 			You now must first upload your EP file, then click the Import link to import. You can save exported file by right-clicking
-					their link and selecting "save-as". Is there another way to do this? This code needs a lot of clean-up and testing before 
-					submitting to github.
+                    reporting of new and updated products at end of script. This really saves on memory and execution time. All errors are still reported. 
+         11-23-2011 More testing on performance of script. Export has been modified to ONLY export to the installed EP directory. This way I can write directly
+                    to the export file rather than building a massive string to stream to client machine. This also conserves a great deal of memory.
+                    This same "fix" should be implemented into the Import code which would require you to first upload the file, then execute the import from the
+                    remote directory.
+         12-05-2011 Some major changes. Changing the work flow per the note above. Added code to manage the CSV file on the remote machine. 
+                    You now must first upload your EP file, then click the Import link to import. You can save exported file by right-clicking
+                    their link and selecting "save-as". Is there another way to do this? This code needs a lot of clean-up and testing before 
+                    submitting to github.
 4.0.16 - 12-07-2011 Basic file management completed. Adding Split function for large data files. This will be executed first after uploading a large file.
-					Once file has been split, it can then be imported. This will also work for large files that have been exported... If you are using old ver
-					of Excel (with 65,000 rows limit) you can split your export file into smaller chunks. Langer had good forsight for file spitting, I just didn't
-					agree with his approach.
-		 12-08-2011 Split function seems to be working well. Need to add configuration variables to set the # of records to split on. 
-					I finally identified the problem with sites with MASSIVE data (like 100,000 on up products). It has to do with updating the price sorter:
-					After each import, Langer would call an update_prices script, and then also call zen_expire_specials if any specials were detected. However,
-					these scripts will time out on a server with very large databases. I am wondering what I am missing on import that I have to update ALL the pricing 
-					in one go instead of it being correct on each update.
-		 12-09-2011 Bug Fixed: manaufacturers_name length exceeds database field size 
-		 			Bug Fixed: wasn't checking length of category names. Now aborts that product's line if a category_name is too long
-		            Updated: products_model length exceeds database file size (cleaned code related to this)
-					Added warnings to product_names and products_url lengths exceeded, but permitted adding/importing to catalog
-					I suppose mata-tags should also have this code (these are varchar 255).
-		 12-11-2011 More minor code clean-up. Will I ever finish? The import flow logic needs to be revisited... it's very "duck tape and bailing wire"
-					Pushing current code to github.	 
+                    Once file has been split, it can then be imported. This will also work for large files that have been exported... If you are using old ver
+                    of Excel (with 65,000 rows limit) you can split your export file into smaller chunks. Langer had good forsight for file spitting, I just didn't
+                    agree with his approach.
+         12-08-2011 Split function seems to be working well. Need to add configuration variables to set the # of records to split on. 
+                    I finally identified the problem with sites with MASSIVE data (like 100,000 on up products). It has to do with updating the price sorter:
+                    After each import, Langer would call an update_prices script, and then also call zen_expire_specials if any specials were detected. However,
+                    these scripts will time out on a server with very large databases. I am wondering what I am missing on import that I have to update ALL the pricing 
+                    in one go instead of it being correct on each update.
+         12-09-2011 Bug Fixed: manaufacturers_name length exceeds database field size 
+                    Bug Fixed: wasn't checking length of category names. Now aborts that product's line if a category_name is too long
+                    Updated: products_model length exceeds database file size (cleaned code related to this)
+                    Added warnings to product_names and products_url lengths exceeded, but permitted adding/importing to catalog
+                    I suppose mata-tags should also have this code (these are varchar 255).
+         12-11-2011 More minor code clean-up. Will I ever finish? The import flow logic needs to be revisited... it's very "duck tape and bailing wire"
+                    Pushing current code to github.     
 4.0.17 - 12-15-2011 Added support for installing on Zencart 1.5.
          12-16-2011 BUG Fix: When importing multi-lingual file with missing language columns on a NEW product, additional laguage entries were not being created
-		            in the TABLE_PRODUCTS_DESCRIPTION table.
+                    in the TABLE_PRODUCTS_DESCRIPTION table.
          12-20-2011 BUG Fix: Multi-lingual category import was not working correctly. I believe I NOW have correctly solved this issue! (whoot!! whoot!!)
-                    I wasn't sure I'd figure it out, and perhaps my solution is not the most efficient, but creating all entries at import for	
+                    I wasn't sure I'd figure it out, and perhaps my solution is not the most efficient, but creating all entries at import for    
                     all your defined languages is working and quite an accomplishment. I do need to add some additional error trapping.
          12-21-2011 Error Trapping. So far, you MUST have a v_categories_name_1 to function correctly. Subsequent v_categories_?? definitions may be omitted. If omitted,
                     the missing column will be defaulted to v_categories_name_1.
@@ -103,5 +103,8 @@
                     Language entries, that you have something to default to.
                     NOTE: Zencart "bug"? If you add a language, then later remove that language, the language entries are left in the databases!
          12-23-2011 Added rudimentary language support to Attributes Import. Basically, all languages are defaulted to the values
-                    entered. No effort is made to define which is the default. This step is being take to ensure that the required entries are
-		            properly being created so further updates or editing can be done.
+                    entered. No effort is made yet to define which is the default, they are just set the same. This step is being take to ensure that the 
+                    required entries are properly being created so further updates or editing can be done.
+4.0.18 - 12-27-2012 Added Improved handling for UTF8 Multi-Byte Characters for languages such as Greek. Should work for others but no data yet for testing Russian or Simplified Chineese
+                    Added Configuration Variable EASYPOPULATE_4_CONFIG_CURLY_QUOTES with 3 options. 0-Don't Convert, 1-Convert to Basic Symbols, 2-Convert to HTML codes
+                    Added support for products_msrp mod.

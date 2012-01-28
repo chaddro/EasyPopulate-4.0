@@ -1,6 +1,8 @@
 <?php
 // NOTE: Need over-ride for installed mods. Basically, a file check to ensure all table columns are installed. If no, set mod to FALSE.
 
+mb_internal_encoding("UTF-8");
+
 // CSV VARIABLES - need to make this configurable in the ADMIN
 // $csv_delimiter = "\t"; // "\t" = tab AND "," = COMMA
 $csv_delimiter = ","; // "\t" = tab AND "," = COMMA
@@ -22,6 +24,7 @@ $strip_smart_tags = ((EASYPOPULATE_4_CONFIG_SMART_TAGS == 'true') ? true : false
 $max_qty_discounts  = EASYPOPULATE_4_CONFIG_MAX_QTY_DISCOUNTS;
 $ep_feedback      = ((EASYPOPULATE_4_CONFIG_VERBOSE == 'true') ? true : false);
 $ep_execution     = (int)EASYPOPULATE_4_CONFIG_EXECUTION_TIME;
+$ep_curly_quotes  = (int)EASYPOPULATE_4_CONFIG_CURLY_QUOTES;
 
 @set_time_limit($ep_execution);  // executin limit in seconds. 300 = 5 minutes before timeout, 0 means no timelimit
 
@@ -42,7 +45,7 @@ $ep_debug_logging_all = false; // do not comment out.. make false instead
 /* Test area end */
 
 // Current EP Version - Modded by Chadd
-$curver              = '4.0.17 - Beta 12-24-2011';
+$curver              = '4.0.18 - Beta 1-27-2012';
 $display_output      = ''; // results of import displayed after script run
 $ep_dltype           = NULL;
 $ep_dlmethod         = NULL;
@@ -95,6 +98,7 @@ $ep_supported_mods['psd'] = ep_4_check_table_column(TABLE_PRODUCTS_DESCRIPTION,'
 $ep_supported_mods['uom'] = ep_4_check_table_column(TABLE_PRODUCTS,'products_price_uom'); // uom = unit of measure, added by Chadd
 $ep_supported_mods['upc'] = ep_4_check_table_column(TABLE_PRODUCTS,'products_upc');       // upc = UPC Code, added by Chadd
 $ep_supported_mods['gpc'] = ep_4_check_table_column(TABLE_PRODUCTS,'products_gpc'); // gpc = google product category for Google Merchant Center, added by Chadd 10-1-2011
+$ep_supported_mods['msrp'] = ep_4_check_table_column(TABLE_PRODUCTS,'products_msrp'); // msrp = manufacturer's suggested retail price, added by Chadd 1-9-2012
 // END: check for existance of various mods
 
 // maximum length for a category in this database
@@ -106,6 +110,20 @@ $manufacturers_name_max_len = zen_field_length(TABLE_MANUFACTURERS, 'manufacture
 $products_model_max_len = zen_field_length(TABLE_PRODUCTS, 'products_model');
 $products_name_max_len = zen_field_length(TABLE_PRODUCTS_DESCRIPTION, 'products_name');
 $products_url_max_len = zen_field_length(TABLE_PRODUCTS_DESCRIPTION, 'products_url');
+
+$project = PROJECT_VERSION_MAJOR.'.'.PROJECT_VERSION_MINOR;
+if ( (substr($project,0,5) == "1.3.8") || (substr($project,0,5) == "1.3.9") && (DB_CHARSET == 'utf8') ) {
+	// maximum length for a category in this database
+	$category_strlen_max = $category_strlen_max/3;
+	// maximum length for important fields
+	$categories_name_max_len = $categories_name_max_len/3;
+	$manufacturers_name_max_len = $manufacturers_name_max_len/3;
+	$products_model_max_len = $products_model_max_len/3;
+	$products_name_max_len = $products_name_max_len/3;
+	$products_url_max_len = $products_url_max_len/3;
+}
+
+
 
 // test for Ajeh
 //$ajeh_sql = 'SELECT * FROM '. TABLE_PRODUCTS .' WHERE '.TABLE_PRODUCTS.'.products_id NOT IN (SELECT '. TABLE_PRODUCTS_TO_CATEGORIES.'.products_id FROM '. TABLE_PRODUCTS_TO_CATEGORIES.')';
@@ -129,6 +147,12 @@ if (mysql_num_rows($epdlanguage_query)) {
 }
 
 $langcode = ep_4_get_languages(); // array of currently used language codes ( 1, 2, 3, ...)
+
+// working on attributes export 
+/*
+if ( isset($_GET['export2']) ) {
+	include_once('easypopulate_4_export2.php'); // this file contains all data import code
+} */
 
 if ( isset($_POST['filter']) OR isset($_GET['export'])  ) {
 	include_once('easypopulate_4_export.php'); // this file contains all data export code
@@ -203,24 +227,40 @@ if (!$error && isset($_REQUEST["delete"]) && $_REQUEST["delete"]!=basename($_SER
 	<div class="pageHeading"><?php echo "Easy Populate $curver"; ?></div>
     
 	<div style="text-align:right; float:right; width:25%"><a href="<?php echo zen_href_link(FILENAME_EASYPOPULATE_4, 'epinstaller=remove') ?>">Un-Install EP4</a>
-    <? 
+    <?php
 		echo '<br><b><u>Configuration Settings</u></b><br>';
 		echo 'Upload Directory: <b>'.$tempdir.'</b><br>'; 
 		echo 'Verbose Feedback: '.(($ep_feedback) ? "TRUE":"FALSE").'<br>';
 		echo 'Split Records: '.$ep_split_records.'<br>';
 		echo 'Execution Time: '.$ep_execution.'<br>';
+		switch ($ep_curly_quotes) {
+			case 0:
+			$ep_curly_text = "No Change";
+			break;
+			case 1:
+			$ep_curly_text = "Basic";
+			break;
+			case 2:	
+			$ep_curly_text = "HTML";
+			break;
+		}
+		echo 'Convert Curly Quotes: '.$ep_curly_text.'<br>';
 			
 		echo '<br><b><u>Custom Products Fields</u></b><br>';
 		echo 'Product Short Descriptions: '.(($ep_supported_mods['psd']) ? "TRUE":"FALSE").'<br>';
 		echo 'Product Unit of Measure: '.(($ep_supported_mods['uom']) ? "TRUE":"FALSE").'<br>';
 		echo 'Product UPC Code: '.(($ep_supported_mods['upc']) ? "TRUE":"FALSE").'<br>';
 		// Google Product Category for Google Merchant Center
-		echo 'Google Product Category: '.(($ep_supported_mods['gpc']) ? "TRUE":"FALSE").'<br>';		
+		echo 'Google Product Category: '.(($ep_supported_mods['gpc']) ? "TRUE":"FALSE").'<br>';
+		echo "Manufacturer's Suggested Retail Price: ".(($ep_supported_mods['msrp']) ? "TRUE":"FALSE").'<br>';	
+	
 		echo '<br><b><u>Installed Languages</u></b> <br>';
 		foreach ($langcode as $key => $lang) {
 			echo $lang['id'].'-'.$lang['code'].': '.$lang['name'].'<br>';
 		}
-		echo 'Default Language: '.	$epdlanguage_id .'-'. $epdlanguage_name.'<br>'; 
+		echo 'Default Language: '.	$epdlanguage_id .'-'. $epdlanguage_name.'<br>';
+		echo 'Internal Character Encoding: '.mb_internal_encoding().'<br>';
+		echo 'DB CharSet: '.DB_CHARSET.'<br>';
 		
 		echo '<br><b><u>Database Field Lengths</u></b><br>';
 		echo 'categories_name:'.$categories_name_max_len.'<br>';
@@ -289,7 +329,7 @@ if (!$error && isset($_REQUEST["delete"]) && $_REQUEST["delete"]!=basename($_SER
     <br>Under Construction - Note: DIAGNOSTIC EXPORTS, NOT FOR IMPORTING ATTRIBUTES YET!<br>
     <a href="easypopulate_4.php?export=attrib"><b>Detailed Products Attributes</b> (detailed multi-line)</a><br />
     <a href="easypopulate_4.php?export=attrib_basic_detailed"><b>Basic Products Attributes</b> (detailed multi-line)</a><br />
-    <a href="easypopulate_4.php?export=attrib_basic_simple"><b>Basic Products Attributes</b> (single-line)</a><br />
+    <!-- <a href="easypopulate_4.php?export2=attrib_basic_simple"><b>Basic Products Attributes</b> (single-line)</a><br /> -->
     <a href="easypopulate_4.php?export=options"><b>Attribute Options Names</b> </a><br />
     <a href="easypopulate_4.php?export=values"><b>Attribute Options Values</b> </a><br />
     <a href="easypopulate_4.php?export=optionvalues"><b>Attribute Options-Names-to-Values</b> </a><br />
@@ -355,6 +395,19 @@ if (!$error && isset($_REQUEST["delete"]) && $_REQUEST["delete"]!=basename($_SER
 		$error=true;
 	} // opendir()
 	echo "</table>\n";
+	
+	/*
+	echo "<div>";
+		$test_string = "Πλαστικά^Εξαρτήματα";
+		$test_array1 = explode("^", $test_string);
+		echo "<br>Using explode() with: ".$test_string."<br>";
+		print_r($test_array1);
+		
+		$test_array2 = mb_split('\x5e', $test_string);
+		echo "<br><br>Using mb_split() with: ".$test_string."<br>";
+		print_r($test_array2);
+	echo "</div>";
+	*/
 	?>
 </div>
 <div id='results'></div>
