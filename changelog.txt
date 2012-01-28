@@ -105,6 +105,7 @@
          12-23-2011 Added rudimentary language support to Attributes Import. Basically, all languages are defaulted to the values
                     entered. No effort is made yet to define which is the default, they are just set the same. This step is being take to ensure that the 
                     required entries are properly being created so further updates or editing can be done.
-4.0.18 - 12-27-2012 Added Improved handling for UTF8 Multi-Byte Characters for languages such as Greek. Should work for others but no data yet for testing Russian or Simplified Chineese
+4.0.18 - 01-27-2012 Added Improved handling for UTF8 Multi-Byte Characters for languages such as Greek. Should work for others but no data yet for testing Russian or Simplified Chineese
                     Added Configuration Variable EASYPOPULATE_4_CONFIG_CURLY_QUOTES with 3 options. 0-Don't Convert, 1-Convert to Basic Symbols, 2-Convert to HTML codes
                     Added support for products_msrp mod.
+4.0.19 - 01-28-2012 Fixed bug in file splitting where subseqent splits appended to previously split files instead of overwritting them.
