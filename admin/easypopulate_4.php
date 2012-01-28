@@ -45,7 +45,7 @@ $ep_debug_logging_all = false; // do not comment out.. make false instead
 /* Test area end */
 
 // Current EP Version - Modded by Chadd
-$curver              = '4.0.18 - Beta 1-27-2012';
+$curver              = '4.0.19 - Beta 1-28-2012';
 $display_output      = ''; // results of import displayed after script run
 $ep_dltype           = NULL;
 $ep_dlmethod         = NULL;
