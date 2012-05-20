@@ -1,0 +1,10 @@
+Note: Basic Attribute Import filename must begin with "Attrib-Basic-EP" plust any other text you want.
+
+Valid values for v_products_options_type:
+
+0 = drop down
+1 = text
+2 = radio
+3 = checkbox
+4 = file
+5 = read only

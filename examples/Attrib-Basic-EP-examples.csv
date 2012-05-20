@@ -1,0 +1,7 @@
+"v_products_model","v_products_options_type","v_products_options_name_1","v_products_options_values_name_1"
+"COLOR 1 TEST",0,"Color","red,green,blue"
+"COLOR 2 TEST",0,"Color","cyan,magenta,yellow,black"
+"SHIRT TEST",2,"Shirt Sizes","S,M,L,XL,XXL"
+"SHIRT TEST",1,"Name Label",
+"PHOTO TEST",4,"Image Upload",
+"PHOTO TEST",3,"Proof Size","5x7,8x10"
