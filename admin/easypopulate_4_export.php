@@ -1,17 +1,18 @@
 <?php
 // get download type
-$ep_dltype = (isset($_POST['filter'])) ? $_POST['filter'] : $ep_dltype;
+$ep_dltype = (isset($_POST['export'])) ? $_POST['export'] : $ep_dltype;
 $display_output = '';
-if (isset($_POST['filter'])) {
-	$ep_dltype = $_POST['filter'];
-}
+
+//if (isset($_POST['filter'])) {
+//	$ep_dltype = $_POST['filter'];
+//}
 
 if (isset($_GET['export'])) {
 	$ep_dltype = $_GET['export'];
 }
 
 if ($ep_dltype == '') {
-   die("error: no export type set"); // need better handler
+   die("error: no export type set - press backspace to return."); // need better handler
 }
 
 $ep_export_count = 0;
@@ -20,19 +21,43 @@ $ep_export_count = 0;
 // depending on the type of the download the user wanted, create a file layout for it.
 $time_start = microtime(true); // benchmarking
 // build export filters
-$sql_filter = '';
-if (!empty($_POST['ep_category_filter'])) {
-	$sub_categories = array();
-	$categories_query_addition = 'ptoc.categories_id = '.(int)$_POST['ep_category_filter'].'';
-	zen_get_sub_categories($sub_categories, $_POST['ep_category_filter']);
-	foreach ($sub_categories AS $key => $category ) {
-		$categories_query_addition .= ' OR ptoc.categories_id = '.(int)$category.'';
+
+// override for $ep_dltype
+if ( isset($_POST['ep_export_type']) ) {
+	if ($_POST['ep_export_type']=='0') { 
+		$ep_dltype = 'full'; // Complete Products
+	} elseif ($_POST['ep_export_type']=='1') {
+		$ep_dltype = 'priceqty'; // Model/Price/Qty
+	} elseif ($_POST['ep_export_type']=='2') {
+		$ep_dltype = 'pricebreaks'; // Model/Price/Breaks
 	}
-	$sql_filter .= ' AND ('.$categories_query_addition.')';
 }
-if ($_POST['ep_manufacturer_filter']!='') { $sql_filter .= ' and p.manufacturers_id = '.(int)$_POST['ep_manufacturer_filter']; }
-if ($_POST['ep_status_filter']!='') { $sql_filter .= ' AND p.products_status = '.(int)$_POST['ep_status_filter']; }
-if ($_POST['dltype']!='') { $ep_dltype = $_POST['dltype']; }
+
+$sql_filter = '';
+
+if ( isset($_POST['ep_category_filter']) ) {
+	if (!empty($_POST['ep_category_filter'])) {
+		$sub_categories = array();
+		$categories_query_addition = 'ptoc.categories_id = '.(int)$_POST['ep_category_filter'].'';
+		zen_get_sub_categories($sub_categories, $_POST['ep_category_filter']);
+		foreach ($sub_categories AS $key => $category ) {
+			$categories_query_addition .= ' OR ptoc.categories_id = '.(int)$category.'';
+		}
+		$sql_filter .= ' AND ('.$categories_query_addition.')';
+	}
+}
+
+if (isset($_POST['ep_manufacturer_filter'])) {
+	if ($_POST['ep_manufacturer_filter']!='') { 
+		$sql_filter .= ' AND p.manufacturers_id = '.(int)$_POST['ep_manufacturer_filter']; 
+	}
+}
+
+if (isset($_POST['ep_status_filter'])) {	
+	if ($_POST['ep_status_filter']!='3') { 
+		$sql_filter .= ' AND p.products_status = '.(int)$_POST['ep_status_filter']; 
+	}
+}
 
 $filelayout = array();
 $filelayout_sql = '';
@@ -51,20 +76,20 @@ switch ($ep_dltype) { // chadd - changed to use $EXPORT_FILE
 	case 'pricebreaks':
 	$EXPORT_FILE = 'PriceBreaks-EP';
 	break;
+	case 'featured':
+	$EXPORT_FILE = 'Featured-EP'; // added 5-2-2012
+	break;
 	case 'category':
 	$EXPORT_FILE = 'Category-EP';
 	break;
 	case 'categorymeta': // chadd - added 12-02-2010
 	$EXPORT_FILE = 'CategoryMeta-EP';
 	break;
-	case 'attrib':
-	$EXPORT_FILE = 'Attrib-Full-EP';
+	case 'attrib_detailed':
+	$EXPORT_FILE = 'Attrib-Detailed-EP';
 	break;
-	case 'attrib_basic_detailed':
-	$EXPORT_FILE = 'Attrib-Basic-Detailed-EP';
-	break;
-	case 'attrib_basic_simple':
-	$EXPORT_FILE = 'Attrib-Basic-Simple-EP';
+	case 'attrib_basic':
+	$EXPORT_FILE = 'Attrib-Basic-EP';
 	break;
 	case 'options':
 	$EXPORT_FILE = 'Options-EP';
@@ -79,12 +104,11 @@ switch ($ep_dltype) { // chadd - changed to use $EXPORT_FILE
 $EXPORT_FILE .= strftime('%Y%b%d-%H%M%S'); // chadd - changed for hour.minute.second
 
 // create file name and path and prepare for writing
-$tmpfpath = DIR_FS_CATALOG . '' . $tempdir . "$EXPORT_FILE" . (($csv_delimiter == ",")?".csv":".txt");
+$tmpfpath = DIR_FS_CATALOG.''.$tempdir."$EXPORT_FILE".(($csv_delimiter == ",")?".csv":".txt");
 $fp = fopen( $tmpfpath, "w+"); 
 
 $column_headers	= ""; // column headers
 
-// 09-30-09 - chadd - no custom header mapping code elsewhere, just use:
 $filelayout_header = $filelayout; 
 
 // prepare the table heading with layout values
@@ -95,8 +119,106 @@ foreach( $filelayout_header as $key => $value ) {
 $column_headers = rtrim($column_headers, $csv_delimiter)."\n";
 fwrite($fp, $column_headers); // write column headers
 
-	$result = ep_4_query($filelayout_sql);
-	while ($row = mysql_fetch_array($result)) {
+// these variablels are for the Attrib_Basic Export
+$active_products_id = ""; // start empty
+$active_options_id = ""; // start empty
+$active_language_id = ""; // start empty
+$active_row = array(); // empty array
+$last_products_id = "";
+
+$result = ep_4_query($filelayout_sql);
+while ($row = mysql_fetch_array($result)) {
+
+if ($ep_dltype == 'attrib_basic') { // special case 'attrib_basic'
+
+	if ($row['v_products_id'] == $active_products_id) {
+		if ($row['v_options_id'] == $active_options_id) {
+			// collect the products_options_values_name
+			if ($active_language_id <> $row['v_language_id']) {
+				$l_id = $row['v_language_id'];
+				$active_row['v_products_options_name_'.$l_id] = $row['v_products_options_name'];
+				$active_row['v_products_options_values_name_'.$l_id] = $row['v_products_options_values_name'];
+				$active_language_id = $row['v_language_id'];
+			} else {
+				$l_id = $row['v_language_id'];
+				$active_row['v_products_options_name_'.$l_id] = $row['v_products_options_name'];
+				$active_row['v_products_options_values_name_'.$l_id] .= ",".$row['v_products_options_values_name'];
+			}
+			continue; // loop - for more products_options_values_name on same v_products_id/v_options_id combo
+		} else { // same product, new attribute - only executes once on new option
+			// Clean the texts that could break CSV file formatting
+			$dataRow = '';
+			$problem_chars = array("\r", "\n", "\t"); // carriage return, newline, tab
+			foreach($filelayout as $key => $value) {
+				$thetext = $active_row[$key];
+				// remove carriage returns, newlines, and tabs - needs review
+				$thetext = str_replace($problem_chars,' ',$thetext);
+				// encapsulate data in quotes, and escape embedded quotes in data
+				$dataRow .= '"'.str_replace('"','""',$thetext).'"'.$csv_delimiter;
+			}
+			// Remove trailing tab, then append the end-of-line
+			$dataRow = rtrim($dataRow,$csv_delimiter)."\n";
+			fwrite($fp, $dataRow); // write 1 line of csv data (this can be slow...)
+			$ep_export_count++;				
+			
+			$active_options_id = $row['v_options_id'];
+			$active_language_id = $row['v_language_id'];
+			$l_id = $row['v_language_id'];
+			$active_row['v_products_options_name_'.$l_id] = $row['v_products_options_name'];
+			$active_row['v_products_options_values_name_'.$l_id] = $row['v_products_options_values_name'];
+			continue; // loop - for more products_options_values_name on same v_products_id/v_options_id combo
+		}
+	} else { // new combo or different product or first time through while-loop
+		if ($active_row['v_products_model'] <> $last_products_id) {
+			// Clean the texts that could break CSV file formatting
+			$dataRow = '';
+			$problem_chars = array("\r", "\n", "\t"); // carriage return, newline, tab
+			foreach($filelayout as $key => $value) {
+				$thetext = $active_row[$key];
+				// remove carriage returns, newlines, and tabs - needs review
+				$thetext = str_replace($problem_chars,' ',$thetext);
+				// encapsulate data in quotes, and escape embedded quotes in data
+				$dataRow .= '"'.str_replace('"','""',$thetext).'"'.$csv_delimiter;
+			}
+			// Remove trailing tab, then append the end-of-line
+			$dataRow = rtrim($dataRow,$csv_delimiter)."\n";
+			fwrite($fp, $dataRow); // write 1 line of csv data (this can be slow...)
+			$ep_export_count++;
+			$last_products_id = $active_row['v_products_model'];
+		}
+		
+		// get current row of data
+		$active_products_id = $row['v_products_id'];
+		$active_options_id = $row['v_options_id'];
+		$active_language_id = $row['v_language_id'];
+		
+		$active_row['v_products_model'] = $row['v_products_model'];
+		$active_row['v_products_options_type'] = $row['v_products_options_type'];
+		
+		$l_id = $row['v_language_id'];
+		$active_row['v_products_options_name_'.$l_id] = $row['v_products_options_name']; 
+		$active_row['v_products_options_values_name_'.$l_id] = $row['v_products_options_values_name'];
+	} // end of special case 'attrib_basic'
+	
+} else { // standard export processing
+
+		if ($ep_dltype == 'attrib_detailed') {
+			if (isset($filelayout['v_products_attributes_filename'])) { 
+				$sql2 = 'SELECT * FROM '.TABLE_PRODUCTS_ATTRIBUTES_DOWNLOAD.' WHERE products_attributes_id = '.$row['v_products_attributes_id'].' LIMIT 1';
+				$result2 = ep_4_query($sql2);
+				$row2 = mysql_fetch_array($result2);
+				if (mysql_num_rows($result2)) {
+					$row['v_products_attributes_filename'] = $row2['products_attributes_filename']; 
+					$row['v_products_attributes_maxdays'] = $row2['products_attributes_maxdays']; 
+					$row['v_products_attributes_maxcount'] = $row2['products_attributes_maxcount']; 
+				} else {
+					$row['v_products_attributes_filename'] = '';
+					$row['v_products_attributes_maxdays'] = '';
+					$row['v_products_attributes_maxcount'] = '';
+				}
+			}				
+		}
+
 		// Products Image
 		if (isset($filelayout['v_products_image'])) { 
 			$products_image = (($row['v_products_image'] == PRODUCTS_IMAGE_NO_IMAGE) ? '' : $row['v_products_image']);
@@ -110,9 +232,9 @@ fwrite($fp, $column_headers); // write column headers
 				$sqlMeta = 'SELECT * FROM '.TABLE_META_TAGS_PRODUCTS_DESCRIPTION.' WHERE products_id = '.$row['v_products_id'].' AND language_id = '.$lid.' LIMIT 1 ';
 				$resultMeta = ep_4_query($sqlMeta);
 				$rowMeta    = mysql_fetch_array($resultMeta);
-				$row['v_metatags_title_' . $lid]       = $rowMeta['metatags_title'];
-				$row['v_metatags_keywords_' . $lid]    = $rowMeta['metatags_keywords'];
-				$row['v_metatags_description_' . $lid] = $rowMeta['metatags_description'];
+				$row['v_metatags_title_'.$lid]       = $rowMeta['metatags_title'];
+				$row['v_metatags_keywords_'.$lid]    = $rowMeta['metatags_keywords'];
+				$row['v_metatags_description_'.$lid] = $rowMeta['metatags_description'];
 				// metaData end
 				// for each language, get the description and set the vals
 				$sql2    = 'SELECT * FROM '.TABLE_PRODUCTS_DESCRIPTION.' WHERE products_id = '.$row['v_products_id'].' AND language_id = '.$lid.' LIMIT 1 ';
@@ -152,9 +274,9 @@ fwrite($fp, $column_headers); // write column headers
 				$sqlMeta = 'SELECT * FROM '.TABLE_METATAGS_CATEGORIES_DESCRIPTION.' WHERE categories_id = '.$row['v_categories_id'].' AND language_id = '.$lid.' LIMIT 1 ';
 				$resultMeta = ep_4_query($sqlMeta) or die(mysql_error());
 				$rowMeta    = mysql_fetch_array($resultMeta);
-				$row['v_metatags_title_' . $lid]       = $rowMeta['metatags_title'];
-				$row['v_metatags_keywords_' . $lid]    = $rowMeta['metatags_keywords'];
-				$row['v_metatags_description_' . $lid] = $rowMeta['metatags_description'];
+				$row['v_metatags_title_'.$lid]       = $rowMeta['metatags_title'];
+				$row['v_metatags_keywords_'.$lid]    = $rowMeta['metatags_keywords'];
+				$row['v_metatags_description_'.$lid] = $rowMeta['metatags_description'];
 				// metaData end
 				// for each language, get category description and name
 				$sql2    = 'SELECT * FROM '.TABLE_CATEGORIES_DESCRIPTION.' WHERE categories_id = '.$row['v_categories_id'].' AND language_id = '.$lid.' LIMIT 1 ';
@@ -164,27 +286,6 @@ fwrite($fp, $column_headers); // write column headers
 				$row['v_categories_description_'.$lid] = $row2['categories_description'];
 			} // foreach
 		} // if ($ep_dltype ...
-	
-		// Multi-Lingual products_options_name and products_options_values_name
-		if ($ep_dltype == 'attrib_basic_simple') {
-			// names and descriptions require that we loop thru all languages that are turned on in the store
-			foreach ($langcode as $key => $lang) {
-				$lid = $lang['id'];
-				// products_options_name
-				$sqlMeta = 'SELECT * FROM '.TABLE_PRODUCTS_OPTIONS.' WHERE products_options_id = '.$row['v_products_options_id'].' AND language_id = '.$lid.' '; // removed LIMIT 1
-				$resultMeta = ep_4_query($sqlMeta) or die(mysql_error());
-				$rowMeta    = mysql_fetch_array($resultMeta);
-				$row['v_products_options_name_'. $lid] = $rowMeta['products_options_name'];
-
-				// products_options_values_name
-				$sql2    = 'SELECT * FROM '.TABLE_PRODUCTS_OPTIONS_VALUES.' WHERE products_options_values_id = '.$row['v_products_options_values_id'].' AND language_id = '.$lid.' '; // removed limit 1
-				$result2 = ep_4_query($sql2);
-				$row2    = mysql_fetch_array($result2);
-				$row['v_products_options_name_'.$lid]        = $row2['products_options_name'];
-			} // foreach
-		} // if ($ep_dltype ...	
-		
-		
 		
 		// CATEGORIES EXPORT
 		// chadd - 12-13-2010 - logic change. $max_categories no longer required. better to loop back to root category and 
@@ -222,6 +323,63 @@ fwrite($fp, $column_headers); // write column headers
 				$row['v_categories_name_'.$lid] = rtrim($row['v_categories_name_'.$lid], "^");		
 			} // foreach
 		} // if() delimited categories path
+
+		// Music Information Export for products with products_type == 2
+		if (isset($filelayout['v_artists_name'])  && ($row['v_products_type'] == '2')) {
+			$sql_music_extra = 'SELECT * FROM '.TABLE_PRODUCT_MUSIC_EXTRA.' WHERE products_id = '.$row['v_products_id'].' LIMIT 1';
+			$result_music_extra = ep_4_query($sql_music_extra);
+			$row_music_extra = mysql_fetch_array($result_music_extra);
+			// artist
+			if ( ($row_music_extra['artists_id'] != '0') && ($row_music_extra['artists_id'] != '') ) { // '0' is correct, but '' NULL is possible
+				$sql_record_artists = 'SELECT * FROM '.TABLE_RECORD_ARTISTS.' WHERE artists_id = '.$row_music_extra['artists_id'].' LIMIT 1';
+				$result_record_artists = ep_4_query($sql_record_artists);
+				$row_record_artists = mysql_fetch_array($result_record_artists);
+				$row['v_artists_name'] = $row_record_artists['artists_name'];
+				$row['v_artists_image'] = $row_record_artists['artists_image'];
+				foreach ($langcode as $key => $lang) {
+					$lid = $lang['id'];
+					$sql_record_artists_info = 'SELECT * FROM '.TABLE_RECORD_ARTISTS_INFO.' WHERE artists_id = '.$row_music_extra['artists_id'].' AND languages_id = '.$lid.' LIMIT 1';
+					$result_record_artists_info = ep_4_query($sql_record_artists_info);
+					$row_record_artists_info = mysql_fetch_array($result_record_artists_info);
+					$row['v_artists_url_'.$lid] = $row_record_artists_info['artists_url'];
+				}
+			} else { 
+				$row['v_artists_name'] = ''; // no artists name
+				$row['v_artists_image'] = '';
+				foreach ($langcode as $key => $lang) {
+					$lid = $lang['id'];
+					$row['v_artists_url_'.$lid] = '';
+				}
+			}
+			// record company
+			if ( ($row_music_extra['record_company_id'] != '0') && ($row_music_extra['record_company_id'] != '') ) { // '0' is correct, but '' NULL is possible
+				$sql_record_company = 'SELECT * FROM '.TABLE_RECORD_COMPANY.' WHERE record_company_id = '.$row_music_extra['record_company_id'].' LIMIT 1';
+				$result_record_company = ep_4_query($sql_record_company);
+				$row_record_company = mysql_fetch_array($result_record_company);
+				$row['v_record_company_name'] = $row_record_company['record_company_name'];
+				$row['v_record_company_image'] = $row_record_company['record_company_image'];
+				foreach ($langcode as $key => $lang) {
+					$lid = $lang['id'];
+					$sql_record_company_info = 'SELECT * FROM '.TABLE_RECORD_COMPANY_INFO.' WHERE record_company_id = '.$row_music_extra['record_company_id'].' AND languages_id = '.$lid.' LIMIT 1';
+					$result_record_company_info = ep_4_query($sql_record_company_info);
+					$row_record_company_info = mysql_fetch_array($result_record_company_info);
+					$row['v_record_company_url_'.$lid] = $row_record_company_info['record_company_url'];
+				}
+			} else {  
+				$row['v_record_company_name'] = '';
+				$row['v_record_company_image'] = '';
+			}
+			// genre
+			if ( ($row_music_extra['music_genre_id'] != '0') && ($row_music_extra['music_genre_id'] != '') ) { // '0' is correct, but '' NULL is possible
+				$sql_music_genre = 'SELECT * FROM '.TABLE_MUSIC_GENRE.' WHERE music_genre_id = '.$row_music_extra['music_genre_id'].' LIMIT 1';
+				$result_music_genre = ep_4_query($sql_music_genre);
+				$row_music_genre = mysql_fetch_array($result_music_genre);
+				$row['v_music_genre_name'] = $row_music_genre['music_genre_name'];
+			} else {  
+				$row['v_music_genre_name'] = '';
+			}
+		}
+		
 
 		// MANUFACTURERS EXPORT - THIS NEEDS MULTI-LINGUAL SUPPORT LIKE EVERYTHING ELSE!
 		// if the filelayout says we need a manfacturers name, get it for download file
@@ -285,18 +443,40 @@ fwrite($fp, $column_headers); // write column headers
 
 
 		fwrite($fp, $dataRow); // write 1 line of csv data (this can be slow...)
-		$ep_export_count++;	
-	} // while ($row)
+		$ep_export_count++;
+} // if 
+} // while ($row)
+
+if ($ep_dltype == 'attrib_basic') { // must write last record
+	// Clean the texts that could break CSV file formatting
+	$dataRow = '';
+	$problem_chars = array("\r", "\n", "\t"); // carriage return, newline, tab
+	foreach($filelayout as $key => $value) {
+		$thetext = $active_row[$key];
+		// remove carriage returns, newlines, and tabs - needs review
+		$thetext = str_replace($problem_chars,' ',$thetext);
+		// encapsulate data in quotes, and escape embedded quotes in data
+		$dataRow .= '"'.str_replace('"','""',$thetext).'"'.$csv_delimiter;
+	}
+	// Remove trailing tab, then append the end-of-line
+	$dataRow = rtrim($dataRow,$csv_delimiter)."\n";
+	fwrite($fp, $dataRow); // write 1 line of csv data (this can be slow...)
+	$ep_export_count++;
+}
+
+
+
 fclose($fp); // close output file
 
 $display_output .= '<br><u><h3>Export Results</h3></u><br>';
 $display_output .= sprintf(EASYPOPULATE_4_MSGSTACK_FILE_EXPORT_SUCCESS, $EXPORT_FILE, $tempdir);	
 $display_output .= '<br>Records Exported: '.$ep_export_count.'<br>';
-$display_output .= '<br>Memory Usage: '.memory_get_usage(); 
-$display_output .= '<br>Memory Peak: '.memory_get_peak_usage();
-
+if (function_exists('memory_get_usage')) {
+	$display_output .= '<br>Memory Usage: '.memory_get_usage(); 
+	$display_output .= '<br>Memory Peak: '.memory_get_peak_usage(); 
+}
 // benchmarking
 $time_end = microtime(true);
 $time = $time_end - $time_start;	
-$display_output .= '<br>Execution Time: '. $time . ' seconds.';
+$display_output .= '<br>Execution Time: '.$time.' seconds.';
 ?>

@@ -1,44 +1,29 @@
 <?php
-
 function ep_4_curly_quotes($curly_text) {
-	$clean_text = $curly_text;
-	$ep_curly_quotes = EASYPOPULATE_4_CONFIG_CURLY_QUOTES;
-	if ($ep_curly_quotes == 1) {				
+	$ep_curly_quotes = (int)EASYPOPULATE_4_CONFIG_CURLY_QUOTES;
+	$ep_char_92 = (int)EASYPOPULATE_4_CONFIG_CHAR_92;
+	if ($ep_curly_quotes == 1) { // standard characters
 		$clean_text = str_replace(array("\xe2\x80\x98", "\xe2\x80\x99", "\xe2\x80\x9c", "\xe2\x80\x9d", "\xe2\x80\x93", "\xe2\x80\x94", "\xe2\x80\xa6"),
- 						array("'", "'", '"', '"', '-', '--', '...'), $curly_text); 
-	} elseif ($ep_curly_quotes == 2) { 
+ 						array("'", "'", '"', '"', '-', '--', '...'), $curly_text);
+	} elseif ($ep_curly_quotes == 2) { // html
  		$clean_text = str_replace(array("\xe2\x80\x98", "\xe2\x80\x99", "\xe2\x80\x9c", "\xe2\x80\x9d", "\xe2\x80\x93", "\xe2\x80\x94", "\xe2\x80\xa6"),
 			array("&lsquo;", "&rsquo;", '&ldquo;', '&rdquo;', '&ndash;', '&mdash;', '&hellip;'), $curly_text);
- 	}	
+ 	} else { // do nothing
+		$clean_text = $curly_text;
+	}
+	// deal with 0x92 ... a funky right-single-quote
+	if ($ep_char_92 == 1) { // standard single quote
+		$clean_text = str_replace("\x92", "'", $clean_text);
+	} elseif ($ep_char_92 == 2) { // html right-single quote
+		$clean_text = str_replace("\x92", "&rsquo;", $clean_text);
+		//echo '<br>option 2 - html <br>';
+	}
 	return $clean_text;
 }
 
-/*
-  function metaColumns($zp_table) {
-    $sql = "SHOW COLUMNS from :tableName:";
-    $sql = $this->bindVars($sql, ':tableName:', $zp_table, 'noquotestring');
-    $res = $this->execute($sql);    
-    while (!$res->EOF) 
-    {
-      $obj [strtoupper($res->fields['Field'])] = new queryFactoryMeta($res->fields); 
-      $res->MoveNext();
-    }    
-    return $obj;
-  }
-  
 // function to return field length
 // uses $tbl = table name, $fld = field name
-  function zen_field_length($tbl, $fld) {
-    global $db;
-    $rs = $db->MetaColumns($tbl);
-    $length = $rs[strtoupper($fld)]->max_length;
-    return $length;
-  }
-*/
-
-// function to return field length
-// uses $tbl = table name, $fld = field name
-  function ep4_zen_field_length($tbl, $fld) {
+function ep4_zen_field_length($tbl, $fld) {
     global $db;
 	$meta = array();
 	$result = mysql_query("SELECT $fld FROM $tbl");
@@ -48,7 +33,7 @@ function ep_4_curly_quotes($curly_text) {
 	}
 	$length = mysql_field_len($result, 0);
     return $length;
-  }
+}
 
 function ep_4_get_languages() {
 	$langcode = array();
@@ -70,6 +55,7 @@ function ep_4_set_filelayout($ep_dltype, &$filelayout_sql, $sql_filter, $langcod
 	case 'full': // FULL products download
 		// The file layout is dynamically made depending on the number of languages
 		$filelayout[] = 'v_products_model';
+		$filelayout[] = 'v_products_type'; // 4-23-2012
 		$filelayout[] = 'v_products_image';
 		foreach ($langcode as $key => $lang) { // create variables for each language id
 			$l_id = $lang['id'];
@@ -96,16 +82,26 @@ function ep_4_set_filelayout($ep_dltype, &$filelayout_sql, $sql_filter, $langcod
 		if ($ep_supported_mods['msrp'] == true) { // Requested Mod Support - Manufacturer's Suggest Retail Price
 			$filelayout[] = 'v_products_msrp'; 
 		}
+		if ($ep_supported_mods['gppi'] == true) { // Requested Mod Support - Group Pricing Per Item
+			$filelayout[] = 'v_products_group_a_price';
+			$filelayout[] = 'v_products_group_b_price';
+			$filelayout[] = 'v_products_group_c_price';
+			$filelayout[] = 'v_products_group_d_price';
+		}
+		if ($ep_supported_mods['excl'] == true) { // Exclusive Product Custom Mod
+			$filelayout[] = 'v_products_exclusive'; 
+		}
 		$filelayout[] = 'v_products_weight';
 		$filelayout[] = 'v_product_is_call';
 		$filelayout[] = 'v_products_sort_order';
 		$filelayout[] = 'v_products_quantity_order_min';
 		$filelayout[] = 'v_products_quantity_order_units';
+		$filelayout[] = 'v_products_priced_by_attribute'; // 4-30-2012
+		$filelayout[] = 'v_product_is_always_free_shipping'; // 4-30-2012
 		$filelayout[] = 'v_date_avail'; // should be changed to v_products_date_available for clarity
 		$filelayout[] = 'v_date_added'; // should be changed to v_products_date_added for clarity
 		$filelayout[] = 'v_products_quantity';
 		$filelayout[] = 'v_manufacturers_name';
-
 		// NEW code for 'unlimited' category depth - 1 Category Column for each installed Language
 		foreach ($langcode as $key => $lang) { // create categories variables for each language id
 			$l_id = $lang['id'];
@@ -113,22 +109,43 @@ function ep_4_set_filelayout($ep_dltype, &$filelayout_sql, $sql_filter, $langcod
 		} 
 		$filelayout[] = 'v_tax_class_title';
 		$filelayout[] = 'v_status'; // this should be v_products_status for clarity
-		// metatags
-		$filelayout[] = 'v_metatags_products_name_status';
-		$filelayout[] = 'v_metatags_title_status';
-		$filelayout[] = 'v_metatags_model_status';
-		$filelayout[] = 'v_metatags_price_status';
-		$filelayout[] = 'v_metatags_title_tagline_status';
-		foreach ($langcode as $key => $lang) { // create variables for each language id
-			$l_id = $lang['id'];
-			$filelayout[] = 'v_metatags_title_'.$l_id;
-			$filelayout[] = 'v_metatags_keywords_'.$l_id;
-			$filelayout[] = 'v_metatags_description_'.$l_id;
-		} 
-		
+		// metatags - 4-23-2012: added switch
+		if ((int)EASYPOPULATE_4_CONFIG_META_DATA) {
+			$filelayout[] = 'v_metatags_products_name_status';
+			$filelayout[] = 'v_metatags_title_status';
+			$filelayout[] = 'v_metatags_model_status';
+			$filelayout[] = 'v_metatags_price_status';
+			$filelayout[] = 'v_metatags_title_tagline_status';
+			foreach ($langcode as $key => $lang) { // create variables for each language id
+				$l_id = $lang['id'];
+				$filelayout[] = 'v_metatags_title_'.$l_id;
+				$filelayout[] = 'v_metatags_keywords_'.$l_id;
+				$filelayout[] = 'v_metatags_description_'.$l_id;
+			}
+		}
+		// music info - 4-23-2012
+		// record_artist, record_artist_info
+		// record_company, record_company_info
+		// music_genre
+		if ((int)EASYPOPULATE_4_CONFIG_MUSIC_DATA) {
+			$filelayout[] = 'v_artists_name';
+			$filelayout[] = 'v_artists_image';
+			foreach ($langcode as $key => $lang) { // create variables for each language id
+				$l_id = $lang['id'];
+				$filelayout[] = 'v_artists_url_'.$l_id;
+			}			
+			$filelayout[] = 'v_record_company_name';
+			$filelayout[] = 'v_record_company_image';
+			foreach ($langcode as $key => $lang) { // create variables for each language id
+				$l_id = $lang['id'];
+				$filelayout[] = 'v_record_company_url_'.$l_id;
+			}
+			$filelayout[] = 'v_music_genre_name';
+		}
 		$filelayout_sql = 'SELECT
 			p.products_id					as v_products_id,
 			p.products_model				as v_products_model,
+			p.products_type					as v_products_type,
 			p.products_image				as v_products_image,
 			p.products_price				as v_products_price,';
 		if ($ep_supported_mods['uom'] == true) { // price UOM mod
@@ -140,14 +157,25 @@ function ep_4_set_filelayout($ep_dltype, &$filelayout_sql, $sql_filter, $langcod
 		if ($ep_supported_mods['gpc'] == true) { // Google Product Category for Google Merchant Center - chadd 10-1-2011
 			$filelayout_sql .=  'p.products_gpc as v_products_gpc,'; 
 		}
-		if ($ep_supported_mods['msrp'] == true) { // // Requested Mod Support - Manufacturer's Suggest Retail Price
+		if ($ep_supported_mods['msrp'] == true) { // Requested Mod Support - Manufacturer's Suggest Retail Price
 			$filelayout_sql .=  'p.products_msrp as v_products_msrp,'; 
+		}	
+		if ($ep_supported_mods['gppi'] == true) { // Requested Mod Support - Group Pricing Per Item
+			$filelayout_sql .=  'p.products_group_a_price as v_products_group_a_price,';
+			$filelayout_sql .=  'p.products_group_b_price as v_products_group_b_price,';
+			$filelayout_sql .=  'p.products_group_c_price as v_products_group_c_price,';
+			$filelayout_sql .=  'p.products_group_d_price as v_products_group_d_price,';
+		}
+		if ($ep_supported_mods['excl'] == true) { // Custom Mode for Exclusive Products Status VARCHAR(32)
+			$filelayout_sql .=  'p.products_exclusive as v_products_exclusive,';
 		}
 		$filelayout_sql .= 'p.products_weight as v_products_weight,
 			p.product_is_call				as v_product_is_call,
 			p.products_sort_order			as v_products_sort_order, 
 			p.products_quantity_order_min	as v_products_quantity_order_min,
 			p.products_quantity_order_units	as v_products_quantity_order_units,
+			p.products_priced_by_attribute	as v_products_priced_by_attribute,
+			p.product_is_always_free_shipping	as v_product_is_always_free_shipping,			
 			p.products_date_available		as v_date_avail,
 			p.products_date_added			as v_date_added,
 			p.products_tax_class_id			as v_tax_class_id,
@@ -166,9 +194,34 @@ function ep_4_set_filelayout($ep_dltype, &$filelayout_sql, $sql_filter, $langcod
 			.TABLE_PRODUCTS_TO_CATEGORIES.' as ptoc
 			WHERE
 			p.products_id = ptoc.products_id AND
-			ptoc.categories_id = subc.categories_id'.$sql_filter;
+			ptoc.categories_id = subc.categories_id '.$sql_filter;
 		break;
-		
+
+	case 'featured': // added 5-2-2012
+		$filelayout[] = 'v_products_model';
+		$filelayout[] = 'v_status';
+		$filelayout[] = 'v_featured_date_added';
+		$filelayout[] = 'v_expires_date';
+		$filelayout[] = 'v_date_status_change';
+		$filelayout[] = 'v_featured_date_available';
+
+		$filelayout_sql = 'SELECT
+			p.products_id             as v_products_id,
+			p.products_model          as v_products_model,
+			f.featured_id             as v_featured_id,
+			f.featured_date_added     as v_featured_date_added,
+			f.featured_last_modified  as v_featured_date_modified,
+			f.expires_date            as v_expires_date,
+			f.date_status_change      as v_date_status_change,
+			f.status                  as v_status,
+			f.featured_date_available as v_featured_date_available
+			FROM '
+			.TABLE_PRODUCTS.' as p,'
+			.TABLE_FEATURED.' as f
+			WHERE
+			p.products_id = f.products_id';
+		break;	
+	
 	case 'priceqty':
 		$filelayout[] = 'v_products_model';
 		$filelayout[] = 'v_status'; // 11-23-2010 added product status to price quantity option
@@ -177,7 +230,7 @@ function ep_4_set_filelayout($ep_dltype, &$filelayout_sql, $sql_filter, $langcod
 		$filelayout[] = 'v_specials_expires_date';
 		$filelayout[] = 'v_products_price';
 		if ($ep_supported_mods['uom'] == true) { // price UOM mod
-			$filelayout[] = 'v_products_price_uom'; // to soon be changed to v_products_price_uom
+			$filelayout[] = 'v_products_price_uom';
 		}
 		if ($ep_supported_mods['msrp'] == true) { // Manufacturer's Suggested Retail Price
 			$filelayout[] = 'v_products_msrp'; 
@@ -187,26 +240,30 @@ function ep_4_set_filelayout($ep_dltype, &$filelayout_sql, $sql_filter, $langcod
 			p.products_id     as v_products_id,
 			p.products_status as v_status,
 			p.products_model  as v_products_model,
-			p.products_price  as v_products_price,';
-
+			p.products_price  as v_products_price,
+			p.manufacturers_id	as v_manufacturers_id,
+			subc.categories_id	as v_categories_id,';
 		if ($ep_supported_mods['uom'] == true) { // price UOM mod
-			$filelayout_sql .= 'p.products_price_uom as v_products_price_uom,'; // to soon be changed to v_products_price_uom
-		} 
+			$filelayout_sql .= 'p.products_price_uom as v_products_price_uom,';
+		}
 		$filelayout_sql .= 'p.products_tax_class_id as v_tax_class_id,
 			p.products_quantity as v_products_quantity
-			FROM '
-			.TABLE_PRODUCTS.' as p';
+			FROM '		
+			.TABLE_PRODUCTS.' as p,'
+			.TABLE_CATEGORIES.' as subc,'
+			.TABLE_PRODUCTS_TO_CATEGORIES.' as ptoc
+			WHERE
+			p.products_id = ptoc.products_id AND
+			ptoc.categories_id = subc.categories_id '.$sql_filter; // added filter 4-13-2012	
 		break;
-	
-	// Chadd: quantity price breaks file layout
-	// 09-30-09 Need a configuration variable to set the MAX discounts level
-	//          then I will be able to generate $filelayout() dynamically
+		
+	// Quantity price breaks file layout
 	case 'pricebreaks':
 		$filelayout[] =	'v_products_model';
 		$filelayout[] = 'v_status'; // 11-23-2010 added product status to price quantity option
 		$filelayout[] =	'v_products_price';
 		if ($ep_supported_mods['uom'] == true) { // price UOM mod
-			$filelayout[] = 'v_products_price_uom'; // to soon be changed to v_products_price_uom
+			$filelayout[] = 'v_products_price_uom';
 		}
 		if ($ep_supported_mods['msrp'] == true) { // Manufacturer's Suggested Retail Price
 			$filelayout[] = 'v_products_msrp'; 
@@ -224,15 +281,21 @@ function ep_4_set_filelayout($ep_dltype, &$filelayout_sql, $sql_filter, $langcod
 			p.products_id     as v_products_id,
 			p.products_status as v_status,
 			p.products_model  as v_products_model,
-			p.products_price  as v_products_price,';
-			
+			p.products_price  as v_products_price,
+			p.manufacturers_id	as v_manufacturers_id,
+			subc.categories_id	as v_categories_id,';
 		if ($ep_supported_mods['uom'] == true) { // price UOM mod
-			$filelayout_sql .= 'p.products_price_uom as v_products_price_uom,'; // to soon be changed to v_products_price_uom
-		} 
+			$filelayout_sql .= 'p.products_price_uom as v_products_price_uom,';
+		}
 		$filelayout_sql .= 'p.products_discount_type as v_products_discount_type,
 			p.products_discount_type_from as v_products_discount_type_from
 			FROM '
-			.TABLE_PRODUCTS.' as p';
+			.TABLE_PRODUCTS.' as p,'
+			.TABLE_CATEGORIES.' as subc,'
+			.TABLE_PRODUCTS_TO_CATEGORIES.' as ptoc
+			WHERE
+			p.products_id = ptoc.products_id AND
+			ptoc.categories_id = subc.categories_id '.$sql_filter; // added filter 4-13-2012		
 	break;	
 
 	case 'category': 
@@ -275,13 +338,13 @@ function ep_4_set_filelayout($ep_dltype, &$filelayout_sql, $sql_filter, $langcod
 			$filelayout[]   = 'v_metatags_description_'.$l_id;
 		} 
 		$filelayout_sql = 'SELECT
-			c.categories_id          AS v_categories_id,
-			c.categories_image       AS v_categories_image
+			c.categories_id    AS v_categories_id,
+			c.categories_image AS v_categories_image
 			FROM '
 			.TABLE_CATEGORIES.' AS c';
 		break;
 		
-	case 'attrib':
+	case 'attrib_detailed':
 		$filelayout[] =	'v_products_attributes_id';
 		$filelayout[] =	'v_products_id';
 		$filelayout[] =	'v_products_model'; // product model from table PRODUCTS
@@ -313,10 +376,17 @@ function ep_4_set_filelayout($ep_dltype, &$filelayout_sql, $sql_filter, $langcod
 		$filelayout[] =	'v_attributes_price_letters';
 		$filelayout[] =	'v_attributes_price_letters_free';
 		$filelayout[] =	'v_attributes_required';
+// table TABLE_PRODUCTS_ATTRIBUTES_DOWNLOAD		
+		$filelayout[] =	'v_products_attributes_filename';
+		$filelayout[] =	'v_products_attributes_maxdays';
+		$filelayout[] =	'v_products_attributes_maxcount';
+		
+		
 		// a = table PRODUCTS_ATTRIBUTES
 		// p = table PRODUCTS
 		// o = table PRODUCTS_OPTIONS
 		// v = table PRODUCTS_OPTIONS_VALUES
+		// d = table PRODUCTS_ATTRIBUTES_DOWNLOAD
 		$filelayout_sql = 'SELECT
 			a.products_attributes_id            as v_products_attributes_id,
 			a.products_id                       as v_products_id,
@@ -350,55 +420,7 @@ function ep_4_set_filelayout($ep_dltype, &$filelayout_sql, $sql_filter, $langcod
 			a.attributes_price_words_free       as v_attributes_price_words_free,
 			a.attributes_price_letters          as v_attributes_price_letters,
 			a.attributes_price_letters_free     as v_attributes_price_letters_free,
-			a.attributes_required               as v_attributes_required
-			FROM '
-			.TABLE_PRODUCTS_ATTRIBUTES.     ' as a,'
-			.TABLE_PRODUCTS.                ' as p,'
-			.TABLE_PRODUCTS_OPTIONS.        ' as o,'
-			.TABLE_PRODUCTS_OPTIONS_VALUES. ' as v
-			WHERE
-			a.products_id       = p.products_id AND
-			a.options_id        = o.products_options_id AND
-			a.options_values_id = v.products_options_values_id';
-		break;
-
-
-	case 'attrib_basic_simple': // simplified sinlge-line attributes ... eventually!
-		// $filelayout[] =	'v_products_attributes_id';
-		// $filelayout[] =	'v_products_id';
-		$filelayout[] =	'v_products_model'; // product model from table PRODUCTS
-		$filelayout[] =	'v_products_options_type'; // 0-drop down, 1=text , 2=radio , 3=checkbox, 4=file, 5=read only 
-		
-		// $filelayout[] =	'v_options_id';
-		$filelayout[] =	'v_products_options_name'; // options name from table PRODUCTS_OPTIONS
-/*		foreach ($langcode as $key => $lang) { // create categories variables for each language id
-			$l_id = $lang['id'];
-			$filelayout[] = 'v_products_options_name_'.$l_id;
-		} 
-*/
-		// $filelayout[] =	'v_options_values_id';
-		
-//		$filelayout[] =	'v_products_options_values_name'; // options values name from table PRODUCTS_OPTIONS_VALUES
-		foreach ($langcode as $key => $lang) { // create categories variables for each language id
-			$l_id = $lang['id'];
-			$filelayout[] = 'v_products_options_values_name_'.$l_id;
-		}
-
-		// a = table PRODUCTS_ATTRIBUTES
-		// p = table PRODUCTS
-		// o = table PRODUCTS_OPTIONS
-		// v = table PRODUCTS_OPTIONS_VALUES
-		$filelayout_sql = 'SELECT
-			a.products_attributes_id            as v_products_attributes_id,
-			a.products_id                       as v_products_id,
-			a.options_id                        as v_options_id,
-			a.options_values_id                 as v_options_values_id,
-			p.products_model				    as v_products_model,
-			o.products_options_id               as v_products_options_id,
-			o.products_options_name             as v_products_options_name,
-			o.products_options_type             as v_products_options_type,
-			v.products_options_values_id        as v_products_options_values_id,
-			v.products_options_values_name      as v_products_options_values_name
+			a.attributes_required               as v_attributes_required 
 			FROM '
 			.TABLE_PRODUCTS_ATTRIBUTES.     ' as a,'
 			.TABLE_PRODUCTS.                ' as p,'
@@ -408,18 +430,24 @@ function ep_4_set_filelayout($ep_dltype, &$filelayout_sql, $sql_filter, $langcod
 			a.products_id       = p.products_id AND
 			a.options_id        = o.products_options_id AND
 			a.options_values_id = v.products_options_values_id AND
-			o.language_id       = v.language_id ORDER BY a.products_id, a.options_id';
-		break;
+			o.language_id       = v.language_id AND
+			o.language_id       = 1 ORDER BY a.products_id, a.options_id, v.products_options_values_id';
+ 		break;
 
-	case 'attrib_basic_detailed': // detailed multi-line attributes
-		$filelayout[] =	'v_products_attributes_id';
-		$filelayout[] =	'v_products_id';
+
+	case 'attrib_basic': // simplified sinlge-line attributes ... eventually!
+		// $filelayout[] =	'v_products_attributes_id';
+		// $filelayout[] =	'v_products_id';
 		$filelayout[] =	'v_products_model'; // product model from table PRODUCTS
-		$filelayout[] =	'v_options_id';
-		$filelayout[] =	'v_products_options_name'; // options name from table PRODUCTS_OPTIONS
 		$filelayout[] =	'v_products_options_type'; // 0-drop down, 1=text , 2=radio , 3=checkbox, 4=file, 5=read only 
-		$filelayout[] =	'v_options_values_id';
-		$filelayout[] =	'v_products_options_values_name'; // options values name from table PRODUCTS_OPTIONS_VALUES
+		foreach ($langcode as $key => $lang) { // create categories variables for each language id
+			$l_id = $lang['id'];
+			$filelayout[] = 'v_products_options_name_'.$l_id;
+		} 
+		foreach ($langcode as $key => $lang) { // create categories variables for each language id
+			$l_id = $lang['id'];
+			$filelayout[] = 'v_products_options_values_name_'.$l_id;
+		}
 		// a = table PRODUCTS_ATTRIBUTES
 		// p = table PRODUCTS
 		// o = table PRODUCTS_OPTIONS
@@ -427,14 +455,15 @@ function ep_4_set_filelayout($ep_dltype, &$filelayout_sql, $sql_filter, $langcod
 		$filelayout_sql = 'SELECT
 			a.products_attributes_id            as v_products_attributes_id,
 			a.products_id                       as v_products_id,
-			p.products_model				    as v_products_model,
 			a.options_id                        as v_options_id,
+			a.options_values_id                 as v_options_values_id,
+			p.products_model				    as v_products_model,
 			o.products_options_id               as v_products_options_id,
 			o.products_options_name             as v_products_options_name,
 			o.products_options_type             as v_products_options_type,
-			a.options_values_id                 as v_options_values_id,
 			v.products_options_values_id        as v_products_options_values_id,
-			v.products_options_values_name      as v_products_options_values_name
+			v.products_options_values_name      as v_products_options_values_name,
+			v.language_id                       as v_language_id
 			FROM '
 			.TABLE_PRODUCTS_ATTRIBUTES.     ' as a,'
 			.TABLE_PRODUCTS.                ' as p,'
@@ -443,8 +472,9 @@ function ep_4_set_filelayout($ep_dltype, &$filelayout_sql, $sql_filter, $langcod
 			WHERE
 			a.products_id       = p.products_id AND
 			a.options_id        = o.products_options_id AND
-			a.options_values_id = v.products_options_values_id';
-		break;
+			a.options_values_id = v.products_options_values_id AND
+			o.language_id       = v.language_id ORDER BY a.products_id, a.options_id, v.language_id, v.products_options_values_id';
+ 		break;
 		
 	case 'options':
 		$filelayout[] =	'v_products_options_id';
@@ -517,7 +547,6 @@ function ep_4_set_filelayout($ep_dltype, &$filelayout_sql, $sql_filter, $langcod
 return $filelayout;;
 }
 
-
 if (!function_exists(zen_get_sub_categories)) {
 	function zen_get_sub_categories(&$categories, $categories_id) {
 		$sub_categories_query = mysql_query("SELECT categories_id FROM ".TABLE_CATEGORIES.
@@ -531,7 +560,6 @@ if (!function_exists(zen_get_sub_categories)) {
 		}
 	}
 }
-
 
 function ep_4_get_uploaded_file($filename) {
 	if (isset($_FILES[$filename])) {
@@ -682,7 +710,7 @@ function ep_4_update_prices() {
 
 // DEPRECATED: no calls to this function
 // I am writing all my own attribute processing code
-function ep_4_update_attributes_sort_order() {
+/*function ep_4_update_attributes_sort_order() {
 	global $db;
 	$all_products_attributes = $db->Execute("select p.products_id, pa.products_attributes_id from ".
 		TABLE_PRODUCTS." p, ".
@@ -694,8 +722,7 @@ function ep_4_update_attributes_sort_order() {
 		zen_update_attributes_products_option_values_sort_order($all_products_attributes->fields['products_id']);
 		$all_products_attributes->MoveNext();
 	}
-}
-
+}*/
 
 function write_debug_log_4($string) {
 	global $ep_debug_log_path;
@@ -742,7 +769,12 @@ function install_easypopulate_4() {
 			('', 'Maximum Quantity Discounts',         'EASYPOPULATE_4_CONFIG_MAX_QTY_DISCOUNTS', '3', 'Maximum number of quantity discounts (price breaks). Is the number of discount columns in downloaded file (default: 3).', ".$group_id.", '11', NULL, now(), NULL, NULL),
 			('', 'Split On Number of Records',         'EASYPOPULATE_4_CONFIG_SPLIT_RECORDS', '2000', 'Number of records to split csv files. Used to break large import files into smaller files. Useful on servers with limited resourses. (default: 2000).', ".$group_id.", '12', NULL, now(), NULL, NULL),
 			('', 'Script Execution Time',              'EASYPOPULATE_4_CONFIG_EXECUTION_TIME', '60', 'Number of seconds for script to run before timeout. May not work on some servers. (default: 60).', ".$group_id.", '13', NULL, now(), NULL, NULL),
-			('', 'Convert Curly Quotes, etc.',         'EASYPOPULATE_4_CONFIG_CURLY_QUOTES', '0', 'Convert Curly Quotes, Em-Dash, En-Dash and Ellipsis characters in Products Description (default 0).<br><br>0=No Change<br>1=Replace with Basic Characters<br>3=Replace with HMTL equivalants', ".$group_id.", '14', NULL, now(), NULL, 'zen_cfg_select_option(array(\"0\", \"1\", \"2\"),')
+			('', 'Convert Curly Quotes, etc.',         'EASYPOPULATE_4_CONFIG_CURLY_QUOTES', '0', 'Convert Curly Quotes, Em-Dash, En-Dash and Ellipsis characters in Product Names &amp; Descriptions (default 0).<br><br>0=No Change<br>1=Replace with Basic Characters<br>3=Replace with HMTL equivalants', ".$group_id.", '14', NULL, now(), NULL, 'zen_cfg_select_option(array(\"0\", \"1\", \"2\"),'),
+			('', 'Convert Character 0x92',             'EASYPOPULATE_4_CONFIG_CHAR_92', '1', 'Convert Character 0x92 characters in Product Names &amp; Descriptions (default 1).<br><br>0=No Change<br>1=Replace with Standard Single Quote<br>2=Replace with HMTL equivalant', ".$group_id.", '15', NULL, now(), NULL, 'zen_cfg_select_option(array(\"0\", \"1\", \"2\"),'),
+
+			('', 'Enable Products Meta Data',          'EASYPOPULATE_4_CONFIG_META_DATA', '1', 'Enable Products Meta Data Columns (default 1).<br><br>0=Disable<br>1=Enable', ".$group_id.", '16', NULL, now(), NULL, 'zen_cfg_select_option(array(\"0\", \"1\"),'), 
+			('', 'Enable Products Music Data',         'EASYPOPULATE_4_CONFIG_MUSIC_DATA', '0', 'Enable Products Music Data Columns (default 0).<br><br>0=Disable<br>1=Enable', ".$group_id.", '17', NULL, now(), NULL, 'zen_cfg_select_option(array(\"0\", \"1\"),')
+
 		");
 	} elseif (substr($project,0,3) == "1.5") {
 		$db->Execute("INSERT INTO ".TABLE_CONFIGURATION_GROUP." VALUES ('', 'Easy Populate 4', 'Configuration Options for Easy Populate 4', '1', '1')");
@@ -763,9 +795,15 @@ function install_easypopulate_4() {
 			('', 'Maximum Quantity Discounts',         'EASYPOPULATE_4_CONFIG_MAX_QTY_DISCOUNTS', '3', 'Maximum number of quantity discounts (price breaks). Is the number of discount columns in downloaded file (default: 3).', ".$group_id.", '11', NULL, now(), NULL, NULL),
 			('', 'Split On Number of Records',         'EASYPOPULATE_4_CONFIG_SPLIT_RECORDS', '2000', 'Number of records to split csv files. Used to break large import files into smaller files. Useful on servers with limited resourses. (default: 2000).', ".$group_id.", '12', NULL, now(), NULL, NULL),
 			('', 'Script Execution Time',              'EASYPOPULATE_4_CONFIG_EXECUTION_TIME', '60', 'Number of seconds for script to run before timeout. May not work on some servers. (default: 60).', ".$group_id.", '13', NULL, now(), NULL, NULL),
-			('', 'Convert Curly Quotes, etc.',         'EASYPOPULATE_4_CONFIG_CURLY_QUOTES', '0', 'Convert Curly Quotes, Em-Dash, En-Dash and Ellipsis characters in Products Description (default 0).<br><br>0=No Change<br>1=Replace with Basic Characters<br>3=Replace with HMTL equivalants', ".$group_id.", '14', NULL, now(), NULL, 'zen_cfg_select_option(array(\"0\", \"1\", \"2\"),')
+			('', 'Convert Curly Quotes, etc.',         'EASYPOPULATE_4_CONFIG_CURLY_QUOTES', '0', 'Convert Curly Quotes, Em-Dash, En-Dash and Ellipsis characters in Products Description (default 0).<br><br>0=No Change<br>1=Replace with Basic Characters<br>3=Replace with HMTL equivalants', ".$group_id.", '14', NULL, now(), NULL, 'zen_cfg_select_option(array(\"0\", \"1\", \"2\"),'),
+			('', 'Convert Character 0x92',             'EASYPOPULATE_4_CONFIG_CHAR_92', '1', 'Convert Character 0x92 characters in Product Names &amp; Descriptions (default 1).<br><br>0=No Change<br>1=Replace with Standard Single Quote<br>2=Replace with HMTL equivalant', ".$group_id.", '15', NULL, now(), NULL, 'zen_cfg_select_option(array(\"0\", \"1\", \"2\"),'),
+
+			('', 'Enable Products Meta Data',          'EASYPOPULATE_4_CONFIG_META_DATA', '1', 'Enable Products Meta Data Columns (default 1).<br><br>0=Disable<br>1=Enable', ".$group_id.", '16', NULL, now(), NULL, 'zen_cfg_select_option(array(\"0\", \"1\"),'), 
+			('', 'Enable Products Music Data',         'EASYPOPULATE_4_CONFIG_MUSIC_DATA', '0', 'Enable Products Music Data Columns (default 0).<br><br>0=Disable<br>1=Enable', ".$group_id.", '17', NULL, now(), NULL, 'zen_cfg_select_option(array(\"0\", \"1\"),')
+
 		");
 	} else { // unsupported version 
+		// i should do something here!
 	} 
 }
 
@@ -810,9 +848,7 @@ function ep_4_chmod_check($tempdir) {
 	return $chmod_check;
 }
 
-/**
-* The following functions are for testing purposes only
-*/
+// The following functions are for testing purposes only
 // available zen functions of use..
 /*
 function zen_get_category_name($category_id, $language_id)

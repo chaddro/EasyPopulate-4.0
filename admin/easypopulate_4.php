@@ -14,17 +14,20 @@ $excel_safe_output = true; // this forces enclosure in quotes
 require_once ('includes/application_top.php');
 
 /* Configuration Variables from Admin Interface  */
-$tempdir            = EASYPOPULATE_4_CONFIG_TEMP_DIR;
-$ep_date_format     = EASYPOPULATE_4_CONFIG_FILE_DATE_FORMAT;
-$ep_raw_time        = EASYPOPULATE_4_CONFIG_DEFAULT_RAW_TIME;
+$tempdir          = EASYPOPULATE_4_CONFIG_TEMP_DIR;
+$ep_date_format   = EASYPOPULATE_4_CONFIG_FILE_DATE_FORMAT;
+$ep_raw_time      = EASYPOPULATE_4_CONFIG_DEFAULT_RAW_TIME;
 $ep_debug_logging = ((EASYPOPULATE_4_CONFIG_DEBUG_LOGGING == 'true') ? true : false);
-$ep_split_records   = (int)EASYPOPULATE_4_CONFIG_SPLIT_RECORDS;
+$ep_split_records = (int)EASYPOPULATE_4_CONFIG_SPLIT_RECORDS;
 $price_with_tax   = ((EASYPOPULATE_4_CONFIG_PRICE_INC_TAX == 'true') ? true : false);
 $strip_smart_tags = ((EASYPOPULATE_4_CONFIG_SMART_TAGS == 'true') ? true : false);
-$max_qty_discounts  = EASYPOPULATE_4_CONFIG_MAX_QTY_DISCOUNTS;
+$max_qty_discounts= EASYPOPULATE_4_CONFIG_MAX_QTY_DISCOUNTS;
 $ep_feedback      = ((EASYPOPULATE_4_CONFIG_VERBOSE == 'true') ? true : false);
 $ep_execution     = (int)EASYPOPULATE_4_CONFIG_EXECUTION_TIME;
 $ep_curly_quotes  = (int)EASYPOPULATE_4_CONFIG_CURLY_QUOTES;
+$ep_char_92       = (int)EASYPOPULATE_4_CONFIG_CHAR_92;
+$ep_metatags      = (int)EASYPOPULATE_4_CONFIG_META_DATA; // 0-Disable, 1-Enable
+$ep_music         = (int)EASYPOPULATE_4_CONFIG_MUSIC_DATA; // 0-Disable, 1-Enable
 
 @set_time_limit($ep_execution);  // executin limit in seconds. 300 = 5 minutes before timeout, 0 means no timelimit
 
@@ -45,10 +48,9 @@ $ep_debug_logging_all = false; // do not comment out.. make false instead
 /* Test area end */
 
 // Current EP Version - Modded by Chadd
-$curver              = '4.0.19 - Beta 1-28-2012';
+$curver              = '4.0.20 - Beta 5-20-2012';
 $display_output      = ''; // results of import displayed after script run
 $ep_dltype           = NULL;
-$ep_dlmethod         = NULL;
 $chmod_check         = true;
 $ep_stack_sql_error  = false; // function returns true on any 1 error, and notifies user of an error
 $specials_print      = EASYPOPULATE_4_SPECIALS_HEADING;
@@ -99,6 +101,8 @@ $ep_supported_mods['uom'] = ep_4_check_table_column(TABLE_PRODUCTS,'products_pri
 $ep_supported_mods['upc'] = ep_4_check_table_column(TABLE_PRODUCTS,'products_upc');       // upc = UPC Code, added by Chadd
 $ep_supported_mods['gpc'] = ep_4_check_table_column(TABLE_PRODUCTS,'products_gpc'); // gpc = google product category for Google Merchant Center, added by Chadd 10-1-2011
 $ep_supported_mods['msrp'] = ep_4_check_table_column(TABLE_PRODUCTS,'products_msrp'); // msrp = manufacturer's suggested retail price, added by Chadd 1-9-2012
+$ep_supported_mods['gppi'] = ep_4_check_table_column(TABLE_PRODUCTS,'products_group_a_price'); // gppi = group pricing per item, added by Chadd 4-24-2012
+$ep_supported_mods['excl'] = ep_4_check_table_column(TABLE_PRODUCTS,'products_exclusive'); // exclu = Custom Mod for Exclusive Products: 04-24-2012
 // END: check for existance of various mods
 
 // maximum length for a category in this database
@@ -110,6 +114,9 @@ $manufacturers_name_max_len = zen_field_length(TABLE_MANUFACTURERS, 'manufacture
 $products_model_max_len = zen_field_length(TABLE_PRODUCTS, 'products_model');
 $products_name_max_len = zen_field_length(TABLE_PRODUCTS_DESCRIPTION, 'products_name');
 $products_url_max_len = zen_field_length(TABLE_PRODUCTS_DESCRIPTION, 'products_url');
+$artists_name_max_len = zen_field_length(TABLE_RECORD_ARTISTS, 'artists_name');
+$record_company_name_max_len = zen_field_length(TABLE_RECORD_COMPANY, 'record_company_name');
+$music_genre_name_max_len = zen_field_length(TABLE_MUSIC_GENRE, 'music_genre_name');
 
 $project = PROJECT_VERSION_MAJOR.'.'.PROJECT_VERSION_MINOR;
 if ( (substr($project,0,5) == "1.3.8") || (substr($project,0,5) == "1.3.9") && (DB_CHARSET == 'utf8') ) {
@@ -122,8 +129,6 @@ if ( (substr($project,0,5) == "1.3.8") || (substr($project,0,5) == "1.3.9") && (
 	$products_name_max_len = $products_name_max_len/3;
 	$products_url_max_len = $products_url_max_len/3;
 }
-
-
 
 // test for Ajeh
 //$ajeh_sql = 'SELECT * FROM '. TABLE_PRODUCTS .' WHERE '.TABLE_PRODUCTS.'.products_id NOT IN (SELECT '. TABLE_PRODUCTS_TO_CATEGORIES.'.products_id FROM '. TABLE_PRODUCTS_TO_CATEGORIES.')';
@@ -148,13 +153,12 @@ if (mysql_num_rows($epdlanguage_query)) {
 
 $langcode = ep_4_get_languages(); // array of currently used language codes ( 1, 2, 3, ...)
 
-// working on attributes export 
 /*
-if ( isset($_GET['export2']) ) {
+if ( isset($_GET['export2']) ) { // working on attributes export 
 	include_once('easypopulate_4_export2.php'); // this file contains all data import code
 } */
 
-if ( isset($_POST['filter']) OR isset($_GET['export'])  ) {
+if ( isset($_POST['export']) OR isset($_GET['export'])  ) {
 	include_once('easypopulate_4_export.php'); // this file contains all data export code
 }
 if ( isset($_GET['import']) ) {
@@ -230,7 +234,7 @@ if (!$error && isset($_REQUEST["delete"]) && $_REQUEST["delete"]!=basename($_SER
     <?php
 		echo '<br><b><u>Configuration Settings</u></b><br>';
 		echo 'Upload Directory: <b>'.$tempdir.'</b><br>'; 
-		echo 'Verbose Feedback: '.(($ep_feedback) ? "TRUE":"FALSE").'<br>';
+		echo 'Verbose Feedback: '.(($ep_feedback) ? '<font color="green">TRUE</font>':"FALSE").'<br>';
 		echo 'Split Records: '.$ep_split_records.'<br>';
 		echo 'Execution Time: '.$ep_execution.'<br>';
 		switch ($ep_curly_quotes) {
@@ -244,16 +248,32 @@ if (!$error && isset($_REQUEST["delete"]) && $_REQUEST["delete"]!=basename($_SER
 			$ep_curly_text = "HTML";
 			break;
 		}
+		switch ($ep_char_92) {
+			case 0:
+			$ep_char92_text = "No Change";
+			break;
+			case 1:
+			$ep_char92_text = "Basic";
+			break;
+			case 2:	
+			$ep_char92_text = "HTML";
+			break;
+		}
 		echo 'Convert Curly Quotes: '.$ep_curly_text.'<br>';
+		echo 'Convert Char 0x92: '.$ep_char92_text.'<br>';
+		echo 'Enable Products Metatags: '.$ep_metatags.'<br>';
+		echo 'Enable Products Music: '.$ep_music.'<br>';
 			
 		echo '<br><b><u>Custom Products Fields</u></b><br>';
-		echo 'Product Short Descriptions: '.(($ep_supported_mods['psd']) ? "TRUE":"FALSE").'<br>';
-		echo 'Product Unit of Measure: '.(($ep_supported_mods['uom']) ? "TRUE":"FALSE").'<br>';
-		echo 'Product UPC Code: '.(($ep_supported_mods['upc']) ? "TRUE":"FALSE").'<br>';
+		echo 'Product Short Descriptions: '.(($ep_supported_mods['psd']) ? '<font color="green">TRUE</font>':"FALSE").'<br>';
+		echo 'Product Unit of Measure: '.(($ep_supported_mods['uom']) ? '<font color="green">TRUE</font>':"FALSE").'<br>';
+		echo 'Product UPC Code: '.(($ep_supported_mods['upc']) ? '<font color="green">TRUE</font>':"FALSE").'<br>';
 		// Google Product Category for Google Merchant Center
-		echo 'Google Product Category: '.(($ep_supported_mods['gpc']) ? "TRUE":"FALSE").'<br>';
-		echo "Manufacturer's Suggested Retail Price: ".(($ep_supported_mods['msrp']) ? "TRUE":"FALSE").'<br>';	
-	
+		echo 'Google Product Category: '.(($ep_supported_mods['gpc']) ? '<font color="green">TRUE</font>':"FALSE").'<br>';
+		echo "Manufacturer's Suggested Retail Price: ".(($ep_supported_mods['msrp']) ? '<font color="green">TRUE</font>':"FALSE").'<br>';
+		echo "Group Pricing Per Item: ".(($ep_supported_mods['gppi']) ? '<font color="green">TRUE</font>':"FALSE").'<br>';
+		echo "Exclusive Products Mod: ".(($ep_supported_mods['excl']) ? '<font color="green">TRUE</font>':"FALSE").'<br>';
+
 		echo '<br><b><u>Installed Languages</u></b> <br>';
 		foreach ($langcode as $key => $lang) {
 			echo $lang['id'].'-'.$lang['code'].': '.$lang['name'].'<br>';
@@ -267,17 +287,6 @@ if (!$error && isset($_REQUEST["delete"]) && $_REQUEST["delete"]!=basename($_SER
 		echo 'manufacturers_name:'.$manufacturers_name_max_len.'<br>';
 		echo 'products_model:'.$products_model_max_len.'<br>';
 		echo 'products_name:'.$products_name_max_len.'<br>';
-	
-	/*  // some error checking
-		echo '<br><br>Problem Data: '. mysql_num_rows($ajeh_result);
-		echo '<br>Memory Usage: '.memory_get_usage(); 
-		echo '<br>Memory Peak: '.memory_get_peak_usage();
-		echo '<br><br>';
-		print_r($langcode);
-		echo '<br><br>code: '.$langcode[1]['id'];
-	*/
-		//register_globals_vars_check_4(); // chadd testing
-	
 	?></div>
 
 	<?php echo zen_draw_separator('pixel_trans.gif', '1', '10'); ?>
@@ -308,31 +317,42 @@ if (!$error && isset($_REQUEST["delete"]) && $_REQUEST["delete"]!=basename($_SER
 		while ($manufacturers = mysql_fetch_array($manufacturers_query)) {
 			$manufacturers_array[] = array( "id" => $manufacturers['manufacturers_id'], 'text' => $manufacturers['manufacturers_name'] );
 		}
-		$status_array = array(array( "id" => '1', 'text' => "status" ),array( "id" => '1', 'text' => "active" ),array( "id" => '0', 'text' => "inactive" ));
-		echo "<b>Filter Complete Export by:</b><br>";
-		echo zen_draw_pull_down_menu('ep_category_filter', array_merge(array( 0 => array( "id" => '', 'text' => "Categories" )), zen_get_category_tree()));
+		$status_array = array(array( "id" => '1', 'text' => "Status" ),array( "id" => '1', 'text' => "active" ),array( "id" => '0', 'text' => "inactive" ),array( "id" => '3', 'text' => "all" ));
+		$export_type_array  = array(array( "id" => '0', 'text' => "Download Type" ),
+			array( "id" => '0', 'text' => "Complete Products" ),
+			array( "id" => '1', 'text' => "Model/Price/Qty" ),
+			array( "id" => '2', 'text' => "Model/Price/Breaks" ));
+		
+		echo "<b>Filterable Exports:</b><br>";
+		
+		echo zen_draw_pull_down_menu('ep_export_type', $export_type_array) . ' ';
+		echo ' ' . zen_draw_pull_down_menu('ep_category_filter', array_merge(array( 0 => array( "id" => '', 'text' => "Categories" )), zen_get_category_tree())) . ' ';
 		echo ' ' . zen_draw_pull_down_menu('ep_manufacturer_filter', $manufacturers_array) . ' ';
 		echo ' ' . zen_draw_pull_down_menu('ep_status_filter', $status_array) . ' ';
-		echo zen_draw_input_field('filter', 'full', ' style="padding: 0px"', false, 'submit');
+		echo zen_draw_input_field('export', 'Export', ' style="padding: 0px"', false, 'submit');
 		?>				
     <br /><br>
     </div>
 
-    <b>Full Export Options:</b><br />
+    <b>Product &amp; Pricing Export/Import Options:</b><br />
     <!-- Download file links -->
     <a href="easypopulate_4.php?export=full"><b>Complete Products</b> (with Metatags)</a><br />
     <a href="easypopulate_4.php?export=priceqty"><b>Model/Price/Qty</b> (with Specials)</a><br />
     <a href="easypopulate_4.php?export=pricebreaks"><b>Model/Price/Breaks</b></a><br />
-    <a href="easypopulate_4.php?export=category"><b>Model/Category</b> </a><br />
+    <a href="easypopulate_4.php?export=featured"><b>Featured Products</b></a><br />
+    
+    <br><b>Category Export/Import Options</b><br>
+    <a href="easypopulate_4.php?export=category"><b>Model/Category</b></a><br />
     <a href="easypopulate_4.php?export=categorymeta"><b>Categories Only</b> (with Metatags)</a><br />
-    <br>
-    <br>Under Construction - Note: DIAGNOSTIC EXPORTS, NOT FOR IMPORTING ATTRIBUTES YET!<br>
-    <a href="easypopulate_4.php?export=attrib"><b>Detailed Products Attributes</b> (detailed multi-line)</a><br />
-    <a href="easypopulate_4.php?export=attrib_basic_detailed"><b>Basic Products Attributes</b> (detailed multi-line)</a><br />
-    <!-- <a href="easypopulate_4.php?export2=attrib_basic_simple"><b>Basic Products Attributes</b> (single-line)</a><br /> -->
-    <a href="easypopulate_4.php?export=options"><b>Attribute Options Names</b> </a><br />
-    <a href="easypopulate_4.php?export=values"><b>Attribute Options Values</b> </a><br />
-    <a href="easypopulate_4.php?export=optionvalues"><b>Attribute Options-Names-to-Values</b> </a><br />
+    
+    <br><b>Attribute Export/Import Options</b><br>
+    <a href="easypopulate_4.php?export=attrib_basic"><b>Basic Products Attributes</b> (basic single-line)</a><br /> 
+    <a href="easypopulate_4.php?export=attrib_detailed"><b>Detailed Products Attributes</b> (detailed multi-line)</a><br />
+    
+    <br>DIAGNOSTIC EXPORTS - Note: NOT FOR IMPORTING ATTRIBUTES!<br>
+    <a href="easypopulate_4.php?export=options"><b>Attribute Options Names</b></a><br />
+    <a href="easypopulate_4.php?export=values"><b>Attribute Options Values</b></a><br />
+    <a href="easypopulate_4.php?export=optionvalues"><b>Attribute Options-Names-to-Values</b></a><br />
 
 	<?php   
     // List uploaded files in multifile mode
@@ -375,14 +395,15 @@ if (!$error && isset($_REQUEST["delete"]) && $_REQUEST["delete"]!=basename($_SER
 				}
 				// file management
 				if ($ext == 'csv') {
-					echo "<td align=center><a href=\"".$_SERVER["PHP_SELF"]."?split=".$dirfile."\">Split</a></td>\n";
-					echo "<td align=center><a href=\"".$_SERVER["PHP_SELF"]."?import=".$dirfile."\">Import</a></td>\n";
-					echo "<td align=center><a href=\"".$_SERVER["PHP_SELF"]."?delete=".urlencode($dirfile)."\">Delete file</a></td>";
+					// $_SERVER["PHP_SELF"] vs $_SERVER['SCRIPT_NAME']
+					echo "<td align=center><a href=\"".$_SERVER['SCRIPT_NAME']."?split=".$dirfile."\">Split</a></td>\n";
+					echo "<td align=center><a href=\"".$_SERVER['SCRIPT_NAME']."?import=".$dirfile."\">Import</a></td>\n";
+					echo "<td align=center><a href=\"".$_SERVER['SCRIPT_NAME']."?delete=".urlencode($dirfile)."\">Delete file</a></td>";
 					echo "<td align=center><a href=".DIR_WS_CATALOG.$tempdir.$dirfile." target=_blank>Download</a></td></tr>\n";
 				} else {		  
 					echo "<td>&nbsp;</td>\n";
 					echo "<td>&nbsp;</td>\n";
-					echo "<td align=center><a href=\"".$_SERVER["PHP_SELF"]."?delete=".urlencode($dirfile)."\">Delete file</a></td>";
+					echo "<td align=center><a href=\"".$_SERVER['SCRIPT_NAME']."?delete=".urlencode($dirfile)."\">Delete file</a></td>";
 					echo "<td align=center><a href=".DIR_WS_CATALOG.$tempdir.$dirfile." target=_blank>Download</a></td></tr>\n";
 				}
 			} // if (file types)

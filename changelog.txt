@@ -109,3 +109,23 @@
                     Added Configuration Variable EASYPOPULATE_4_CONFIG_CURLY_QUOTES with 3 options. 0-Don't Convert, 1-Convert to Basic Symbols, 2-Convert to HTML codes
                     Added support for products_msrp mod.
 4.0.19 - 01-28-2012 Fixed bug in file splitting where subseqent splits appended to previously split files instead of overwritting them.
+4.0.20 - 04-10-2012 Significant work on attributes import. Two Attribute Import/Export files are now available. Attrib-Basic-EP and Attrib-Detailed-EP.
+                    Attrib-Basic-EP is used to create your products_options_name and products_options_values_name with a given product_options_type and assign 
+                    this attribute set to a products_model. Multiple languages are supported. Important: You must have language id 1 (English by default install).
+                    The Basic sheet can only create new attributes or update (add to) attributes for a given products_model. There is no provision yet for removing attributes
+                    so this must be done from within the admin.
+                    Attrib-Detailed-EP is used After you have imported your Basic attributes. The Detailed sheet can be used to update all vital settings for an attribute on a 
+                    given products_model. Note that the Detailed sheet does NOT create products_options_name or products_options_values_name entries. NOR does the Detailed sheet
+                    add or remove entries. 
+                    The examples/ directory contains a new sample CSV file for importing attributes.
+         04-12-2012 Added option to deal with character 0x92 (a right single quote) that appears to come from Western Europe (window 1252) encoding. This can also be corrected when
+                    saving your CSV file and selecting either utf-8 or iso-8859-1. Added settings info on right side of screen.
+                    NOTE: If \"" (which looks like an escape sequence) is in your input file, it will break the import. 
+         04-13-2012 Expanded the filterable downloads to allow Complete Products, Model/Price/Qty, and Model/Price Breaks. Some minor changes to EP4 page.
+         04-23-2012 Added configuration variables for MetaTags and Music Exports. If enabled, they allow for the additional columns to be exported.
+         04-24-2012 Completed import/export for products_type = 2, Music (Artist, Record Company, Genre)
+         04-25-2012 Concept for alternate column header names added to the import code. Needs fleshing out and a way for user interaction.
+         04-30-2012 Added products_priced_by_attribute and product_is_always_free_shipping to the main products export/import file layout
+		 05-01-2012 Added NEW file to support Featured Items export/import
+         05-03-2012 Added "curly quotes" check for categories names import
+         05-08-2012 More "curly quotes" checks added
