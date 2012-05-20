@@ -91,7 +91,7 @@ CSV files from OO, it will properly encapsulate all fields. Excel will not
 necessarily do this, depending on your data, and the export CSV option 
 you pick from within Excel.
 
-In the /examples directory is an sample input files: Attrib-Basic-EP-colors.csv
+In the /examples directory is an sample input files: Attrib-Basic-EP-examples.csv
 
 The "Detailed Products Attributes" shows all attribute details assigned to a given products_model,
 with one line per option_name. So a product with a dropbox of 3 colors will result in 3 lines of
