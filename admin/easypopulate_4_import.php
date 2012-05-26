@@ -911,10 +911,10 @@ if ( ( strtolower(substr($file['name'],0,15)) <> "categorymeta-ep") && ( strtolo
 				$v_products_id = $max_product_id;
 				
 // HERE ========> 
-				if (isset($v_artists_name)) {
-					$v_products_type = 2; // 1 is default, 2 = music
+				if ($v_artists_name <> '') {
+					$v_products_type = 2; // 2 = music
 				} else {
-					$v_products_type = 2;
+					$v_products_type = 1; // standard product
 				}	
 				
 				$query = "INSERT INTO ".TABLE_PRODUCTS." SET
