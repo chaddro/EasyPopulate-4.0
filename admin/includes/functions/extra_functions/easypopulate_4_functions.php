@@ -1,4 +1,6 @@
 <?php
+// $Id: easypopulate_4_functions.php, v4.0.21 06-01-2012 chadderuski $
+
 function ep_4_curly_quotes($curly_text) {
 	$ep_curly_quotes = (int)EASYPOPULATE_4_CONFIG_CURLY_QUOTES;
 	$ep_char_92 = (int)EASYPOPULATE_4_CONFIG_CHAR_92;

@@ -1,7 +1,5 @@
 <?php
-// NOTE: Need over-ride for installed mods. Basically, a file check to ensure all table columns are installed. If no, set mod to FALSE.
-
-mb_internal_encoding("UTF-8");
+// $Id: easypopulate_4.php, v4.0.21 06-01-2012 chadderuski $
 
 // CSV VARIABLES - need to make this configurable in the ADMIN
 // $csv_delimiter = "\t"; // "\t" = tab AND "," = COMMA
@@ -48,7 +46,7 @@ $ep_debug_logging_all = false; // do not comment out.. make false instead
 /* Test area end */
 
 // Current EP Version - Modded by Chadd
-$curver              = '4.0.20 - Beta 5-20-2012';
+$curver              = '4.0.21 - Beta 6-1-2012';
 $display_output      = ''; // results of import displayed after script run
 $ep_dltype           = NULL;
 $chmod_check         = true;
@@ -119,15 +117,24 @@ $record_company_name_max_len = zen_field_length(TABLE_RECORD_COMPANY, 'record_co
 $music_genre_name_max_len = zen_field_length(TABLE_MUSIC_GENRE, 'music_genre_name');
 
 $project = PROJECT_VERSION_MAJOR.'.'.PROJECT_VERSION_MINOR;
-if ( (substr($project,0,5) == "1.3.8") || (substr($project,0,5) == "1.3.9") && (DB_CHARSET == 'utf8') ) {
-	// maximum length for a category in this database
+
+$collation = mysql_client_encoding(); // should be either latin1 or utf8
+
+if ($collation == 'utf8') {
+	mb_internal_encoding("UTF-8");
+}
+
+if ( ($collation == 'utf8') && ((substr($project,0,5) == "1.3.8") || (substr($project,0,5) == "1.3.9")) ) {
+	//mb_internal_encoding("UTF-8");
 	$category_strlen_max = $category_strlen_max/3;
-	// maximum length for important fields
 	$categories_name_max_len = $categories_name_max_len/3;
 	$manufacturers_name_max_len = $manufacturers_name_max_len/3;
 	$products_model_max_len = $products_model_max_len/3;
 	$products_name_max_len = $products_name_max_len/3;
 	$products_url_max_len = $products_url_max_len/3;
+	$artists_name_max_len = $artists_name_max_len/3;
+	$record_company_name_max_len = $record_company_name_max_len/3;
+	$music_genre_name_max_len = $music_genre_name_max_len/3;
 }
 
 // test for Ajeh
@@ -280,13 +287,24 @@ if (!$error && isset($_REQUEST["delete"]) && $_REQUEST["delete"]!=basename($_SER
 		}
 		echo 'Default Language: '.	$epdlanguage_id .'-'. $epdlanguage_name.'<br>';
 		echo 'Internal Character Encoding: '.mb_internal_encoding().'<br>';
-		echo 'DB CharSet: '.DB_CHARSET.'<br>';
+		echo 'DB Collation: '.$collation.'<br>';
 		
 		echo '<br><b><u>Database Field Lengths</u></b><br>';
 		echo 'categories_name:'.$categories_name_max_len.'<br>';
 		echo 'manufacturers_name:'.$manufacturers_name_max_len.'<br>';
 		echo 'products_model:'.$products_model_max_len.'<br>';
 		echo 'products_name:'.$products_name_max_len.'<br>';
+	
+	/*  // some error checking
+		echo '<br><br>Problem Data: '. mysql_num_rows($ajeh_result);
+		echo '<br>Memory Usage: '.memory_get_usage(); 
+		echo '<br>Memory Peak: '.memory_get_peak_usage();
+		echo '<br><br>';
+		print_r($langcode);
+		echo '<br><br>code: '.$langcode[1]['id'];
+	*/
+		//register_globals_vars_check_4(); // testing
+	
 	?></div>
 
 	<?php echo zen_draw_separator('pixel_trans.gif', '1', '10'); ?>
@@ -416,6 +434,9 @@ if (!$error && isset($_REQUEST["delete"]) && $_REQUEST["delete"]!=basename($_SER
 		$error=true;
 	} // opendir()
 	echo "</table>\n";
+	
+	
+
 	
 	/*
 	echo "<div>";

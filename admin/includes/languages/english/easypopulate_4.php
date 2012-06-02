@@ -1,7 +1,8 @@
 <?php
-/**
-* $display_output defines
-*/
+// $Id: easypopulate_4.php, v4.0.21 06-01-2012 chadderuski $
+
+// $display_output defines
+
 // file uploads display - output via $display_output
 define('EASYPOPULATE_4_DISPLAY_SPLIT_LOCATION','You can also download your split files from your %s directory<br />');
 define('EASYPOPULATE_4_DISPLAY_HEADING','<br /><h3><u>Import Results</u></h3><br />');
@@ -27,9 +28,7 @@ define('EASYPOPULATE_4_DISPLAY_RESULT_ARTISTS_NAME_LONG','<br /><font color="red
 define('EASYPOPULATE_4_DISPLAY_RESULT_RECORD_COMPANY_NAME_LONG','<br /><font color="red"><b>SKIPPED! - Record Company Name:</b> %s - exceeds max. length: %s</font>');
 define('EASYPOPULATE_4_DISPLAY_RESULT_MUSIC_GENRE_NAME_LONG','<br /><font color="red"><b>SKIPPED! - Music Genre Name:</b> %s - exceeds max. length: %s</font>');
 
-/**
-* $messageStack defines
-*/
+// $messageStack defines
 // checks - msg stack alerts - output via $messageStack
 define('EASYPOPULATE_4_MSGSTACK_TEMP_FOLDER_MISSING','<b>Easy Populate "Uploads Folder" missing!</b><br />Your uploads folder is missing. Your configuration indicates that your uploads folder is named <b>%s</b>, and is located in <b>%s</b>.<br>');
 define('EASYPOPULATE_4_MSGSTACK_TEMP_FOLDER_NOT_WRITABLE','<b>Easy Populate "Uploads Folder" is not writable!</b><br />Your uploads folder is not writable. Folder permissions for <b>%s</b> must be "777" or "755" depending on your server setup.<br>You must correct folder permissions before contining.<br>');
@@ -52,9 +51,7 @@ define('EASYPOPULATE_4_MSGSTACK_INSTALL_KEYS_FAIL','<b>Easy Populate Configurati
 // file handling - msg stack alerts - output via $messageStack
 define('EASYPOPULATE_4_MSGSTACK_FILE_EXPORT_SUCCESS', 'File <b>%s.csv</b> successfully exported! The file is ready for download in your /%s directory.');
 
-/**
-* $specials_print defines
-*/
+// $specials_print defines
 // results of specials in $specials_print
 define('EASYPOPULATE_4_SPECIALS_HEADING', '<b><u>Specials Summary</u></b><p class=smallText>'); // open paragraph
 define('EASYPOPULATE_4_SPECIALS_PRICE_FAIL', '<font color="red"><b>SKIPPED! - Model:</b> %s - specials price higher than normal price...</font><br />');

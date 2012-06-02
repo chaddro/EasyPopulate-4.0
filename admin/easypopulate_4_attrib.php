@@ -1,4 +1,7 @@
 <?php
+// $Id: easypopulate_4_attrib.php, v4.0.21 06-01-2012 chadderuski $
+
+
 // Database default values
 $products_options_id  = 1; // this needs to auto increment for NEW products options
 $language_id          = 1; // default 1=english

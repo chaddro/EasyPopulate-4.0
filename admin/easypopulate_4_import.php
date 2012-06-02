@@ -1,4 +1,6 @@
 <?php
+// $Id: easypopulate_4_import.php, v4.0.21 06-01-2012 chadderuski $
+
 // BEGIN: Data Import Module
 if ( isset($_GET['import']) ) {
 	$time_start = microtime(true); // benchmarking
@@ -76,6 +78,20 @@ if ( isset($_GET['import']) ) {
 	
 	// Read Column Headers
 	if ($raw_headers = fgetcsv($handle, 0, $csv_delimiter, $csv_enclosure)) {
+/*		$header_search = array("ARTIST","TITLE","FORMAT","LABEL",
+			"CATALOG_NUMBER","UPC","PRICE","RETAIL",
+			"WHOLESALE",	"GENRE","RELEASE_DATE","EXCLUSIVE",
+			"WEIGHT","QTY","DISPLAY ON SITE","IMAGE",
+			"DESCRIPTION", "TERRITORY","TRACKLISTING");
+		
+		$header_replace = array("v_artists_name","v_products_name_1","v_categories_name_1","v_record_company_name",
+			"v_products_model","v_products_upc","v_products_price",	"v_products_group_a_price",
+			"v_products_group_b_price","v_music_genre_name","v_date_avail","v_products_exclusive",
+			"v_products_weight","v_products_quantity","v_status","v_products_image",
+			"v_products_description_1", "v_territory","v_tracklisting");
+
+		$raw_headers = str_replace($header_search, $header_replace, $raw_headers);
+*/
 		$filelayout = array_flip($raw_headers);
 	
 	// Featured Products 5-2-2012
@@ -914,7 +930,7 @@ if ( ( strtolower(substr($file['name'],0,15)) <> "categorymeta-ep") && ( strtolo
 				if ($v_artists_name <> '') {
 					$v_products_type = 2; // 2 = music
 				} else {
-					$v_products_type = 1; // standard product
+					$v_products_type = 1;
 				}	
 				
 				$query = "INSERT INTO ".TABLE_PRODUCTS." SET
