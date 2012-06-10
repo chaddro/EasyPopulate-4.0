@@ -44,6 +44,11 @@ if ( isset($_GET['import']) ) {
 	if ($ep_supported_mods['excl'] == true) { // Exclusive Products Custom Mod
 		$default_these[] = 'v_products_exclusive';
 	}
+	if (count($custom_fields) > 0) {
+		foreach ($custom_fields as $field) {
+			$filelayout[] = 'v_'.$field;
+		}
+	}
 	$default_these[] = 'v_products_quantity';
 	$default_these[] = 'v_products_weight';
 	$default_these[] = 'v_products_discount_type';
@@ -347,6 +352,11 @@ if ( ( strtolower(substr($file['name'],0,15)) <> "categorymeta-ep") && ( strtolo
 		if ($ep_supported_mods['excl'] == true) { // Exclusive Product Custom Mod
 			$sql .= 'p.products_exclusive as v_products_exclusive,';
 		}
+		if (count($custom_fields) > 0) {
+			foreach ($custom_fields as $field) {
+				$sql .= 'p.'.$field.' as v_'.$field.',';
+			}
+		}		
 		$sql .= 'p.products_weight			as v_products_weight,
 			p.products_discount_type		as v_products_discount_type,
 			p.products_discount_type_from   as v_products_discount_type_from,
@@ -925,12 +935,10 @@ if ( ( strtolower(substr($file['name'],0,15)) <> "categorymeta-ep") && ( strtolo
 					$max_product_id = 1;
 				}
 				$v_products_id = $max_product_id;
-				
-// HERE ========> 
 				if ($v_artists_name <> '') {
 					$v_products_type = 2; // 2 = music
 				} else {
-					$v_products_type = 1;
+					$v_products_type = 1; // 1 = standard product
 				}	
 				
 				$query = "INSERT INTO ".TABLE_PRODUCTS." SET
@@ -957,6 +965,12 @@ if ( ( strtolower(substr($file['name'],0,15)) <> "categorymeta-ep") && ( strtolo
 				}
 				if ($ep_supported_mods['excl'] == true) { // Exclusive Product custom mod
 					$query .= "products_exclusive = '".addslashes($v_products_exclusive)."',";
+				}
+				if (count($custom_fields) > 0) {
+					foreach ($custom_fields as $field) {
+						$value ='v_'.$field;
+						$query .= "$field = '".addslashes($$value)."',";
+					}
 				}
 				$query .= "products_image			= '".addslashes($v_products_image)."',
 					products_weight					= '".$v_products_weight."',
@@ -1043,6 +1057,12 @@ if ( ( strtolower(substr($file['name'],0,15)) <> "categorymeta-ep") && ( strtolo
 				}
 				if ($ep_supported_mods['excl'] == true) { // Exclusive Products custom mod
 					$query .= "products_exclusive = '".addslashes($v_products_exclusive)."',";
+				}
+				if (count($custom_fields) > 0) {
+					foreach ($custom_fields as $field) {
+						$value ='v_'.$field;
+						$query .= "$field = '".addslashes($$value)."',";
+					}
 				}
 				$query .= "products_image			= '".addslashes($v_products_image)."',
 					products_weight					= '".$v_products_weight."',

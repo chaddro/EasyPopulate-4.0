@@ -63,7 +63,7 @@ if (isset($_POST['ep_status_filter'])) {
 
 $filelayout = array();
 $filelayout_sql = '';
-$filelayout = ep_4_set_filelayout($ep_dltype,  $filelayout_sql, $sql_filter, $langcode, $ep_supported_mods); 
+$filelayout = ep_4_set_filelayout($ep_dltype,  $filelayout_sql, $sql_filter, $langcode, $ep_supported_mods, $custom_fields); 
 $filelayout = array_flip($filelayout);
 // END: File Download Layouts
 

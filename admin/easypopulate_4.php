@@ -46,10 +46,9 @@ $ep_debug_logging_all = false; // do not comment out.. make false instead
 /* Test area end */
 
 // Current EP Version - Modded by Chadd
-$curver              = '4.0.21 - Beta 6-1-2012';
+$curver              = '4.0.22 - Beta 6-10-2012';
 $display_output      = ''; // results of import displayed after script run
 $ep_dltype           = NULL;
-$chmod_check         = true;
 $ep_stack_sql_error  = false; // function returns true on any 1 error, and notifies user of an error
 $specials_print      = EASYPOPULATE_4_SPECIALS_HEADING;
 $has_specials        = false;
@@ -63,10 +62,10 @@ $smart_tags = array("\r\n|\r|\n" => '<br />', ); // need to check into this more
 if (substr($tempdir, -1) != '/') $tempdir .= '/';
 if (substr($tempdir, 0, 1) == '/') $tempdir = substr($tempdir, 1);
 
-$ep_debug_log_path = DIR_FS_CATALOG . $tempdir;
+$ep_debug_log_path = DIR_FS_CATALOG.$tempdir;
 
 if ($ep_debug_logging_all == true) {
-	$fp = fopen($ep_debug_log_path . 'ep_debug_log.txt','w'); // new blank log file on each page impression for full testing log (too big otherwise!!)
+	$fp = fopen($ep_debug_log_path.'ep_debug_log.txt','w'); // new blank log file on each page impression for full testing log (too big otherwise!!)
 	fclose($fp);
 }
 
@@ -102,6 +101,22 @@ $ep_supported_mods['msrp'] = ep_4_check_table_column(TABLE_PRODUCTS,'products_ms
 $ep_supported_mods['gppi'] = ep_4_check_table_column(TABLE_PRODUCTS,'products_group_a_price'); // gppi = group pricing per item, added by Chadd 4-24-2012
 $ep_supported_mods['excl'] = ep_4_check_table_column(TABLE_PRODUCTS,'products_exclusive'); // exclu = Custom Mod for Exclusive Products: 04-24-2012
 // END: check for existance of various mods
+
+// custom products fields check
+$custom_field_names = array();
+$custom_field_check = array();
+$custom_fields = array();
+if(strlen(EASYPOPULATE_4_CONFIG_CUSTOM_FIELDS) > 0) {
+	$custom_field_names = explode(',',EASYPOPULATE_4_CONFIG_CUSTOM_FIELDS);
+	foreach($custom_field_names as $field) {
+		if ( ep_4_check_table_column(TABLE_PRODUCTS,$field) ) {
+			$custom_field_check[] = TRUE;
+			$custom_fields[] = $field;
+		} else {
+			$custom_field_check[] = FALSE;
+		}
+	}
+}
 
 // maximum length for a category in this database
 $category_strlen_max = zen_field_length(TABLE_CATEGORIES_DESCRIPTION, 'categories_name');
@@ -281,6 +296,13 @@ if (!$error && isset($_REQUEST["delete"]) && $_REQUEST["delete"]!=basename($_SER
 		echo "Group Pricing Per Item: ".(($ep_supported_mods['gppi']) ? '<font color="green">TRUE</font>':"FALSE").'<br>';
 		echo "Exclusive Products Mod: ".(($ep_supported_mods['excl']) ? '<font color="green">TRUE</font>':"FALSE").'<br>';
 
+		echo "<br><b><u>User Defined Products Fields: </b></u><br>";
+		$i = 0;
+		foreach ($custom_field_names as $field) {
+			echo $field.': '.(($custom_field_check[$i]) ? '<font color="green">TRUE</font>':"FALSE").'<br>';
+			$i++;
+		}
+		
 		echo '<br><b><u>Installed Languages</u></b> <br>';
 		foreach ($langcode as $key => $lang) {
 			echo $lang['id'].'-'.$lang['code'].': '.$lang['name'].'<br>';
