@@ -6,7 +6,7 @@ if (!defined('IS_ADMIN_FLAG')) {
 }
 if (function_exists('zen_register_admin_page')) {
     if (!zen_page_key_exists('easypopulate_4')) {
-        // Add backup_mysql to Tools menu
+        // Add easypopulate_4 to Tools menu
         zen_register_admin_page('easypopulate_4', 'BOX_TOOLS_EASYPOPULATE_4','FILENAME_EASYPOPULATE_4', '', 'tools', 'Y', 97);
     }
 }
