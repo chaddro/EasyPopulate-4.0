@@ -249,6 +249,64 @@ if ( isset($_GET['import']) ) {
 		} // while
 	} // if Detailed Attributes Import
 
+	// Detailed Attributes Import
+	if ( strtolower(substr($file['name'],0,15)) == "sba-detailed-ep" && ep_4_SBA1Exists() == true) {
+		while ($items = fgetcsv($handle, 0, $csv_delimiter, $csv_enclosure)) { // read 1 line of data
+			$sql = 'SELECT * FROM '.TABLE_PRODUCTS_ATTRIBUTES.' 
+				WHERE (
+				products_attributes_id = '.$items[$filelayout['v_products_attributes_id']].'' . /* AND 
+				products_id = '.$items[$filelayout['v_products_id']].' AND 
+				options_id = '.$items[$filelayout['v_options_id']].' AND 
+				options_values_id = '.$items[$filelayout['v_options_values_id']].'
+				*/' ) LIMIT 1';
+			$sql = 'SELECT * FROM '.TABLE_PRODUCTS_WITH_ATTRIBUTES_STOCK.' 
+				WHERE (
+				stock_id = '.$items[$filelayout['v_stock_id']].' ' . /*AND 
+				products_id = '.$items[$filelayout['v_products_id']].' AND 
+				options_id = '.$items[$filelayout['v_options_id']].' AND 
+				options_values_id = '.$items[$filelayout['v_options_values_id']].'
+				*/') LIMIT 1';
+			$result = ep_4_query($sql);
+			if ($row = mysql_fetch_array($result)) {
+				// UPDATE
+				$sql = "UPDATE ".TABLE_PRODUCTS_WITH_ATTRIBUTES_STOCK." SET 
+					products_id		              = ".$items[$filelayout['v_products_id']].",
+					stock_attributes                  = '".$items[$filelayout['v_stock_attributes']]."',
+					quantity					    = ".$items[$filelayout['v_quantity']].",
+					sort						    = ".$items[$filelayout['v_sort']]."
+					WHERE (
+					stock_id = ".$items[$filelayout['v_stock_id']]." )";
+				$result = ep_4_query($sql);
+				
+				if ($items[$filelayout['v_products_attributes_filename']] <> '') { // download file name
+					$sql = 'SELECT * FROM '.TABLE_PRODUCTS_ATTRIBUTES_DOWNLOAD.' 
+						WHERE (products_attributes_id = '.$items[$filelayout['v_products_attributes_id']].') LIMIT 1';
+					$result = ep_4_query($sql);
+					if ($row = mysql_fetch_array($result)) { // update
+						$sql = "UPDATE ".TABLE_PRODUCTS_ATTRIBUTES_DOWNLOAD." SET 
+							products_attributes_filename = '".$items[$filelayout['v_products_attributes_filename']]."',
+							products_attributes_maxdays  = '".$items[$filelayout['v_products_attributes_maxdays']]."',
+							products_attributes_maxcount = '".$items[$filelayout['v_products_attributes_maxcount']]."'
+							WHERE ( 
+							products_attributes_id = ".$items[$filelayout['v_products_attributes_id']].")";
+						$result = ep_4_query($sql);
+					} else { // insert
+						$sql = "INSERT INTO ".TABLE_PRODUCTS_ATTRIBUTES_DOWNLOAD." SET 
+							products_attributes_id       = '".$items[$filelayout['v_products_attributes_id']]."',
+							products_attributes_filename = '".$items[$filelayout['v_products_attributes_filename']]."',
+							products_attributes_maxdays  = '".$items[$filelayout['v_products_attributes_maxdays']]."',
+							products_attributes_maxcount = '".$items[$filelayout['v_products_attributes_maxcount']]."'";
+						$result = ep_4_query($sql);
+					}				
+				}
+				$ep_update_count++;			
+			} else { // error Attribute entry not found - needs work!
+				$display_output .= sprintf('<br /><font color="red"><b>SKIPPED! - Attribute Entry on Model: </b>%s - Not Found!</font>', $items[$filelayout['v_products_model']]);
+				$ep_error_count++;
+			} // if 
+		} // while
+	} // if Detailed Stock By Attributes Import
+
 	// CATEGORIES1
 	// This Category MetaTags import routine only deals with existing Categories. It does not create or modify the tree.
 	// This code is ONLY used to Edit Categories image, description, and metatags data!
@@ -311,7 +369,7 @@ if ( isset($_GET['import']) ) {
 		} // while
 	} // if
 
-if ( ( strtolower(substr($file['name'],0,15)) <> "categorymeta-ep") && ( strtolower(substr($file['name'],0,7)) <> "attrib-")) { //  temporary solution here... 12-06-2010
+if ( ( strtolower(substr($file['name'],0,15)) <> "categorymeta-ep") && ( strtolower(substr($file['name'],0,7)) <> "attrib-") && ( strtolower(substr($file['name'],0,4)) <> "sba-" && ep_4_SBA1Exists() == true)) { //  temporary solution here... 12-06-2010
 	
 	// Main IMPORT loop For Product Related Data. v_products_id is the main key
 	while ($items = fgetcsv($handle, 0, $csv_delimiter, $csv_enclosure)) { // read 1 line of data
