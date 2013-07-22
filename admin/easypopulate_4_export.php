@@ -90,6 +90,9 @@ switch ($ep_dltype) { // chadd - changed to use $EXPORT_FILE
 	case 'attrib_detailed':
 	$EXPORT_FILE = 'Attrib-Detailed-EP';
 	break;
+	case 'SBA_detailed'; // mc12345678 - added 07-18-2013 to support Stock By Attributes
+	$EXPORT_FILE = 'SBA-Detailed-EP';
+	break;
 	case 'attrib_basic':
 	$EXPORT_FILE = 'Attrib-Basic-EP';
 	break;
@@ -138,6 +141,7 @@ if ($ep_dltype == 'attrib_basic') { // special case 'attrib_basic'
 			// collect the products_options_values_name
 			if ($active_language_id <> $row['v_language_id']) {
 				$l_id = $row['v_language_id'];
+				$active_row['v_products_options_type'] = $row['v_products_options_type'];
 				$active_row['v_products_options_name_'.$l_id] = $row['v_products_options_name'];
 				$active_row['v_products_options_values_name_'.$l_id] = $row['v_products_options_values_name'];
 				$active_language_id = $row['v_language_id'];
@@ -145,6 +149,7 @@ if ($ep_dltype == 'attrib_basic') { // special case 'attrib_basic'
 				$l_id = $row['v_language_id'];
 				$active_row['v_products_options_name_'.$l_id] = $row['v_products_options_name'];
 				$active_row['v_products_options_values_name_'.$l_id] .= ",".$row['v_products_options_values_name'];
+				$active_row['v_products_options_type'] = $row['v_products_options_type'];
 			}
 			continue; // loop - for more products_options_values_name on same v_products_id/v_options_id combo
 		} else { // same product, new attribute - only executes once on new option
@@ -168,6 +173,7 @@ if ($ep_dltype == 'attrib_basic') { // special case 'attrib_basic'
 			$l_id = $row['v_language_id'];
 			$active_row['v_products_options_name_'.$l_id] = $row['v_products_options_name'];
 			$active_row['v_products_options_values_name_'.$l_id] = $row['v_products_options_values_name'];
+			$active_row['v_products_options_type'] = $row['v_products_options_type'];
 			continue; // loop - for more products_options_values_name on same v_products_id/v_options_id combo
 		}
 	} else { // new combo or different product or first time through while-loop
@@ -221,6 +227,23 @@ if ($ep_dltype == 'attrib_basic') { // special case 'attrib_basic'
 			}				
 		}
 
+		else 
+			if ($ep_dltype == 'SBA_detailed') {
+				if (isset($filelayout['v_products_attributes_filename'])) /* Believe this should be an SBA filename; however, need to look at the filename assignment function to see how this works.  */{ 
+					$sql2 = 'SELECT * FROM '.TABLE_PRODUCTS_ATTRIBUTES_DOWNLOAD.' WHERE products_attributes_id = '.$row['v_products_attributes_id'].' LIMIT 1';
+					$result2 = ep_4_query($sql2);
+					$row2 = mysql_fetch_array($result2);
+					if (mysql_num_rows($result2)) {
+						$row['v_products_attributes_filename'] = $row2['products_attributes_filename']; 
+						$row['v_products_attributes_maxdays'] = $row2['products_attributes_maxdays']; 
+						$row['v_products_attributes_maxcount'] = $row2['products_attributes_maxcount']; 
+					} else {
+						$row['v_products_attributes_filename'] = '';
+						$row['v_products_attributes_maxdays'] = '';
+						$row['v_products_attributes_maxcount'] = '';
+					}
+				}				
+			}
 		// Products Image
 		if (isset($filelayout['v_products_image'])) { 
 			$products_image = (($row['v_products_image'] == PRODUCTS_IMAGE_NO_IMAGE) ? '' : $row['v_products_image']);

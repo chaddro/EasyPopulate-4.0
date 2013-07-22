@@ -51,6 +51,72 @@ function ep_4_get_languages() {
 	return $ep_languages_array;
 }
 
+function ep_4_SBA1Exists () {
+	// The current thought is to have one of these Exists files for each version of SBA to consider; however, they also all could fall under one SBA_Exists check provided some return is made and a comparison done on the other end about what was returned.  
+	//Check to see if any version of Stock with attributes is installed (If so, and properly programmed, there should be a define for the table associated with the stock.  There may be more than one, and if so, they should all be verified for the particular SBA.
+	if (defined('TABLE_PRODUCTS_WITH_ATTRIBUTES_STOCK')) {
+		//Now that have identified that the table (applicable to mc12345678's store, has been identified as in existence, now need to look at the setup of the table (Number of columns and if each column identified below is in the table, or conversely if the table's column matches the list below.
+		//Columns in table: stock_id, products_id, stock_attributes, quantity, and sort.
+//		echo 'In<br />';
+//		$colsarray = $db->Execute('SHOW COLUMNS FROM ' . TABLE_PRODUCTS_WITH_ATTRIBUTES_STOCK);
+		$colsarray = ep_4_query('SHOW COLUMNS FROM ' . TABLE_PRODUCTS_WITH_ATTRIBUTES_STOCK);
+//		echo 'After execute<br />';
+		$numCols = mysql_num_rows($colsarray);
+		if ($numCols == 5) {
+			while ($row = mysql_fetch_array($colsarray)){
+				switch ($row['Field']) {
+					case 'stock_id':
+						break;
+					case 'products_id':
+						break;
+					case 'stock_attributes':
+						break;
+					case 'quantity':
+						break;
+					case 'sort':
+						break;
+					default:
+						return false;
+						break;
+						
+				}
+//				print_r($row);
+/*				echo '4<br />';
+				if ($row['Field'] == 'stock_id') {
+					echo ' true <br />';
+				} else {
+					echo ' false <br />';
+				}
+				echo '3<br />'; */
+			}
+			return true;
+		} else {
+			return false;
+		}
+//		$returnedcols = mysql_fetch_array($colsarray);
+//		$colnames = array_keys($returnedcols);
+/*		echo 'Num Rows: ' . $numCols . '<br />';
+		if ($returnedcols['Field'] == 'stock_id') {
+			echo 'true <br />';
+		} else {
+			echo 'false <br />';
+		}
+		echo '3<br />';
+		echo $returnedcols . '111<br />';
+		print_r($returnedcols);
+		echo '3<br />'; */
+		
+/*		while ($row = mysql_fetch_array($colsarray)){
+			print_r($row);
+			echo '4<br />';
+		}
+		echo '4<br />';*/
+		//return true;
+	} else {
+		return false;
+	}
+}
+
 function ep_4_set_filelayout($ep_dltype, &$filelayout_sql, $sql_filter, $langcode, $ep_supported_mods, $custom_fields) {
 	$filelayout = array();
 	switch($ep_dltype) {
@@ -487,6 +553,115 @@ function ep_4_set_filelayout($ep_dltype, &$filelayout_sql, $sql_filter, $langcod
 			a.options_values_id = v.products_options_values_id AND
 			o.language_id       = v.language_id ORDER BY a.products_id, a.options_id, v.language_id, v.products_options_values_id';
  		break;
+		
+	case 'SBA_detailed':
+		$filelayout[] =	'v_stock_id'; // stock id from SBA table
+		$filelayout[] =	'v_products_id';
+		$filelayout[] =	'v_stock_attributes'; 
+		$filelayout[] =	'v_products_model'; // product model from table PRODUCTS
+		$filelayout[] =	'v_quantity';
+		$filelayout[] =	'v_sort';
+		$filelayout[] =	'v_products_name'; // product model from table PRODUCTS
+		$filelayout[] =	'v_products_options_name'; // options name from table PRODUCTS_OPTIONS
+		$filelayout[] =	'v_products_options_values_name'; // options values name from table PRODUCTS_OPTIONS_VALUES
+		$filelayout[] =	'v_products_attributes_id';
+		$filelayout[] =	'v_products_options_type'; // 0-drop down, 1=text , 2=radio , 3=checkbox, 4=file, 5=read only 
+		$filelayout[] =	'v_options_id';
+		$filelayout[] =	'v_options_values_id';
+//		$filelayout[] =	'v_options_values_price';
+//		$filelayout[] =	'v_price_prefix';
+//		$filelayout[] =	'v_products_options_sort_order';
+//		$filelayout[] =	'v_product_attribute_is_free';
+//		$filelayout[] =	'v_products_attributes_weight';
+//		$filelayout[] =	'v_products_attributes_weight_prefix';
+//		$filelayout[] =	'v_attributes_display_only';
+//		$filelayout[] =	'v_attributes_default';
+//		$filelayout[] =	'v_attributes_discounted';
+//		$filelayout[] =	'v_attributes_image';
+//		$filelayout[] =	'v_attributes_price_base_included';
+//		$filelayout[] =	'v_attributes_price_onetime';
+//		$filelayout[] =	'v_attributes_price_factor';
+//		$filelayout[] =	'v_attributes_price_factor_offset';
+//		$filelayout[] =	'v_attributes_price_factor_onetime';
+//		$filelayout[] =	'v_attributes_price_factor_onetime_offset';
+//		$filelayout[] =	'v_attributes_qty_prices';
+//		$filelayout[] =	'v_attributes_qty_prices_onetime';
+//		$filelayout[] =	'v_attributes_price_words';
+//		$filelayout[] =	'v_attributes_price_words_free';
+//		$filelayout[] =	'v_attributes_price_letters';
+//		$filelayout[] =	'v_attributes_price_letters_free';
+//		$filelayout[] =	'v_attributes_required';
+// table TABLE_PRODUCTS_ATTRIBUTES_DOWNLOAD		
+//		$filelayout[] =	'v_products_SBA_filename';
+		$filelayout[] =	'v_products_attributes_filename';
+		$filelayout[] =	'v_products_attributes_maxdays';
+		$filelayout[] =	'v_products_attributes_maxcount';
+		
+		// a = table PRODUCTS_ATTRIBUTES
+		// p = table PRODUCTS
+		// o = table PRODUCTS_OPTIONS
+		// v = table PRODUCTS_OPTIONS_VALUES
+		// d = table PRODUCTS_ATTRIBUTES_DOWNLOAD
+		// s = table PRODUCTS_WITH_ATTRIBUTES_STOCK
+		// pd = table PRODUCTS_DESCRIPTIONS
+		$filelayout_sql = 'SELECT
+			a.products_attributes_id            as v_products_attributes_id,
+			a.products_id                       as v_products_id,
+			p.products_model				    as v_products_model,
+			a.options_id                        as v_options_id,
+			o.products_options_id               as v_products_options_id,
+			o.products_options_name             as v_products_options_name,
+			o.products_options_type             as v_products_options_type,
+			a.options_values_id                 as v_options_values_id,
+			v.products_options_values_id        as v_products_options_values_id,
+			v.products_options_values_name      as v_products_options_values_name,'./*
+			a.options_values_price              as v_options_values_price,
+			a.price_prefix                      as v_price_prefix,
+			a.products_options_sort_order       as v_products_options_sort_order,
+			a.product_attribute_is_free         as v_product_attribute_is_free,
+			a.products_attributes_weight        as v_products_attributes_weight,
+			a.products_attributes_weight_prefix as v_products_attributes_weight_prefix,
+			a.attributes_display_only           as v_attributes_display_only,
+			a.attributes_default                as v_attributes_default,
+			a.attributes_discounted             as v_attributes_discounted,
+			a.attributes_image                  as v_attributes_image,
+			a.attributes_price_base_included    as v_attributes_price_base_included,
+			a.attributes_price_onetime          as v_attributes_price_onetime,
+			a.attributes_price_factor           as v_attributes_price_factor,
+			a.attributes_price_factor_offset    as v_attributes_price_factor_offset,
+			a.attributes_price_factor_onetime   as v_attributes_price_factor_onetime,
+			a.attributes_price_factor_onetime_offset      as v_attributes_price_factor_onetime_offset,
+			a.attributes_qty_prices             as v_attributes_qty_prices,
+			a.attributes_qty_prices_onetime     as v_attributes_qty_prices_onetime,
+			a.attributes_price_words            as v_attributes_price_words,
+			a.attributes_price_words_free       as v_attributes_price_words_free,
+			a.attributes_price_letters          as v_attributes_price_letters,
+			a.attributes_price_letters_free     as v_attributes_price_letters_free,
+			a.attributes_required               as v_attributes_required, */
+			's.stock_id					 as v_stock_id,
+			s.stock_attributes				 as v_stock_attributes,
+			s.quantity					 as v_quantity,
+			s.sort						 as v_sort,
+			pd.products_name				 as v_products_name
+			FROM '
+			.TABLE_PRODUCTS_ATTRIBUTES.     ' as a,'
+			.TABLE_PRODUCTS.                ' as p,'
+			.TABLE_PRODUCTS_OPTIONS.        ' as o,'
+			.TABLE_PRODUCTS_OPTIONS_VALUES. ' as v,'
+			.TABLE_PRODUCTS_WITH_ATTRIBUTES_STOCK. ' as s,'
+			.TABLE_PRODUCTS_DESCRIPTION.	  ' as pd
+			WHERE
+			a.products_id       = p.products_id AND
+			pd.products_id		= p.products_id AND
+			a.options_id        = o.products_options_id AND
+			a.options_values_id = v.products_options_values_id AND
+			o.language_id       = v.language_id AND
+			o.language_id       = 1 AND
+			s.products_id		= p.products_id AND
+			s.stock_attributes	= a.products_attributes_id
+			ORDER BY a.products_id, a.options_id, v.products_options_values_id';
+ 		break;
+
 		
 	case 'options':
 		$filelayout[] =	'v_products_options_id';
