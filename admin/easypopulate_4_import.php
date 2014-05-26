@@ -1340,48 +1340,48 @@ if ( strtolower(substr($file['name'],0,14)) == "pricebreaks-ep") {
 }	
 			
 			
-			// BEGIN: Products Descriptions
-			// the following is common in both the updating an existing product and creating a new product
-			if (isset($v_products_name)) {
-				foreach( $v_products_name as $key => $name) {
-					$sql = "SELECT * FROM ".TABLE_PRODUCTS_DESCRIPTION." WHERE
-							products_id = ".$v_products_id." AND
-							language_id = ".$key;
-					$result = ep_4_query($sql);
-						
-					if (mysql_num_rows($result) == 0) {
-						$sql = "INSERT INTO ".TABLE_PRODUCTS_DESCRIPTION." (
-							products_id,
-							language_id,
-							products_name,
-							products_description,";
-						if ($ep_supported_mods['psd'] == true) {
-							$sql .= " products_short_desc,";
-						}
-						$sql .= " products_url )
-							VALUES (
-							'".$v_products_id."',
-							".$key.",
-							'".addslashes($name)."',
-							'".addslashes($v_products_description[$key])."',";
-						if ($ep_supported_mods['psd'] == true) {
-							$sql .= "'".addslashes($v_products_short_desc[$key])."',";
-						}
-						$sql .= "'".addslashes($v_products_url[$key])."')";
-						$result = ep_4_query($sql);
-					} else { // already in the description, update it
-						$sql = "UPDATE ".TABLE_PRODUCTS_DESCRIPTION." SET
-							products_name        ='".addslashes($name)."',
-							products_description ='".addslashes($v_products_description[$key])."',";
-						if ($ep_supported_mods['psd'] == true) {
-							$sql .= " products_short_desc = '".addslashes($v_products_short_desc[$key])."',";
-						}
-						$sql .= " products_url='".addslashes($v_products_url[$key])."'
-							WHERE products_id = '".$v_products_id."' AND language_id = '".$key."'";
-						$result = ep_4_query($sql);
-					}
-				}		
-			} // END: Products Descriptions End	
+            // BEGIN: Products Descriptions
+            // the following is common in both the updating an existing product and creating a new product
+            if (isset($v_products_name)) {
+                foreach ($v_products_name as $key => $name) {
+                    $sql = "SELECT * FROM " . TABLE_PRODUCTS_DESCRIPTION . " WHERE
+                        products_id = " . $v_products_id . " AND
+                        language_id = " . $key;
+                    $result = ep_4_query($sql);
+
+                    if (mysql_num_rows($result) == 0) {
+                        $sql = "INSERT INTO " . TABLE_PRODUCTS_DESCRIPTION . " (
+                            products_id,
+                            language_id,
+                            products_name, " .
+                            ((isset($filelayout['v_products_description_' . $key]) || ( isset($filelayout['v_products_description_' . $key]) && $product_is_new) ) ? " products_description," : "");
+                        if ($ep_supported_mods['psd'] == true) {
+                            $sql .= " products_short_desc,";
+                        }
+                        $sql .= " products_url )
+                            VALUES (
+                            '" . $v_products_id . "',
+                            " . $key . ",
+                            '" . addslashes($name) . "', " .
+                            ((isset($filelayout['v_products_description_' . $key]) || ( isset($filelayout['v_products_description_' . $key]) && $product_is_new) ) ? "'" . addslashes($v_products_description[$key]) . "'," : "");
+                        if ($ep_supported_mods['psd'] == true) {
+                            $sql .= "'" . addslashes($v_products_short_desc[$key]) . "',";
+                        }
+                        $sql .= "'" . addslashes($v_products_url[$key]) . "')";
+                        $result = ep_4_query($sql);
+                    } else { // already in the description, update it
+                        $sql = "UPDATE ".TABLE_PRODUCTS_DESCRIPTION." SET
+       products_name        ='".addslashes($name)."', " .
+                            ((isset($filelayout['v_products_description_' . $key]) || ( isset($filelayout['v_products_description_' . $key]) && $product_is_new) ) ? "products_description ='" . addslashes($v_products_description[$key]) . "'," : "");
+                        if ($ep_supported_mods['psd'] == true) {
+                            $sql .= " products_short_desc = '" . addslashes($v_products_short_desc[$key]) . "',";
+                        }
+                        $sql .= " products_url='" . addslashes($v_products_url[$key]) . "'
+       WHERE products_id = '" . $v_products_id . "' AND language_id = '" . $key . "'";
+                        $result = ep_4_query($sql);
+                    }
+                }
+            } // END: Products Descriptions End	
 
 //==================================================================================================================================
 			// Assign product to category if linked
