@@ -61,6 +61,12 @@ if (isset($_POST['ep_status_filter'])) {
 	}
 }
 
+if ($ep_dltype == 'SBAStockProdFilter') {
+	$ep_dltype = 'SBAStock';
+	$sql_filter = 'p.products_id = p.products_id ORDER BY p.products_id ASC';
+	
+}
+
 $filelayout = array();
 $filelayout_sql = '';
 $filelayout = ep_4_set_filelayout($ep_dltype,  $filelayout_sql, $sql_filter, $langcode, $ep_supported_mods, $custom_fields); 
@@ -93,6 +99,12 @@ switch ($ep_dltype) { // chadd - changed to use $EXPORT_FILE
 	case 'SBA_detailed'; // mc12345678 - added 07-18-2013 to support Stock By Attributes
 	$EXPORT_FILE = 'SBA-Detailed-EP';
 	break;
+	case 'SBAStock'; // mc12345678 - added 02-22-2014 to support providing a stock export when SBA is installed.
+	$EXPORT_FILE = 'SBA-Stock-EP';
+	break;
+//	case 'SBAStockProdFilter'; // mc12345678 - added 03-08-2014 to support sorting by stock_id providing a stock export when SBA is installed
+//	$EXPORT_FILE = 'SBA-Stock-EP';
+//	break;
 	case 'attrib_basic':
 	$EXPORT_FILE = 'Attrib-Basic-EP';
 	break;
@@ -130,7 +142,7 @@ $active_options_id = ""; // start empty
 $active_language_id = ""; // start empty
 $active_row = array(); // empty array
 $last_products_id = "";
-
+$print1 = 0;
 $result = ep_4_query($filelayout_sql);
 while ($row = mysql_fetch_array($result)) {
 
@@ -225,10 +237,8 @@ if ($ep_dltype == 'attrib_basic') { // special case 'attrib_basic'
 					$row['v_products_attributes_maxcount'] = '';
 				}
 			}				
-		}
-
-		else 
-			if ($ep_dltype == 'SBA_detailed') {
+		} 
+		elseif ($ep_dltype == 'SBA_detailed') {
 				if (isset($filelayout['v_products_attributes_filename'])) /* Believe this should be an SBA filename; however, need to look at the filename assignment function to see how this works.  */{ 
 					$sql2 = 'SELECT * FROM '.TABLE_PRODUCTS_ATTRIBUTES_DOWNLOAD.' WHERE products_attributes_id = '.$row['v_products_attributes_id'].' LIMIT 1';
 					$result2 = ep_4_query($sql2);
@@ -249,7 +259,7 @@ if ($ep_dltype == 'attrib_basic') { // special case 'attrib_basic'
 			$products_image = (($row['v_products_image'] == PRODUCTS_IMAGE_NO_IMAGE) ? '' : $row['v_products_image']);
 		}
 		// Multi-Lingual Meta-Tage, Products Name, Products Description, Products URL, and Products Short Descriptions
-		if ($ep_dltype == 'full') {
+		if ($ep_dltype == 'full' || $ep_dltype == 'SBAStock') {
 			// names and descriptions require that we loop thru all installed languages
 			foreach ($langcode as $key => $lang) {
 				$lid = $lang['id'];
@@ -348,7 +358,223 @@ if ($ep_dltype == 'attrib_basic') { // special case 'attrib_basic'
 				$row['v_categories_name_'.$lid] = rtrim($row['v_categories_name_'.$lid], "^");		
 			} // foreach
 		} // if() delimited categories path
+		
+		//This will do all of the special work to provide the remaining row data:
+		//  	'v_SBA_tracked';
+		//	'v_table_tracker';
+		//  Products_attributes (either combined attributes of a non-SBA tracked item
+		//	or the SBA stock data (both legible/understandable to a reviewer of the
+		//	spreadsheet)
+		//	
+		// Clean the texts that could break CSV file formatting
+		$dataRow ='';
+		$problem_chars = array("\r", "\n", "\t"); // carriage return, newline, tab
 
+		if ( ($ep_dltype == 'SBAStock')) {
+			
+			//Get the option names and option values for the current product
+
+
+			// a = table PRODUCTS_ATTRIBUTES
+			// p = table PRODUCTS
+			// o = table PRODUCTS_OPTIONS
+			// v = table PRODUCTS_OPTIONS_VALUES
+			// d = table PRODUCTS_ATTRIBUTES_DOWNLOAD
+			$sqlAttrib = 'SELECT DISTINCT 
+				' . /*a.products_attributes_id            as v_products_attributes_id,*/'
+				p.products_id                       as v_products_id,
+				'./*p.products_model				    as v_products_model,
+				a.options_id                        as v_options_id,
+				o.products_options_id               as v_products_options_id,*/'
+				o.products_options_name             as v_products_options_name,
+				'./*o.products_options_type             as v_products_options_type,
+				a.options_values_id                 as v_options_values_id,
+				v.products_options_values_id        as v_products_options_values_id,*/'
+				v.products_options_values_name      as v_products_options_values_name './*
+				a.options_values_price              as v_options_values_price,
+				a.price_prefix                      as v_price_prefix,
+				a.products_options_sort_order       as v_products_options_sort_order,
+				a.product_attribute_is_free         as v_product_attribute_is_free,
+				a.products_attributes_weight        as v_products_attributes_weight,
+				a.products_attributes_weight_prefix as v_products_attributes_weight_prefix,
+				a.attributes_display_only           as v_attributes_display_only,
+				a.attributes_default                as v_attributes_default,
+				a.attributes_discounted             as v_attributes_discounted,
+				a.attributes_image                  as v_attributes_image,
+				a.attributes_price_base_included    as v_attributes_price_base_included,
+				a.attributes_price_onetime          as v_attributes_price_onetime,
+				a.attributes_price_factor           as v_attributes_price_factor,
+				a.attributes_price_factor_offset    as v_attributes_price_factor_offset,
+				a.attributes_price_factor_onetime   as v_attributes_price_factor_onetime,
+				a.attributes_price_factor_onetime_offset      as v_attributes_price_factor_onetime_offset,
+				a.attributes_qty_prices             as v_attributes_qty_prices,
+				a.attributes_qty_prices_onetime     as v_attributes_qty_prices_onetime,
+				a.attributes_price_words            as v_attributes_price_words,
+				a.attributes_price_words_free       as v_attributes_price_words_free,
+				a.attributes_price_letters          as v_attributes_price_letters,
+				a.attributes_price_letters_free     as v_attributes_price_letters_free,
+				a.attributes_required               as v_attributes_required */' 
+				FROM '
+				.TABLE_PRODUCTS_OPTIONS_VALUES_TO_PRODUCTS_OPTIONS. ' as ovpo,'
+				.TABLE_PRODUCTS_OPTIONS_VALUES. ' as v,'
+				.TABLE_PRODUCTS.                ' as p,'
+				.TABLE_PRODUCTS_OPTIONS.        ' as o,'
+				.TABLE_PRODUCTS_ATTRIBUTES.     ' a LEFT JOIN '
+				.TABLE_PRODUCTS_WITH_ATTRIBUTES_STOCK.	' pwas ON pwas.stock_attributes = a.products_attributes_id
+				WHERE
+				a.products_id       = p.products_id AND
+				a.options_id        = o.products_options_id AND 
+				a.options_values_id = v.products_options_values_id AND
+				o.language_id       = v.language_id AND
+				p.products_id		= \''. $row['v_products_id'] .'\' AND
+				o.products_options_id	= ovpo.products_options_id AND
+				v.products_options_values_id	= ovpo.products_options_values_id AND 
+				o.language_id       = 1 ORDER BY p.products_id ASC';/*, a.options_id, v.products_options_values_id';*/
+			
+			$resultAttrib = ep_4_query($sqlAttrib);
+			$resultAttribCount = mysql_num_rows($resultAttrib);
+			
+			if ($resultAttribCount !== false) {
+				while ($rowAttrib = mysql_fetch_assoc($resultAttrib)){
+					$row['v_products_attributes'] .= $rowAttrib['v_products_options_name'] . ': ' . $rowAttrib['v_products_options_values_name'] . '; ';
+				}
+			}
+			//Combine the option names and option values for this product.
+			//Set v_products_attributes to the combined data
+			//Assign product_id to v_table_tracker for main product
+			$row['v_SBA_tracked'] = '';
+			$row['v_table_tracker'] = $row['v_products_id'];
+
+			//Check if product is tracked via SBA  
+			$sqlSBA = 'SELECT
+				s.products_id				as v_products_id, 
+				s.stock_id					 as v_stock_id,
+				s.stock_attributes				 as v_stock_attributes,
+				s.quantity					 as v_quantity 
+				FROM '
+				.TABLE_PRODUCTS.                ' as p,'
+				.TABLE_PRODUCTS_WITH_ATTRIBUTES_STOCK. ' as s
+				WHERE 
+				s.products_id		= p.products_id AND
+				p.products_id = \''. $row['v_products_id'] . '\'';
+			$resultSBA = ep_4_query($sqlSBA);
+			$resultSBACount = mysql_num_rows($resultSBA);
+			
+			if ($resultSBACount !== false && $resultSBACount > 0) {
+				//If product is tracked by SBA
+
+				// Clean the data then write the row of the original data
+				$dataRow ='';
+				foreach($filelayout as $key => $value) {
+					if (strpos($key, "v_products_description") !== false ){
+						$row[$key] = strip_tags($row[$key]);
+					}
+					$thetext = $row[$key];
+					// remove carriage returns, newlines, and tabs - needs review
+					$thetext = str_replace($problem_chars,' ',$thetext);
+					// $thetext = str_replace("\r",' ',$thetext);
+					// $thetext = str_replace("\n",' ',$thetext);
+					// $thetext = str_replace("\t",' ',$thetext);
+
+					// encapsulate data in quotes, and escape embedded quotes in data
+					$dataRow .= '"'.str_replace('"','""',$thetext).'"'.$csv_delimiter;
+					/*
+					if ($excel_safe_output == true) { // encapsulate field data with quotes
+					  // use quoted values and escape the embedded quotes for excel safe output.
+					  $dataRow .= '"'.str_replace('"','""',$thetext).'"' . $csv_delimiter;
+					} else {
+					  // and put the text into the output separated by $csv_delimiter defined above
+					  $dataRow .= $thetext . $csv_delimiter;
+					} */
+				} // End Data Cleanup
+
+				// Remove trailing tab, then append the end-of-line
+				$dataRow = rtrim($dataRow,$csv_delimiter)."\n";
+
+				fwrite($fp, $dataRow); // write 1 line of csv data (this can be slow...)
+				
+				// loop through the SBA data until one before the end
+				// Must get the attribute and quantity data from the SBA table
+				// While not at the one before end
+				//  clean the data then
+				//  Store the data.
+				$resultSBACounter = 1;
+				while ($rowSBA = mysql_fetch_assoc($resultSBA)){
+//					print_r($rowSBA);
+					//$rowSBA    = mysql_fetch_array($resultSBA);
+					//  get the attribute and quantity data from the SBA table
+					//  clean the data then
+
+					//Need to explode the attributes list,
+					$trackAttribute = explode(",", $rowSBA['v_stock_attributes']);
+					//Need to trim the numerical string before sending for review
+					$row['v_products_attributes'] = '';
+					foreach ($trackAttribute as $currentAttrib) {
+						$sqlSBAAttributes = 'SELECT
+							o.products_options_name		as v_SBA_option_name,
+							v.products_options_values_name	as v_SBA_value_name 
+							FROM '
+							.TABLE_PRODUCTS_OPTIONS .		' as o, '
+							.TABLE_PRODUCTS_OPTIONS_VALUES .	' as v, '
+							.TABLE_PRODUCTS_ATTRIBUTES .		' as a
+							WHERE 
+							o.products_options_id = a.options_id AND
+							v.products_options_values_id = a.options_values_id AND
+							a.products_attributes_id = \''. trim($currentAttrib) . '\'';
+						$resultSBAAttributes = ep_4_query($sqlSBAAttributes);
+						$resultSBACountAttributes = mysql_fetch_assoc($resultSBAAttributes);
+
+						$row['v_products_attributes'] .= (is_null($resultSBACountAttributes['v_SBA_value_name']) ? 'Option Does Not Exist' : $resultSBACountAttributes['v_SBA_option_name']) . ': ' . (is_null($resultSBACountAttributes['v_SBA_value_name']) ? 'Value Does Not Exist' : $resultSBACountAttributes['v_SBA_value_name']) . '; ';
+					}
+
+					$row['v_products_quantity'] = $rowSBA['v_quantity'];
+					$row['v_SBA_tracked'] = 'X';
+					$row['v_table_tracker'] = $rowSBA['v_stock_id'];
+					// loop through the SBA data until one before the end
+					// While not at the one before end
+					//  get the attribute and quantity data from the SBA table
+					if ($resultSBACounter < $resultSBACount) {
+						//  clean the data then
+						//  write the row (keep the same base data as previous)
+						// Clean the data then write the row of the original data
+						$dataRow ='';
+						foreach($filelayout as $key => $value) {
+							if (strpos($key, "v_products_description") !== false ){
+								$row[$key] = strip_tags($row[$key]);
+							}
+							$thetext = $row[$key];
+							// remove carriage returns, newlines, and tabs - needs review
+							$thetext = str_replace($problem_chars,' ',$thetext);
+							// $thetext = str_replace("\r",' ',$thetext);
+							// $thetext = str_replace("\n",' ',$thetext);
+							// $thetext = str_replace("\t",' ',$thetext);
+
+							// encapsulate data in quotes, and escape embedded quotes in data
+							$dataRow .= '"'.str_replace('"','""',$thetext).'"'.$csv_delimiter;
+							/*
+							if ($excel_safe_output == true) { // encapsulate field data with quotes
+							  // use quoted values and escape the embedded quotes for excel safe output.
+							  $dataRow .= '"'.str_replace('"','""',$thetext).'"' . $csv_delimiter;
+							} else {
+							  // and put the text into the output separated by $csv_delimiter defined above
+							  $dataRow .= $thetext . $csv_delimiter;
+							} */
+						} // End Data Cleanup
+
+						// Remove trailing tab, then append the end-of-line
+						$dataRow = rtrim($dataRow,$csv_delimiter)."\n";
+
+						fwrite($fp, $dataRow); // write 1 line of csv data (this can be slow...)
+						
+					}
+					$resultSBACounter++;
+				}
+				//  For the last row, assign the data to the $row; however, do not write
+				//	it yet.. The end of the below loop will write it.
+
+			}
+		} // End if SBAStock
+	
 		// Music Information Export for products with products_type == 2
 		if (isset($filelayout['v_artists_name'])  && ($row['v_products_type'] == '2')) {
 			$sql_music_extra = 'SELECT * FROM '.TABLE_PRODUCT_MUSIC_EXTRA.' WHERE products_id = '.$row['v_products_id'].' LIMIT 1';
@@ -465,7 +691,6 @@ if ($ep_dltype == 'attrib_basic') { // special case 'attrib_basic'
 		}
 		// Remove trailing tab, then append the end-of-line
 		$dataRow = rtrim($dataRow,$csv_delimiter)."\n";
-
 
 		fwrite($fp, $dataRow); // write 1 line of csv data (this can be slow...)
 		$ep_export_count++;

@@ -355,9 +355,12 @@ if ( isset($_GET['import']) ) {
 					$display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_UPDATE_PRODUCT, $items[(int)$filelayout['v_products_model']]) . $items[(int)$filelayout['v_products_quantity']];
 					$ep_update_count++;			
 					if ($sync) {
-						$stock->update_parent_products_stock((int)$query[$items[(int)$filelayout['v_products_model']]][(int)$filelayout['v_table_tracker']]);
+//						print_r($items[(int)$filelayout['v_products_model']]);
+						unset($query[$items[(int)$filelayout['v_products_model']]]);
+
+						$stock->update_parent_products_stock((int)$query[$items[(int)$filelayout['v_products_model']]][$items[(int)$filelayout['v_table_tracker']]]);
 	//		$messageStack->add_session('Parent Product Quantity Updated', 'success');
-						unset($query[$items[(int)$filelayout['v_products_model']]]);						
+						
 					}
 				} else { // error Attribute entry not found - needs work!
 					$display_output .= sprintf('<br /><font color="red"><b>SKIPPED! - SBA Tracked Quantity on Model: </b>%s - Not Found!</font>', $items[(int)$filelayout['v_products_model']]);

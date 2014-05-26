@@ -132,3 +132,6 @@
 4.0.21   06-01-2012	Fix to v_products_type on import.
                     Added new solution for checking database collation... this makes a difference when using 1.38/139 as the functions do not return field lengths correctly.
                     Fixed "security" issue with zencart 1.5
+4.0.21 SBA_Stock 03-01-2014	Added functionality to manage total stock of items when Stock By Attributes (SBA) is installed and items are or are not tracked by SBA.
+						Files modified: admin/easypopulate_4.php, easypopulate_4_import.php, easypopulate_4_export.php and admin/includes/functions/extra_functions/easypopulate_4_functions.php.
+						
