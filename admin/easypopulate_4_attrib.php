@@ -19,14 +19,14 @@ while ($contents = fgetcsv($handle, 0, $csv_delimiter, $csv_enclosure)) { // whi
 	$query ="SELECT * FROM ".TABLE_PRODUCTS." WHERE (products_model = '" . addslashes($v_products_model) . "') LIMIT 1";
 	$result = ep_4_query($query);
 
-	if (mysql_num_rows($result) == 0)  { // products_model is not in TABLE_PRODUCTS
+	if (($ep_uses_mysqli ? mysqli_num_rows($result) : mysql_num_rows($result)) == 0)  { // products_model is not in TABLE_PRODUCTS
 		$display_output .= sprintf('<br /><font color="red"><b>SKIPPED! - Model: </b>%s - Not Found! Unable to apply attributes.</font>', $v_products_model);
 		$ep_error_count++;			
 		continue; // skip current record (returns to while #1)
 	}
 
 	// Find the correct product_model to edit
-	while($row = mysql_fetch_array($result)) { // BEGIN while #2
+	while($row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array($result))) { // BEGIN while #2
 		$v_products_id = $row['products_id'];
 				
 		// why am I again testing products_model? I used that to query the database in the first place!
@@ -66,13 +66,13 @@ while ($contents = fgetcsv($handle, 0, $csv_delimiter, $csv_enclosure)) { // whi
 			$result = ep_4_query($query);
 		
 			// insert new products_options_name
-			if ($row = mysql_fetch_array($result))  { 
+			if ($row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array($result)))  { 
 				$v_products_options_id = $row['products_options_id']; // this is not getting used for anything!
 			// get current products_options_id
 			} else { // products_options_name is not in TABLE_PRODUCTS so ADD it
 				$sql_max = "SELECT MAX(products_options_id) FROM ".TABLE_PRODUCTS_OPTIONS;
 				$result_max = ep_4_query($sql_max);
-				$row_max = mysql_fetch_array($result_max);
+				$row_max = ($ep_uses_mysqli ? mysqli_fetch_array($result_max) : mysql_fetch_array($result_max));
 				$v_products_options_id = $row_max[0] + 1;
 				if (!is_numeric($products_options_id) ) { // i don't think this ever gets executed even when table is empty!!!
 					$v_products_options_id = 1; 
@@ -99,7 +99,7 @@ while ($contents = fgetcsv($handle, 0, $csv_delimiter, $csv_enclosure)) { // whi
 			// Get max index id for TABLE_PRODUCTS_OPTIONS_VALUES_TO_PRODUCTS_OPTIONS
 			$sql_max2 = "SELECT MAX(products_options_values_to_products_options_id) max FROM ".TABLE_PRODUCTS_OPTIONS_VALUES_TO_PRODUCTS_OPTIONS;
 			$result2 = ep_4_query($sql_max2);
-			$row2 = mysql_fetch_array($result2);
+			$row2 = ($ep_uses_mysqli ? mysqli_fetch_array($result2) : mysql_fetch_array($result2));
 			$products_options_values_to_products_options_id = $row2['max'] + 1;
 			if ( !is_numeric($products_options_values_to_products_options_id) ) { 
 				$products_options_values_to_products_options_id = 1; 
@@ -108,7 +108,7 @@ while ($contents = fgetcsv($handle, 0, $csv_delimiter, $csv_enclosure)) { // whi
 			// Get max index id for TABLE_PRODUCTS_OPTIONS_VALUES
 			$sql_max3 = "SELECT MAX(products_options_values_id) max FROM ".TABLE_PRODUCTS_OPTIONS_VALUES;
 			$result3 = ep_4_query($sql_max3);
-			$row3 = mysql_fetch_array($result3);
+			$row3 = ($ep_uses_mysqli ? mysqli_fetch_array(result3) : mysql_fetch_array($result3));
 			$products_options_values_id = $row3['max'] + 1;
 			if (!is_numeric($products_options_values_id) ) { 
 				$products_options_values_id = 1;
@@ -142,7 +142,7 @@ while ($contents = fgetcsv($handle, 0, $csv_delimiter, $csv_enclosure)) { // whi
 					$result4 = ep_4_query($sql);
 
 					// if $result4 == 0, products_options_values_name not found
-					if (mysql_num_rows($result4) == 0)  { // products_options_name is not in TABLE_PRODUCTS_OPTIONS_VALUES
+					if (($ep_uses_mysqli ? mysqli_num_rows($result4) : mysql_num_rows($result4)) == 0)  { // products_options_name is not in TABLE_PRODUCTS_OPTIONS_VALUES
 						// insert New products_options_values_name
 // HERE ==============> changed to add language entries for all defined languages					
 						foreach ($langcode as $key => $lang) {
@@ -178,7 +178,7 @@ while ($contents = fgetcsv($handle, 0, $csv_delimiter, $csv_enclosure)) { // whi
 						products_options_values_id = '0'";
 					$result5 = ep_4_query($sql5);
 					// if $result5 == 0, combination not found
-					if (mysql_num_rows($result5) == 0)  { // combination is not in TABLE_PRODUCTS_OPTIONS_VALUES_TO_PRODUCTS_OPTIONS
+					if (($ep_uses_mysqli ? mysqli_num_rows($result5) : mysql_num_rows($result5)) == 0)  { // combination is not in TABLE_PRODUCTS_OPTIONS_VALUES_TO_PRODUCTS_OPTIONS
 						// insert new combination
 						$errorcheck = ep_4_query("INSERT INTO ".TABLE_PRODUCTS_OPTIONS_VALUES_TO_PRODUCTS_OPTIONS."
 						(products_options_values_to_products_options_id, products_options_id, products_options_values_id) 
@@ -202,7 +202,7 @@ while ($contents = fgetcsv($handle, 0, $csv_delimiter, $csv_enclosure)) { // whi
 					$result5 = ep_4_query($sql5);
 
 					// if $result5 == 0, combination not found
-					if (mysql_num_rows($result5) == 0)  { // combination is not in TABLE_PRODUCTS_OPTIONS_VALUES_TO_PRODUCTS_OPTIONS
+					if (($ep_uses_mysqli ? mysqli_fetch_array($result5) : mysql_num_rows($result5)) == 0)  { // combination is not in TABLE_PRODUCTS_OPTIONS_VALUES_TO_PRODUCTS_OPTIONS
 						$errorcheck = ep_4_query("INSERT INTO ".TABLE_PRODUCTS_OPTIONS_VALUES_TO_PRODUCTS_OPTIONS."
 							(products_options_values_to_products_options_id, products_options_id, products_options_values_id) 
 							VALUES('$products_options_values_to_products_options_id', '$v_products_options_id', '$products_options_values_id')");
@@ -232,7 +232,7 @@ while ($contents = fgetcsv($handle, 0, $csv_delimiter, $csv_enclosure)) { // whi
 						b.products_options_values_name = '". $values_names_array[$l_id][$values_names_index]."'";
 					$result5 = ep_4_query($sql5);
 					
-					$row5 = mysql_fetch_array($result5);
+					$row5 = ($ep_uses_mysqli ? mysqli_fetch_array($result5) : mysql_fetch_array($result5));
 					$a_products_options_values_id = $row5['products_options_values_id'];
 					
 
@@ -246,8 +246,8 @@ while ($contents = fgetcsv($handle, 0, $csv_delimiter, $csv_enclosure)) { // whi
 						options_id = '".$v_products_options_id."' AND
 						options_values_id = '".$a_products_options_values_id."'";
 					$result6 = ep_4_query($sql6);
-					$row6 = mysql_fetch_array($result6);
-					if (mysql_num_rows($result6) == 0)  {
+					$row6 = ($ep_uses_mysqli ? mysqli_fetch_array($result6) : mysql_fetch_array($result6));
+					if (($ep_uses_mysqli ? mysqli_num_rows($result6) : mysql_num_rows($result6)) == 0)  {
 						$errorcheck = ep_4_query("INSERT INTO ".TABLE_PRODUCTS_ATTRIBUTES."
 							(products_id, options_id, options_values_id) 
 							VALUES ('".$v_products_id."', '".$v_products_options_id."','".$a_products_options_values_id."')");
@@ -267,13 +267,13 @@ while ($contents = fgetcsv($handle, 0, $csv_delimiter, $csv_enclosure)) { // whi
 				// Get max index id for TABLE_PRODUCTS_OPTIONS_VALUES
 				$sql_max3 = "SELECT MAX(products_options_values_id) max FROM ".TABLE_PRODUCTS_OPTIONS_VALUES;
 				$result3 = ep_4_query($sql_max3);
-				$row3 = mysql_fetch_array($result3);
+				$row3 = ($ep_uses_mysqli ? mysqli_fetch_array($result3) : mysql_fetch_array($result3));
 				$products_options_values_id = $row3['max'] + 1;
 				
 				// Get max index id for TABLE_PRODUCTS_OPTIONS_VALUES_TO_PRODUCTS_OPTIONS
 				$sql_max2 = "SELECT MAX(products_options_values_to_products_options_id) max FROM ".TABLE_PRODUCTS_OPTIONS_VALUES_TO_PRODUCTS_OPTIONS;
 				$result2 = ep_4_query($sql_max2);
-				$row2 = mysql_fetch_array($result2);
+				$row2 = ($ep_uses_mysqli ? mysqli_fetch_array($result2) : mysql_fetch_array($result2));
 				$products_options_values_to_products_options_id = $row2['max'] + 1;
 				$values_names_index++;
 				$products_options_values_sort_order++; 
