@@ -132,3 +132,23 @@
 4.0.21   06-01-2012	Fix to v_products_type on import.
                     Added new solution for checking database collation... this makes a difference when using 1.38/139 as the functions do not return field lengths correctly.
                     Fixed "security" issue with zencart 1.5
+4.0.22 	 03-01-2014	SBA_Stock: Added functionality to manage total stock of items when Stock By Attributes (SBA) is installed and items are or are not tracked by SBA.
+						Files modified: admin/easypopulate_4.php, easypopulate_4_import.php, easypopulate_4_export.php and admin/includes/functions/extra_functions/easypopulate_4_functions.php.
+4.0.23 	 07-13-2014	Upgrade to ZC 1.5.3. Incorporated usage of mysqli_ related functions where mysql_ functions were used to continue functionality in older versions but allow
+					continued operation in newer ZC versions.  Also added 
+					additional SBA functionality for import and export.  SBA is 
+					still tied to an older version of SBA and 
+					needs to be updated to reflect Potterhouse's version.  Also
+					modified the basic attribute process of updating the sort order
+					to use a factor of 10 instead of a factor of 1 when importing
+					basic attributes.  Ideally, the sort order would remain as
+					previously assigned if the product existed and be adjusted as
+					necessary to remain in the desired sort order; however, at 
+					least this way room is provided between EP4 updates to add
+					additional options between existing options.  
+					In admin/easypopulate_4_attrib.php is a variable 
+					$products_sort_order_increment that is currently set to 10 
+					so that options will be added first at the value of 1 as 
+					assigned in the same file, then will increment to 
+					10, 20, 30, etc... for each subsequent option upon import 
+					of the basic file.

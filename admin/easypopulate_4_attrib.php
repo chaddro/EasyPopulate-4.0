@@ -1,5 +1,5 @@
 <?php
-// $Id: easypopulate_4_attrib.php, v4.0.21 06-01-2012 chadderuski $
+// $Id: easypopulate_4_attrib.php, v4.0.23 07-13-2014 mc12345678 $
 
 
 // Database default values
@@ -9,6 +9,7 @@ $product_options_type = 0; // default 0=Dropdown, 1=Text, 2=Radio, 3=Checkbox, 4
 $products_options_values_id = 1;
 $new_options_name = 0;
 $new_options_values_name = 0;
+$products_sort_order_increment = 10;
 
 // attribute import loop - read 1 line of data from input file
 while ($contents = fgetcsv($handle, 0, $csv_delimiter, $csv_enclosure)) { // while #1 - Main Loop
@@ -276,7 +277,7 @@ while ($contents = fgetcsv($handle, 0, $csv_delimiter, $csv_enclosure)) { // whi
 				$row2 = ($ep_uses_mysqli ? mysqli_fetch_array($result2) : mysql_fetch_array($result2));
 				$products_options_values_to_products_options_id = $row2['max'] + 1;
 				$values_names_index++;
-				$products_options_values_sort_order++; 
+				$products_options_values_sort_order += (round(($products_options_values_sort_order/10))) * 10 + $products_sort_order_increment; 
 			} // END: while #3
 			if (!$table_products_attributes_update) {
 				// FEEDBACK ========> implode(",", $values_names_array[1])

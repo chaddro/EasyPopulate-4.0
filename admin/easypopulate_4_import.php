@@ -1,5 +1,5 @@
 <?php
-// $Id: easypopulate_4_import.php, v4.0.21 06-01-2012 chadderuski $
+// $Id: easypopulate_4_import.php, v4.0.23 07-13-2014 mc12345678 $
 
 // BEGIN: Data Import Module
 if ( isset($_GET['import']) ) {
@@ -307,6 +307,85 @@ if ( isset($_GET['import']) ) {
 		} // while
 	} // if Detailed Stock By Attributes Import
 
+	// Import stock quantity knowing that cart has SBA installed:
+	// FOR RESYNC, THEN THE FOLLOWING APPLIES and will need to get/carry over the 
+	// $stock class:
+	// require(DIR_WS_CLASSES . 'products_with_attributes_stock.php');
+	// $stock = new products_with_attributes_stock;
+	// 		if(is_numeric((int)$_GET['products_id'])){
+
+	//			$stock->update_parent_products_stock((int)$_GET['products_id']);
+	//		$messageStack->add_session('Parent Product Quantity Updated', 'success');
+
+	if ( strtolower(substr($file['name'],0,12)) == "sba-stock-ep" && ep_4_SBA1Exists() == true) {
+		$sync = false;
+		if (isset($_GET['sync']) && $_GET['sync'] == '1') {
+			$query = array();
+			$sync = true;
+
+			require(DIR_WS_CLASSES . 'products_with_attributes_stock.php');
+			$stock = new products_with_attributes_stock;
+		}
+
+		while ($items = fgetcsv($handle, 0, $csv_delimiter, $csv_enclosure)) { // read 1 line of data
+			//IF STANDARD STOCK, then Update the standard stock
+			if ($items[$filelayout['v_SBA_tracked']] == '') {
+				$sql = "UPDATE ".TABLE_PRODUCTS." SET 
+					products_quantity					    = ".$items[(int)$filelayout['v_products_quantity']]."
+					WHERE (
+					products_id = ".$items[(int)$filelayout['v_table_tracker']]." )";
+				if ($sync) {
+					$query[$items[(int)$filelayout['v_products_model']]] = $items;
+					//Need to capture all of the product model/product number/quantity counts so that can do a comparison in the SBA section and remove the data point.  Once all done, then cycle through this data and update with it.
+				} elseif (!$sync) { 
+					if ($result = ep_4_query($sql)) {
+						$ep_update_count++;			
+						$display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_UPDATE_PRODUCT, $items[(int)$filelayout['v_products_model']] ) . $items[(int)$filelayout['v_products_quantity']];
+					} else { // error Attribute entry not found - needs work!
+						$display_output .= sprintf('<br /><font color="red"><b>SKIPPED! - Product Quantity on Model: </b>%s - Not Found!</font>', $items[(int)$filelayout['v_products_model']]);
+						$ep_error_count++;
+					} // if 
+				}
+			} elseif ($items[(int)$filelayout['v_SBA_tracked']] == "X") {
+				$sql = "UPDATE ".TABLE_PRODUCTS_WITH_ATTRIBUTES_STOCK." SET 
+					quantity					    = ".$items[(int)$filelayout['v_products_quantity']]."
+					WHERE (
+					stock_id = ".$items[$filelayout['v_table_tracker']]." )";
+				if ($result = ep_4_query($sql)) {
+					$display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_UPDATE_PRODUCT, $items[(int)$filelayout['v_products_model']]) . $items[(int)$filelayout['v_products_quantity']];
+					$ep_update_count++;			
+					if ($sync) {
+						$stock->update_parent_products_stock((int)$query[$items[(int)$filelayout['v_products_model']]][(int)$filelayout['v_table_tracker']]);
+	//		$messageStack->add_session('Parent Product Quantity Updated', 'success');
+						unset($query[$items[(int)$filelayout['v_products_model']]]);						
+					}
+				} else { // error Attribute entry not found - needs work!
+					$display_output .= sprintf('<br /><font color="red"><b>SKIPPED! - SBA Tracked Quantity on Model: </b>%s - Not Found!</font>', $items[(int)$filelayout['v_products_model']]);
+					$ep_error_count++;
+				} // if 
+
+			} //end if Standard / SBA stock
+		} // end while
+
+		if ($sync) {
+			foreach($query as $items) {
+				$sql = "UPDATE ".TABLE_PRODUCTS." SET 
+					products_quantity					    = ".$items[(int)$filelayout['v_products_quantity']]."
+					WHERE (
+					products_id = ".$items[(int)$filelayout['v_table_tracker']]." )";
+				if ($result = ep_4_query($sql)) {
+					$ep_update_count++;			
+					$display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_UPDATE_PRODUCT, $items[(int)$filelayout['v_products_model']] ) . $items[(int)$filelayout['v_products_quantity']];
+				} else { // error Attribute entry not found - needs work!
+					$display_output .= sprintf('<br /><font color="red"><b>SKIPPED! - Product Quantity on Model: </b>%s - Not Found!</font>', $items[(int)$filelayout['v_products_model']]);
+					$ep_error_count++;
+				} //end if Standard
+
+			} //end foreach
+		} // end if sync
+//		$display_output .= '<br/> This: ' . print_r($query) . 'test<br/>';
+	} // End of Import stock quantity knowing that cart has SBA installed.
+
 	// CATEGORIES1
 	// This Category MetaTags import routine only deals with existing Categories. It does not create or modify the tree.
 	// This code is ONLY used to Edit Categories image, description, and metatags data!
@@ -369,7 +448,7 @@ if ( isset($_GET['import']) ) {
 		} // while
 	} // if
 
-if ( ( strtolower(substr($file['name'],0,15)) <> "categorymeta-ep") && ( strtolower(substr($file['name'],0,7)) <> "attrib-") && (ep_4_SBA1Exists() == true ? ( strtolower(substr($file['name'],0,4)) <> "sba-"): true )) { //  temporary solution here... 12-06-2010
+if ( ( strtolower(substr($file['name'],0,15)) <> "categorymeta-ep") && ( strtolower(substr($file['name'],0,7)) <> "attrib-") && (ep_4_SBA1Exists() == true ? ( strtolower(substr($file['name'],0,4)) <> "sba-") : true )) { //  temporary solution here... 12-06-2010
 	
 	// Main IMPORT loop For Product Related Data. v_products_id is the main key
 	while ($items = fgetcsv($handle, 0, $csv_delimiter, $csv_enclosure)) { // read 1 line of data
@@ -1261,48 +1340,48 @@ if ( strtolower(substr($file['name'],0,14)) == "pricebreaks-ep") {
 }	
 			
 			
-			// BEGIN: Products Descriptions
+            // BEGIN: Products Descriptions
             // the following is common in both the updating an existing product and creating a new product // mc12345678 updated to allow omission of v_products_description in the import file.
-			if (isset($v_products_name)) {
-				foreach( $v_products_name as $key => $name) {
-					$sql = "SELECT * FROM ".TABLE_PRODUCTS_DESCRIPTION." WHERE
-							products_id = ".$v_products_id." AND
-							language_id = ".$key;
-					$result = ep_4_query($sql);
-						
+            if (isset($v_products_name)) {
+                foreach ($v_products_name as $key => $name) {
+                    $sql = "SELECT * FROM " . TABLE_PRODUCTS_DESCRIPTION . " WHERE
+                        products_id = " . $v_products_id . " AND
+                        language_id = " . $key;
+                    $result = ep_4_query($sql);
+
 					if (($ep_uses_mysqli ? mysqli_num_rows($result) : mysql_num_rows($result)) == 0) {
-						$sql = "INSERT INTO ".TABLE_PRODUCTS_DESCRIPTION." (
-							products_id,
-							language_id,
+                        $sql = "INSERT INTO " . TABLE_PRODUCTS_DESCRIPTION . " (
+                            products_id,
+                            language_id,
                             products_name, " .
                             ((isset($filelayout['v_products_description_' . $key]) || ( isset($filelayout['v_products_description_' . $key]) && $product_is_new) ) ? " products_description," : "");
-						if ($ep_supported_mods['psd'] == true) {
-							$sql .= " products_short_desc,";
-						}
-						$sql .= " products_url )
-							VALUES (
+                        if ($ep_supported_mods['psd'] == true) {
+                            $sql .= " products_short_desc,";
+                        }
+                        $sql .= " products_url )
+                            VALUES (
                             '" . $v_products_id . "',
                             " . $key . ",
                             '" . addslashes($name) . "', " .
                             ((isset($filelayout['v_products_description_' . $key]) || ( isset($filelayout['v_products_description_' . $key]) && $product_is_new) ) ? "'" . addslashes($v_products_description[$key]) . "'," : "");
-						if ($ep_supported_mods['psd'] == true) {
-							$sql .= "'".addslashes($v_products_short_desc[$key])."',";
-						}
-						$sql .= "'".addslashes($v_products_url[$key])."')";
-						$result = ep_4_query($sql);
-					} else { // already in the description, update it
-						$sql = "UPDATE ".TABLE_PRODUCTS_DESCRIPTION." SET
+                        if ($ep_supported_mods['psd'] == true) {
+                            $sql .= "'" . addslashes($v_products_short_desc[$key]) . "',";
+                        }
+                        $sql .= "'" . addslashes($v_products_url[$key]) . "')";
+                        $result = ep_4_query($sql);
+                    } else { // already in the description, update it
+                        $sql = "UPDATE ".TABLE_PRODUCTS_DESCRIPTION." SET
        products_name        ='".addslashes($name)."', " .
                             ((isset($filelayout['v_products_description_' . $key]) || ( isset($filelayout['v_products_description_' . $key]) && $product_is_new) ) ? "products_description ='" . addslashes($v_products_description[$key]) . "'," : "");
-						if ($ep_supported_mods['psd'] == true) {
-							$sql .= " products_short_desc = '".addslashes($v_products_short_desc[$key])."',";
-						}
-						$sql .= " products_url='".addslashes($v_products_url[$key])."'
-							WHERE products_id = '".$v_products_id."' AND language_id = '".$key."'";
-						$result = ep_4_query($sql);
-					}
-				}		
-			} // END: Products Descriptions End	
+                        if ($ep_supported_mods['psd'] == true) {
+                            $sql .= " products_short_desc = '" . addslashes($v_products_short_desc[$key]) . "',";
+                        }
+                        $sql .= " products_url='" . addslashes($v_products_url[$key]) . "'
+       WHERE products_id = '" . $v_products_id . "' AND language_id = '" . $key . "'";
+                        $result = ep_4_query($sql);
+                    }
+                }
+            } // END: Products Descriptions End	
 
 //==================================================================================================================================
 			// Assign product to category if linked

@@ -1,5 +1,5 @@
 <?php
-// $Id: easypopulate_4_functions.php, v4.0.21 06-01-2012 chadderuski $
+// $Id: easypopulate_4_functions.php, v4.0.23 07-13-2014 mc12345678 $
 
 function ep_4_curly_quotes($curly_text) {
 	$ep_curly_quotes = (int)EASYPOPULATE_4_CONFIG_CURLY_QUOTES;
@@ -128,6 +128,43 @@ function ep_4_SBA1Exists () {
 function ep_4_set_filelayout($ep_dltype, &$filelayout_sql, $sql_filter, $langcode, $ep_supported_mods, $custom_fields) {
 	$filelayout = array();
 	switch($ep_dltype) {
+	case 'SBAStock';
+		$filelayout[] = 'v_products_model';
+		$filelayout[] = 'v_status';
+		foreach ($langcode as $key => $lang) { // create variables for each language id
+			$l_id = $lang['id'];
+			$filelayout[] = 'v_products_name_'.$l_id;
+			$filelayout[] = 'v_products_description_'.$l_id;
+			if ($ep_supported_mods['psd'] == true) { // products short description mod
+				$filelayout[] = 'v_products_short_desc_'.$l_id;
+			}
+		} 
+		//$filelayout[] =	'v_products_options_values_name'; // options values name from table PRODUCTS_OPTIONS_VALUES
+		$filelayout[] = 'v_SBA_tracked';
+		$filelayout[] = 'v_table_tracker';
+		$filelayout[] = 'v_products_attributes'; // options name from table 
+		$filelayout[] = 'v_products_quantity';
+		
+		$filelayout_sql = 'SELECT
+			p.products_id					as v_products_id,
+			p.products_model				as v_products_model,';
+		if (count($custom_fields) > 0) { // User Defined Products Fields
+			foreach ($custom_fields as $field) {
+				$filelayout_sql .= 'p.'.$field.' as v_'.$field.',';
+			}
+		}
+		$filelayout_sql .= '
+			p.products_quantity				as v_products_quantity,
+			p.products_status				as v_status 
+			FROM '
+			.TABLE_PRODUCTS.' as p '
+			//.TABLE_CATEGORIES.' as subc,'
+			//.TABLE_PRODUCTS_TO_CATEGORIES.' as ptoc
+			. ($sql_filter <> '' ? 'WHERE '. $sql_filter : '');
+			//p.products_id = ptoc.products_id AND
+			/*ptoc.categories_id = subc.categories_id '.$sql_filter;*/
+		break;
+		
 	case 'full': // FULL products download
 		// The file layout is dynamically made depending on the number of languages
 		$filelayout[] = 'v_products_model';
@@ -954,7 +991,7 @@ function ep_4_query($query) {
 	if (($ep_uses_mysqli ? mysqli_errno($db->link) : mysql_errno())) {
 		$ep_stack_sql_error = true;
 		if ($ep_debug_logging == true) {
-			$string = "MySQLi error ".($ep_uses_mysqli ? mysqli_errno($db->link) : mysql_errno()).": ".($ep_uses_mysqli ? mysqli_error($db->link) : $mysql_error())."\nWhen executing:\n$query\n";
+			$string = ($ep_uses_mysqli ? "MySQLi" : "MySQL") . " error ".($ep_uses_mysqli ? mysqli_errno($db->link) : mysql_errno() ) . ": ".($ep_uses_mysqli ? mysqli_error($db->link) : $mysql_error())."\nWhen executing:\n$query\n";
 			write_debug_log_4($string);
 		}
 	} elseif ($ep_debug_logging_all == true) {
