@@ -1,5 +1,5 @@
 <?php
-// $Id: easypopulate_4_export.php, v4.0.21 06-01-2012 chadderuski $
+// $Id: easypopulate_4_export.php, v4.0.23 07-13-2014 mc12345678 $
 
 // get download type
 $ep_dltype = (isset($_POST['export'])) ? $_POST['export'] : $ep_dltype;
@@ -136,7 +136,7 @@ foreach( $filelayout_header as $key => $value ) {
 $column_headers = rtrim($column_headers, $csv_delimiter)."\n";
 fwrite($fp, $column_headers); // write column headers
 
-// these variablels are for the Attrib_Basic Export
+// these variables are for the Attrib_Basic Export
 $active_products_id = ""; // start empty
 $active_options_id = ""; // start empty
 $active_language_id = ""; // start empty
@@ -144,9 +144,10 @@ $active_row = array(); // empty array
 $last_products_id = "";
 $print1 = 0;
 $result = ep_4_query($filelayout_sql);
-while ($row = mysql_fetch_array($result)) {
+while ($row = ($ep_uses_mysqli ?  mysqli_fetch_array($result) : mysql_fetch_array($result))) {
 
-if ($ep_dltype == 'attrib_basic') { // special case 'attrib_basic'
+	if ($ep_dltype == 'attrib_basic') { // special case 'attrib_basic'
+
 
 	if ($row['v_products_id'] == $active_products_id) {
 		if ($row['v_options_id'] == $active_options_id) {
@@ -226,8 +227,8 @@ if ($ep_dltype == 'attrib_basic') { // special case 'attrib_basic'
 			if (isset($filelayout['v_products_attributes_filename'])) { 
 				$sql2 = 'SELECT * FROM '.TABLE_PRODUCTS_ATTRIBUTES_DOWNLOAD.' WHERE products_attributes_id = '.$row['v_products_attributes_id'].' LIMIT 1';
 				$result2 = ep_4_query($sql2);
-				$row2 = mysql_fetch_array($result2);
-				if (mysql_num_rows($result2)) {
+				$row2 = ($ep_uses_mysqli ? mysqli_fetch_array($result2) : mysql_fetch_array($result2));
+				if (($ep_uses_mysqli ? mysqli_num_rows($result2) : mysql_num_rows($result2))) {
 					$row['v_products_attributes_filename'] = $row2['products_attributes_filename']; 
 					$row['v_products_attributes_maxdays'] = $row2['products_attributes_maxdays']; 
 					$row['v_products_attributes_maxcount'] = $row2['products_attributes_maxcount']; 
@@ -242,8 +243,8 @@ if ($ep_dltype == 'attrib_basic') { // special case 'attrib_basic'
 				if (isset($filelayout['v_products_attributes_filename'])) /* Believe this should be an SBA filename; however, need to look at the filename assignment function to see how this works.  */{ 
 					$sql2 = 'SELECT * FROM '.TABLE_PRODUCTS_ATTRIBUTES_DOWNLOAD.' WHERE products_attributes_id = '.$row['v_products_attributes_id'].' LIMIT 1';
 					$result2 = ep_4_query($sql2);
-					$row2 = mysql_fetch_array($result2);
-					if (mysql_num_rows($result2)) {
+				$row2 = ($ep_uses_mysqli ? mysqli_fetch_array($result2) : mysql_fetch_array($result2));
+				if (($ep_uses_mysqli ? mysqli_num_rows($result2) : mysql_num_rows($result2))) {
 						$row['v_products_attributes_filename'] = $row2['products_attributes_filename']; 
 						$row['v_products_attributes_maxdays'] = $row2['products_attributes_maxdays']; 
 						$row['v_products_attributes_maxcount'] = $row2['products_attributes_maxcount']; 
@@ -266,7 +267,7 @@ if ($ep_dltype == 'attrib_basic') { // special case 'attrib_basic'
 				// metaData start
 				$sqlMeta = 'SELECT * FROM '.TABLE_META_TAGS_PRODUCTS_DESCRIPTION.' WHERE products_id = '.$row['v_products_id'].' AND language_id = '.$lid.' LIMIT 1 ';
 				$resultMeta = ep_4_query($sqlMeta);
-				$rowMeta    = mysql_fetch_array($resultMeta);
+				$rowMeta = ($ep_uses_mysqli ? mysqli_fetch_array($resultMeta) : mysql_fetch_array($resultMeta));
 				$row['v_metatags_title_'.$lid]       = $rowMeta['metatags_title'];
 				$row['v_metatags_keywords_'.$lid]    = $rowMeta['metatags_keywords'];
 				$row['v_metatags_description_'.$lid] = $rowMeta['metatags_description'];
@@ -274,7 +275,7 @@ if ($ep_dltype == 'attrib_basic') { // special case 'attrib_basic'
 				// for each language, get the description and set the vals
 				$sql2    = 'SELECT * FROM '.TABLE_PRODUCTS_DESCRIPTION.' WHERE products_id = '.$row['v_products_id'].' AND language_id = '.$lid.' LIMIT 1 ';
 				$result2 = ep_4_query($sql2);
-				$row2    = mysql_fetch_array($result2);
+				$row2 = ($ep_uses_mysqli ? mysqli_fetch_array($result2) : mysql_fetch_array($result2));
 				$row['v_products_name_'.$lid]        = $row2['products_name'];
 				$row['v_products_description_'.$lid] = $row2['products_description'];
 				if ($ep_supported_mods['psd'] == true) { // products short descriptions mod
@@ -288,8 +289,8 @@ if ($ep_dltype == 'attrib_basic') { // special case 'attrib_basic'
 		if (isset($filelayout['v_specials_price'])) {
 			$specials_query = ep_4_query('SELECT specials_new_products_price, specials_date_available, expires_date FROM '.
 				TABLE_SPECIALS.' WHERE products_id = '.$row['v_products_id']);
-			if (mysql_num_rows($specials_query)) { 	// special
-				$ep_specials = mysql_fetch_array($specials_query);
+			if (($ep_uses_mysqli ? mysqli_num_rows($specials_query) : mysql_num_rows($specials_query)) ) {  // special
+				$ep_specials = ($ep_uses_mysqli ? mysqli_fetch_array($specials_query) : mysql_fetch_array($specials_query));
 				$row['v_specials_price']        = $ep_specials['specials_new_products_price'];
 				$row['v_specials_date_avail']   = $ep_specials['specials_date_available'];
 				$row['v_specials_expires_date'] = $ep_specials['expires_date'];
@@ -307,8 +308,8 @@ if ($ep_dltype == 'attrib_basic') { // special case 'attrib_basic'
 				$lid = $lang['id'];
 				// metaData start
 				$sqlMeta = 'SELECT * FROM '.TABLE_METATAGS_CATEGORIES_DESCRIPTION.' WHERE categories_id = '.$row['v_categories_id'].' AND language_id = '.$lid.' LIMIT 1 ';
-				$resultMeta = ep_4_query($sqlMeta) or die(mysql_error());
-				$rowMeta    = mysql_fetch_array($resultMeta);
+				$resultMeta = ep_4_query($sqlMeta) or die(($ep_uses_mysqli ? mysqli_error($db->link) : mysql_error()));
+				$rowMeta = ($ep_uses_mysqli ? mysqli_fetch_array($resultMeta) : mysql_fetch_array($resultMeta));
 				$row['v_metatags_title_'.$lid]       = $rowMeta['metatags_title'];
 				$row['v_metatags_keywords_'.$lid]    = $rowMeta['metatags_keywords'];
 				$row['v_metatags_description_'.$lid] = $rowMeta['metatags_description'];
@@ -316,7 +317,7 @@ if ($ep_dltype == 'attrib_basic') { // special case 'attrib_basic'
 				// for each language, get category description and name
 				$sql2    = 'SELECT * FROM '.TABLE_CATEGORIES_DESCRIPTION.' WHERE categories_id = '.$row['v_categories_id'].' AND language_id = '.$lid.' LIMIT 1 ';
 				$result2 = ep_4_query($sql2);
-				$row2    = mysql_fetch_array($result2);
+				$row2 = ($ep_uses_mysqli ? mysqli_fetch_array($result2) : mysql_fetch_array($result2));
 				$row['v_categories_name_'.$lid]        = $row2['categories_name'];
 				$row['v_categories_description_'.$lid] = $row2['categories_description'];
 			} // foreach
@@ -336,14 +337,14 @@ if ($ep_dltype == 'attrib_basic') { // special case 'attrib_basic'
 				// mult-lingual categories start - for each language, get category description and name
 				$sql2 =  'SELECT * FROM '.TABLE_CATEGORIES_DESCRIPTION.' WHERE categories_id = '.$thecategory_id.' ORDER BY language_id';
 				$result2 = ep_4_query($sql2);
-				while ($row2 = mysql_fetch_array($result2)) {
+			while ($row2 = ($ep_uses_mysqli ? mysqli_fetch_array($result2) : mysql_fetch_array($result2))) {
 					$lid = $row2['language_id'];
 					$row['v_categories_name_'.$lid] = $row2['categories_name'].$category_delimiter.$row['v_categories_name_'.$lid];
 				}
 				// look for parent categories ID
 				$sql3 = 'SELECT parent_id FROM '.TABLE_CATEGORIES.' WHERE categories_id = '.$thecategory_id;
 				$result3 = ep_4_query($sql3);
-				$row3 = mysql_fetch_array($result3);
+			$row3 = ($ep_uses_mysqli ? mysqli_fetch_array($result3) : mysql_fetch_array($result3));
 				$theparent_id = $row3['parent_id'];
 				if ($theparent_id != '') { // Found parent ID, set thecategoryid to get the next level
 				  $thecategory_id = $theparent_id;
@@ -579,19 +580,19 @@ if ($ep_dltype == 'attrib_basic') { // special case 'attrib_basic'
 		if (isset($filelayout['v_artists_name'])  && ($row['v_products_type'] == '2')) {
 			$sql_music_extra = 'SELECT * FROM '.TABLE_PRODUCT_MUSIC_EXTRA.' WHERE products_id = '.$row['v_products_id'].' LIMIT 1';
 			$result_music_extra = ep_4_query($sql_music_extra);
-			$row_music_extra = mysql_fetch_array($result_music_extra);
+		$row_music_extra = ($ep_uses_mysqli ? mysqli_fetch_array($result_music_extra) : mysql_fetch_array($result_music_extra));
 			// artist
 			if ( ($row_music_extra['artists_id'] != '0') && ($row_music_extra['artists_id'] != '') ) { // '0' is correct, but '' NULL is possible
 				$sql_record_artists = 'SELECT * FROM '.TABLE_RECORD_ARTISTS.' WHERE artists_id = '.$row_music_extra['artists_id'].' LIMIT 1';
 				$result_record_artists = ep_4_query($sql_record_artists);
-				$row_record_artists = mysql_fetch_array($result_record_artists);
+			$row_record_artists = ($ep_uses_mysqli ? mysqli_fetch_array($result_record_artists) : mysql_fetch_array($result_record_artists));
 				$row['v_artists_name'] = $row_record_artists['artists_name'];
 				$row['v_artists_image'] = $row_record_artists['artists_image'];
 				foreach ($langcode as $key => $lang) {
 					$lid = $lang['id'];
 					$sql_record_artists_info = 'SELECT * FROM '.TABLE_RECORD_ARTISTS_INFO.' WHERE artists_id = '.$row_music_extra['artists_id'].' AND languages_id = '.$lid.' LIMIT 1';
 					$result_record_artists_info = ep_4_query($sql_record_artists_info);
-					$row_record_artists_info = mysql_fetch_array($result_record_artists_info);
+					$row_record_artists_info = ($ep_uses_mysqli ? mysqli_fetch_array($result_record_artists_info) : mysql_fetch_array($result_record_artists_info));
 					$row['v_artists_url_'.$lid] = $row_record_artists_info['artists_url'];
 				}
 			} else { 
@@ -606,14 +607,14 @@ if ($ep_dltype == 'attrib_basic') { // special case 'attrib_basic'
 			if ( ($row_music_extra['record_company_id'] != '0') && ($row_music_extra['record_company_id'] != '') ) { // '0' is correct, but '' NULL is possible
 				$sql_record_company = 'SELECT * FROM '.TABLE_RECORD_COMPANY.' WHERE record_company_id = '.$row_music_extra['record_company_id'].' LIMIT 1';
 				$result_record_company = ep_4_query($sql_record_company);
-				$row_record_company = mysql_fetch_array($result_record_company);
+			$row_record_company = ($ep_uses_mysqli ? mysqli_fetch_array($result_record_company) : mysql_fetch_array($result_record_company));
 				$row['v_record_company_name'] = $row_record_company['record_company_name'];
 				$row['v_record_company_image'] = $row_record_company['record_company_image'];
 				foreach ($langcode as $key => $lang) {
 					$lid = $lang['id'];
 					$sql_record_company_info = 'SELECT * FROM '.TABLE_RECORD_COMPANY_INFO.' WHERE record_company_id = '.$row_music_extra['record_company_id'].' AND languages_id = '.$lid.' LIMIT 1';
 					$result_record_company_info = ep_4_query($sql_record_company_info);
-					$row_record_company_info = mysql_fetch_array($result_record_company_info);
+					$row_record_company_info = ($ep_uses_mysqli ? mysqli_fetch_array($result_record_company_info) : mysql_fetch_array($result_record_company_info));
 					$row['v_record_company_url_'.$lid] = $row_record_company_info['record_company_url'];
 				}
 			} else {  
@@ -624,7 +625,7 @@ if ($ep_dltype == 'attrib_basic') { // special case 'attrib_basic'
 			if ( ($row_music_extra['music_genre_id'] != '0') && ($row_music_extra['music_genre_id'] != '') ) { // '0' is correct, but '' NULL is possible
 				$sql_music_genre = 'SELECT * FROM '.TABLE_MUSIC_GENRE.' WHERE music_genre_id = '.$row_music_extra['music_genre_id'].' LIMIT 1';
 				$result_music_genre = ep_4_query($sql_music_genre);
-				$row_music_genre = mysql_fetch_array($result_music_genre);
+			$row_music_genre = ($ep_uses_mysqli ? mysqli_fetch_array($result_music_genre) : mysql_fetch_array($result_music_genre));
 				$row['v_music_genre_name'] = $row_music_genre['music_genre_name'];
 			} else {  
 				$row['v_music_genre_name'] = '';
@@ -638,7 +639,7 @@ if ($ep_dltype == 'attrib_basic') { // special case 'attrib_basic'
 			if ( ($row['v_manufacturers_id'] != '0') && ($row['v_manufacturers_id'] != '') ) { // '0' is correct, but '' NULL is possible
 				$sql2 = 'SELECT manufacturers_name FROM '.TABLE_MANUFACTURERS.' WHERE manufacturers_id = '.$row['v_manufacturers_id'];
 				$result2 = ep_4_query($sql2);
-				$row2    = mysql_fetch_array($result2);
+			$row2 = ($ep_uses_mysqli ? mysqli_fetch_array($result2) : mysql_fetch_array($result2));
 				$row['v_manufacturers_name'] = $row2['manufacturers_name']; 
 			} else {  // this is to fix the error on manufacturers name
 				// $row['v_manufacturers_id'] = '0';  blank name mean 0 id - right? chadd 4-7-09
@@ -654,7 +655,7 @@ if ($ep_dltype == 'attrib_basic') { // special case 'attrib_basic'
 					TABLE_PRODUCTS_DISCOUNT_QUANTITY.' WHERE products_id = '. 
 					$row['v_products_id'].' AND discount_id='.$discount_index;
 				$result2 = ep_4_query($sql2);
-				$row2    = mysql_fetch_array($result2);
+				$row2 = ($ep_uses_mysqli ? mysqli_fetch_array($result2) : mysql_fetch_array($result2));
 				$row['v_discount_price_'.$discount_index] = $row2['discount_price'];
 				$row['v_discount_qty_'.$discount_index]   = $row2['discount_qty'];
 			}
