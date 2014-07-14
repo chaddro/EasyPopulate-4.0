@@ -1,5 +1,5 @@
 <?php
-// $Id: easypopulate_4_import.php, v4.0.21 06-01-2012 chadderuski $
+// $Id: easypopulate_4_import.php, v4.0.23 07-13-2014 mc12345678 $
 
 // BEGIN: Data Import Module
 if ( isset($_GET['import']) ) {
@@ -105,12 +105,12 @@ if ( isset($_GET['import']) ) {
 		while ($items = fgetcsv($handle, 0, $csv_delimiter, $csv_enclosure)) { // read 1 line of data
 			$sql = "SELECT * FROM ".TABLE_PRODUCTS." WHERE (products_model = '".$items[$filelayout['v_products_model']]."') LIMIT 1";
 			$result = ep_4_query($sql);
-			if ($row = mysql_fetch_array($result)) {
+				if ($row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array($result))) {
 				$v_products_id = $row['products_id'];
 				// Add or Update the table Featured
 				$sql2 = "SELECT * FROM ".TABLE_FEATURED." WHERE ( products_id = '".$v_products_id."' ) LIMIT 1";
 				$result2 = ep_4_query($sql2);
-				if ($row2 = mysql_fetch_array($result2)) { // update featured product
+					if ($row2 = ($ep_uses_mysqli ? mysqli_fetch_array($result2) : mysql_fetch_array($result2))) { // update featured product
 					$v_featured_id = $row2['featured_id'];
 					$v_today = strtotime(date("Y-m-d"));
 					$v_expires_date = $items[$filelayout['v_expires_date']];
@@ -136,7 +136,7 @@ if ( isset($_GET['import']) ) {
 					// add featured product
 					$sql_max = "SELECT MAX(featured_id) max FROM ".TABLE_FEATURED;
 					$result_max = ep_4_query($sql_max);
-					$row_max = mysql_fetch_array($result_max);
+						$row_max = ($ep_uses_mysqli ? mysqli_fetch_array($result_max) : mysql_fetch_array($result_max));
 					$max_featured_id = $row_max['max']+1;
 					// if database is empty, start at 1
 					if (!is_numeric($max_featured_id) ) {
@@ -187,7 +187,7 @@ if ( isset($_GET['import']) ) {
 				options_values_id = '.$items[$filelayout['v_options_values_id']].'
 				) LIMIT 1';
 			$result = ep_4_query($sql);
-			if ($row = mysql_fetch_array($result)) {
+				if ($row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array($result))) {
 				// UPDATE
 				$sql = "UPDATE ".TABLE_PRODUCTS_ATTRIBUTES." SET 
 					options_values_price              = ".$items[$filelayout['v_options_values_price']].",
@@ -224,7 +224,7 @@ if ( isset($_GET['import']) ) {
 					$sql = 'SELECT * FROM '.TABLE_PRODUCTS_ATTRIBUTES_DOWNLOAD.' 
 						WHERE (products_attributes_id = '.$items[$filelayout['v_products_attributes_id']].') LIMIT 1';
 					$result = ep_4_query($sql);
-					if ($row = mysql_fetch_array($result)) { // update
+						if ($row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array($result))) { // update
 						$sql = "UPDATE ".TABLE_PRODUCTS_ATTRIBUTES_DOWNLOAD." SET 
 							products_attributes_filename = '".$items[$filelayout['v_products_attributes_filename']]."',
 							products_attributes_maxdays  = '".$items[$filelayout['v_products_attributes_maxdays']]."',
@@ -249,6 +249,143 @@ if ( isset($_GET['import']) ) {
 		} // while
 	} // if Detailed Attributes Import
 
+	// Detailed Attributes Import
+	if ( strtolower(substr($file['name'],0,15)) == "sba-detailed-ep" && ep_4_SBA1Exists() == true) {
+		while ($items = fgetcsv($handle, 0, $csv_delimiter, $csv_enclosure)) { // read 1 line of data
+			$sql = 'SELECT * FROM '.TABLE_PRODUCTS_ATTRIBUTES.' 
+				WHERE (
+				products_attributes_id = '.$items[$filelayout['v_products_attributes_id']].'' . /* AND 
+				products_id = '.$items[$filelayout['v_products_id']].' AND 
+				options_id = '.$items[$filelayout['v_options_id']].' AND 
+				options_values_id = '.$items[$filelayout['v_options_values_id']].'
+				*/' ) LIMIT 1';
+			$sql = 'SELECT * FROM '.TABLE_PRODUCTS_WITH_ATTRIBUTES_STOCK.' 
+				WHERE (
+				stock_id = '.$items[$filelayout['v_stock_id']].' ' . /*AND 
+				products_id = '.$items[$filelayout['v_products_id']].' AND 
+				options_id = '.$items[$filelayout['v_options_id']].' AND 
+				options_values_id = '.$items[$filelayout['v_options_values_id']].'
+				*/') LIMIT 1';
+			$result = ep_4_query($sql);
+				if ($row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array($result))) {
+				// UPDATE
+				$sql = "UPDATE ".TABLE_PRODUCTS_WITH_ATTRIBUTES_STOCK." SET 
+					products_id		              = ".$items[$filelayout['v_products_id']].",
+					stock_attributes                  = '".$items[$filelayout['v_stock_attributes']]."',
+					quantity					    = ".$items[$filelayout['v_quantity']].",
+					sort						    = ".$items[$filelayout['v_sort']]."
+					WHERE (
+					stock_id = ".$items[$filelayout['v_stock_id']]." )";
+				$result = ep_4_query($sql);
+				
+				if ($items[$filelayout['v_products_attributes_filename']] <> '') { // download file name
+					$sql = 'SELECT * FROM '.TABLE_PRODUCTS_ATTRIBUTES_DOWNLOAD.' 
+						WHERE (products_attributes_id = '.$items[$filelayout['v_products_attributes_id']].') LIMIT 1';
+					$result = ep_4_query($sql);
+						if ($row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array($result))) { // update
+						$sql = "UPDATE ".TABLE_PRODUCTS_ATTRIBUTES_DOWNLOAD." SET 
+							products_attributes_filename = '".$items[$filelayout['v_products_attributes_filename']]."',
+							products_attributes_maxdays  = '".$items[$filelayout['v_products_attributes_maxdays']]."',
+							products_attributes_maxcount = '".$items[$filelayout['v_products_attributes_maxcount']]."'
+							WHERE ( 
+							products_attributes_id = ".$items[$filelayout['v_products_attributes_id']].")";
+						$result = ep_4_query($sql);
+					} else { // insert
+						$sql = "INSERT INTO ".TABLE_PRODUCTS_ATTRIBUTES_DOWNLOAD." SET 
+							products_attributes_id       = '".$items[$filelayout['v_products_attributes_id']]."',
+							products_attributes_filename = '".$items[$filelayout['v_products_attributes_filename']]."',
+							products_attributes_maxdays  = '".$items[$filelayout['v_products_attributes_maxdays']]."',
+							products_attributes_maxcount = '".$items[$filelayout['v_products_attributes_maxcount']]."'";
+						$result = ep_4_query($sql);
+					}				
+				}
+				$ep_update_count++;			
+			} else { // error Attribute entry not found - needs work!
+				$display_output .= sprintf('<br /><font color="red"><b>SKIPPED! - Attribute Entry on Model: </b>%s - Not Found!</font>', $items[$filelayout['v_products_model']]);
+				$ep_error_count++;
+			} // if 
+		} // while
+	} // if Detailed Stock By Attributes Import
+
+	// Import stock quantity knowing that cart has SBA installed:
+	// FOR RESYNC, THEN THE FOLLOWING APPLIES and will need to get/carry over the 
+	// $stock class:
+	// require(DIR_WS_CLASSES . 'products_with_attributes_stock.php');
+	// $stock = new products_with_attributes_stock;
+	// 		if(is_numeric((int)$_GET['products_id'])){
+
+	//			$stock->update_parent_products_stock((int)$_GET['products_id']);
+	//		$messageStack->add_session('Parent Product Quantity Updated', 'success');
+
+	if ( strtolower(substr($file['name'],0,12)) == "sba-stock-ep" && ep_4_SBA1Exists() == true) {
+		$sync = false;
+		if (isset($_GET['sync']) && $_GET['sync'] == '1') {
+			$query = array();
+			$sync = true;
+
+			require(DIR_WS_CLASSES . 'products_with_attributes_stock.php');
+			$stock = new products_with_attributes_stock;
+		}
+
+		while ($items = fgetcsv($handle, 0, $csv_delimiter, $csv_enclosure)) { // read 1 line of data
+			//IF STANDARD STOCK, then Update the standard stock
+			if ($items[$filelayout['v_SBA_tracked']] == '') {
+				$sql = "UPDATE ".TABLE_PRODUCTS." SET 
+					products_quantity					    = ".$items[(int)$filelayout['v_products_quantity']]."
+					WHERE (
+					products_id = ".$items[(int)$filelayout['v_table_tracker']]." )";
+				if ($sync) {
+					$query[$items[(int)$filelayout['v_products_model']]] = $items;
+					//Need to capture all of the product model/product number/quantity counts so that can do a comparison in the SBA section and remove the data point.  Once all done, then cycle through this data and update with it.
+				} elseif (!$sync) { 
+					if ($result = ep_4_query($sql)) {
+						$ep_update_count++;			
+						$display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_UPDATE_PRODUCT, $items[(int)$filelayout['v_products_model']] ) . $items[(int)$filelayout['v_products_quantity']];
+					} else { // error Attribute entry not found - needs work!
+						$display_output .= sprintf('<br /><font color="red"><b>SKIPPED! - Product Quantity on Model: </b>%s - Not Found!</font>', $items[(int)$filelayout['v_products_model']]);
+						$ep_error_count++;
+					} // if 
+				}
+			} elseif ($items[(int)$filelayout['v_SBA_tracked']] == "X") {
+				$sql = "UPDATE ".TABLE_PRODUCTS_WITH_ATTRIBUTES_STOCK." SET 
+					quantity					    = ".$items[(int)$filelayout['v_products_quantity']]."
+					WHERE (
+					stock_id = ".$items[$filelayout['v_table_tracker']]." )";
+				if ($result = ep_4_query($sql)) {
+					$display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_UPDATE_PRODUCT, $items[(int)$filelayout['v_products_model']]) . $items[(int)$filelayout['v_products_quantity']];
+					$ep_update_count++;			
+					if ($sync) {
+						$stock->update_parent_products_stock((int)$query[$items[(int)$filelayout['v_products_model']]][(int)$filelayout['v_table_tracker']]);
+	//		$messageStack->add_session('Parent Product Quantity Updated', 'success');
+						unset($query[$items[(int)$filelayout['v_products_model']]]);						
+					}
+				} else { // error Attribute entry not found - needs work!
+					$display_output .= sprintf('<br /><font color="red"><b>SKIPPED! - SBA Tracked Quantity on Model: </b>%s - Not Found!</font>', $items[(int)$filelayout['v_products_model']]);
+					$ep_error_count++;
+				} // if 
+
+			} //end if Standard / SBA stock
+		} // end while
+
+		if ($sync) {
+			foreach($query as $items) {
+				$sql = "UPDATE ".TABLE_PRODUCTS." SET 
+					products_quantity					    = ".$items[(int)$filelayout['v_products_quantity']]."
+					WHERE (
+					products_id = ".$items[(int)$filelayout['v_table_tracker']]." )";
+				if ($result = ep_4_query($sql)) {
+					$ep_update_count++;			
+					$display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_UPDATE_PRODUCT, $items[(int)$filelayout['v_products_model']] ) . $items[(int)$filelayout['v_products_quantity']];
+				} else { // error Attribute entry not found - needs work!
+					$display_output .= sprintf('<br /><font color="red"><b>SKIPPED! - Product Quantity on Model: </b>%s - Not Found!</font>', $items[(int)$filelayout['v_products_model']]);
+					$ep_error_count++;
+				} //end if Standard
+
+			} //end foreach
+		} // end if sync
+//		$display_output .= '<br/> This: ' . print_r($query) . 'test<br/>';
+	} // End of Import stock quantity knowing that cart has SBA installed.
+
 	// CATEGORIES1
 	// This Category MetaTags import routine only deals with existing Categories. It does not create or modify the tree.
 	// This code is ONLY used to Edit Categories image, description, and metatags data!
@@ -259,7 +396,7 @@ if ( isset($_GET['import']) ) {
 			// $items[$filelayout['v_categories_image']];
 			$sql = 'SELECT categories_id FROM '.TABLE_CATEGORIES.' WHERE (categories_id = '.$items[$filelayout['v_categories_id']].') LIMIT 1';
 			$result = ep_4_query($sql);
-			if ($row = mysql_fetch_array($result)) {
+				if ($row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array($result))) {
 				// UPDATE
 				$sql = "UPDATE ".TABLE_CATEGORIES." SET 
 					categories_image = '".addslashes($items[$filelayout['v_categories_image']])."',
@@ -284,7 +421,7 @@ if ( isset($_GET['import']) ) {
 					$sql = "SELECT categories_id FROM ".TABLE_METATAGS_CATEGORIES_DESCRIPTION." WHERE 
 						(categories_id = ".$items[$filelayout['v_categories_id']]." AND language_id = ".$lid.") LIMIT 1";
 					$result = ep_4_query($sql);
-					if ($row = mysql_fetch_array($result)) {
+						if ($row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array($result))) {
 						// UPDATE
 						$sql = "UPDATE ".TABLE_METATAGS_CATEGORIES_DESCRIPTION." SET 
 						metatags_title		 = '".addslashes($items[$filelayout['v_metatags_title_'.$lid]])."',
@@ -311,7 +448,7 @@ if ( isset($_GET['import']) ) {
 		} // while
 	} // if
 
-if ( ( strtolower(substr($file['name'],0,15)) <> "categorymeta-ep") && ( strtolower(substr($file['name'],0,7)) <> "attrib-")) { //  temporary solution here... 12-06-2010
+if ( ( strtolower(substr($file['name'],0,15)) <> "categorymeta-ep") && ( strtolower(substr($file['name'],0,7)) <> "attrib-") && (ep_4_SBA1Exists() == true ? ( strtolower(substr($file['name'],0,4)) <> "sba-") : true )) { //  temporary solution here... 12-06-2010
 	
 	// Main IMPORT loop For Product Related Data. v_products_id is the main key
 	while ($items = fgetcsv($handle, 0, $csv_delimiter, $csv_enclosure)) { // read 1 line of data
@@ -393,7 +530,7 @@ if ( ( strtolower(substr($file['name'],0,15)) <> "categorymeta-ep") && ( strtolo
 		// this gets default values for current v_products_model
 		// inputs: $items array (file data by column #); $filelayout array (headings by column #); 
 		// $row (current TABLE_PRODUCTS data by heading name)
-		while ( $row = mysql_fetch_array($result) ) { // chadd - this executes once?? why use while-loop??
+				while ( $row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array($result) )) { // chadd - this executes once?? why use while-loop??
 			$product_is_new = false; // we found products_model in database
 			// Get current products descriptions and categories for this model from database
 			// $row at present consists of current product data for above fields only (in $sql)
@@ -411,7 +548,7 @@ if ( ( strtolower(substr($file['name'],0,15)) <> "categorymeta-ep") && ( strtolo
 			foreach ($langcode as $key => $lang) {
 				$sql2 = 'SELECT * FROM '.TABLE_PRODUCTS_DESCRIPTION.' WHERE products_id = '.$row['v_products_id'].' AND language_id = '.$lang['id'];
 				$result2 = ep_4_query($sql2);
-				$row2 = mysql_fetch_array($result2);
+						$row2 = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array($result2));
 				// create variables (v_products_name_1, v_products_name_2, etc. which corresponds to our column headers) and assign data
 				$row['v_products_name_'.$lang['id']] = ep_4_curly_quotes($row2['products_name']);
 				
@@ -438,7 +575,7 @@ if ( ( strtolower(substr($file['name'],0,15)) <> "categorymeta-ep") && ( strtolo
 			if (($row['v_manufacturers_id'] != '0') && ($row['v_manufacturers_id'] != '') ) { // if 0, no manufacturer set
 				$sql2 = 'SELECT manufacturers_name FROM '.TABLE_MANUFACTURERS.' WHERE manufacturers_id = '.$row['v_manufacturers_id'];
 				$result2 = ep_4_query($sql2);
-				$row2 = mysql_fetch_array($result2);
+						$row2 = ($ep_uses_mysqli ? mysqli_fetch_array($result2) : mysql_fetch_array($result2));
 				$row['v_manufacturers_name'] = $row2['manufacturers_name']; 
 				}
 			else {
@@ -645,13 +782,13 @@ if ( ( strtolower(substr($file['name'],0,15)) <> "categorymeta-ep") && ( strtolo
 		if ( isset($v_manufacturers_name) && ($v_manufacturers_name != '') && (mb_strlen($v_manufacturers_name) <= $manufacturers_name_max_len) ) {
 			$sql = "SELECT man.manufacturers_id AS manID FROM ".TABLE_MANUFACTURERS." AS man WHERE man.manufacturers_name = '".addslashes($v_manufacturers_name)."' LIMIT 1";
 			$result = ep_4_query($sql);
-			if ( $row = mysql_fetch_array($result) ) {
+					if ( $row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array($result) )) {
 				$v_manufacturers_id = $row['manID']; // this id goes into the products table
 			} else { // It is set to autoincrement, do not need to fetch max id
 				$sql = "INSERT INTO ".TABLE_MANUFACTURERS." (manufacturers_name, date_added, last_modified)
 					VALUES ('".addslashes($v_manufacturers_name)."', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
 				$result = ep_4_query($sql);
-				$v_manufacturers_id = mysql_insert_id(); // id is auto_increment, so can use this function
+						$v_manufacturers_id = ($ep_uses_mysqli ? mysqli_insert_id($db->link) : mysql_insert_id()); // id is auto_increment, so can use this function
 				
 				// BUG FIX: TABLE_MANUFACTURERS_INFO need an entry for each installed language! chadd 11-14-2011
 				// This is not a complete fix, since we are not importing manufacturers_url
@@ -741,7 +878,7 @@ if ( ( strtolower(substr($file['name'],0,15)) <> "categorymeta-ep") && ( strtolo
 						cat.parent_id = ".$theparent_id." AND
 						des.categories_name = '".addslashes($thiscategoryname)."' LIMIT 1";
 				$result = ep_4_query($sql);
-				$row = mysql_fetch_array($result);
+						$row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array($result));
 				// if $row is not null, we found entry, so retrive info
 				if ( $row != '' ) { // category exists
 					foreach( $row as $item ) {
@@ -763,7 +900,7 @@ if ( ( strtolower(substr($file['name'],0,15)) <> "categorymeta-ep") && ( strtolo
 					// get next available categoies_id
 					$sql = "SELECT MAX(categories_id) max FROM ".TABLE_CATEGORIES;
 					$result = ep_4_query($sql);
-					$row = mysql_fetch_array($result);
+							$row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array($result));
 					$max_category_id = $row['max']+1;
 					// if database is empty, start at 1
 					if (!is_numeric($max_category_id) ) {
@@ -814,7 +951,7 @@ if ( ( strtolower(substr($file['name'],0,15)) <> "categorymeta-ep") && ( strtolo
 			if ( isset($v_artists_name) && ($v_artists_name != '') && (mb_strlen($v_artists_name) <= $artists_name_max_len) ) {
 				$sql = "SELECT artists_id AS artistsID FROM ".TABLE_RECORD_ARTISTS." WHERE artists_name = '".addslashes(ep_4_curly_quotes($v_artists_name))."' LIMIT 1";
 				$result = ep_4_query($sql);
-				if ( $row = mysql_fetch_array($result) ) {
+						if ( $row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array($result) )) {
 					$v_artists_id = $row['artistsID']; // this id goes into the product_music_extra table
 					$sql = "UPDATE ".TABLE_RECORD_ARTISTS." SET 
 						artists_image = '".addslashes($v_artists_image)."',
@@ -832,7 +969,7 @@ if ( ( strtolower(substr($file['name'],0,15)) <> "categorymeta-ep") && ( strtolo
 					$sql = "INSERT INTO ".TABLE_RECORD_ARTISTS." (artists_name, artists_image, date_added, last_modified)
 						VALUES ('".addslashes(ep_4_curly_quotes($v_artists_name))."', '".addslashes($v_artists_image)."', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
 					$result = ep_4_query($sql);
-					$v_artists_id = mysql_insert_id(); // id is auto_increment, so can use this function
+							$v_artists_id = ($ep_uses_mysqli ? mysqli_insert_id($db->link) : mysql_insert_id()); // id is auto_increment, so can use this function
 					foreach ($langcode as $lang) {
 						$l_id = $lang['id'];
 						$sql = "INSERT INTO ".TABLE_RECORD_ARTISTS_INFO." (artists_id, languages_id, artists_url)
@@ -857,7 +994,7 @@ if ( ( strtolower(substr($file['name'],0,15)) <> "categorymeta-ep") && ( strtolo
 			if ( isset($v_record_company_name) && ($v_record_company_name != '') && (mb_strlen($v_record_company_name) <= $record_company_name_max_len) ) {
 				$sql = "SELECT record_company_id AS record_companyID FROM ".TABLE_RECORD_COMPANY." WHERE record_company_name = '".addslashes(ep_4_curly_quotes($v_record_company_name))."' LIMIT 1";
 				$result = ep_4_query($sql);
-				if ( $row = mysql_fetch_array($result) ) {
+						if ( $row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array($result) )) {
 					$v_record_company_id = $row['record_companyID']; // this id goes into the product_music_extra table
 					$sql = "UPDATE ".TABLE_RECORD_COMPANY." SET 
 						record_company_image = '".addslashes($v_record_company_image)."',
@@ -875,7 +1012,7 @@ if ( ( strtolower(substr($file['name'],0,15)) <> "categorymeta-ep") && ( strtolo
 					$sql = "INSERT INTO ".TABLE_RECORD_COMPANY." (record_company_name, record_company_image, date_added, last_modified)
 						VALUES ('".addslashes(ep_4_curly_quotes($v_record_company_name))."', '".addslashes($v_record_company_image)."', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
 					$result = ep_4_query($sql);
-					$v_record_company_id = mysql_insert_id(); // id is auto_increment, so can use this function
+							$v_record_company_id = ($ep_uses_mysqli ? mysqli_insert_id($db->link) : mysql_insert_id()); // id is auto_increment, so can use this function
 					foreach ($langcode as $lang) {
 						$l_id = $lang['id'];
 						$sql = "INSERT INTO ".TABLE_RECORD_COMPANY_INFO." (record_company_id, languages_id, record_company_url)
@@ -900,13 +1037,13 @@ if ( ( strtolower(substr($file['name'],0,15)) <> "categorymeta-ep") && ( strtolo
 			if ( isset($v_music_genre_name) && ($v_music_genre_name != '') && (mb_strlen($v_music_genre_name) <= $music_genre_name_max_len) ) {
 				$sql = "SELECT music_genre_id AS music_genreID FROM ".TABLE_MUSIC_GENRE." WHERE music_genre_name = '".addslashes($v_music_genre_name)."' LIMIT 1";
 				$result = ep_4_query($sql);
-				if ( $row = mysql_fetch_array($result) ) {
+						if ( $row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array($result) )) {
 					$v_music_genre_id = $row['music_genreID']; // this id goes into the product_music_extra table
 				} else { // It is set to autoincrement, do not need to fetch max id
 					$sql = "INSERT INTO ".TABLE_MUSIC_GENRE." (music_genre_name, date_added, last_modified)
 						VALUES ('".addslashes($v_music_genre_name)."', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
 					$result = ep_4_query($sql);
-					$v_music_genre_id = mysql_insert_id(); // id is auto_increment
+							$v_music_genre_id = ($ep_uses_mysqli ? mysqli_insert_id($db->link) : mysql_insert_id()); // id is auto_increment
 				}
 			} else { // $v_music_genre_name == '' or name length violation
 				if (mb_strlen($v_music_genre_name) > $music_genre_name_max_len) {
@@ -925,11 +1062,11 @@ if ( ( strtolower(substr($file['name'],0,15)) <> "categorymeta-ep") && ( strtolo
 		if ($v_products_model != "") { // products_model exists!
 			// First we check to see if this is a product in the current db.
 			$result = ep_4_query("SELECT products_id FROM ".TABLE_PRODUCTS." WHERE (products_model = '".addslashes($v_products_model)."') LIMIT 1");
-			if (mysql_num_rows($result) == 0)  { // new item, insert into products
+					if (($ep_uses_mysqli ? mysqli_num_rows($result) : mysql_num_rows($result)) == 0)  { // new item, insert into products
 				$v_date_added	= ($v_date_added == 'NULL') ? CURRENT_TIMESTAMP : $v_date_added;
 				$sql			= "SHOW TABLE STATUS LIKE '".TABLE_PRODUCTS."'";
 				$result			= ep_4_query($sql);
-				$row			= mysql_fetch_array($result);
+						$row			= ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array($result));
 				$max_product_id = $row['Auto_increment'];
 				if (!is_numeric($max_product_id) ) {
 					$max_product_id = 1;
@@ -1006,7 +1143,7 @@ if ( ( strtolower(substr($file['name'],0,15)) <> "categorymeta-ep") && ( strtolo
 					// PRODUCT_MUSIC_EXTRA
 					if ($v_products_type == '2') {
 						$sql_music_extra = ep_4_query("SELECT * FROM ".TABLE_PRODUCT_MUSIC_EXTRA." WHERE (products_id = '".$v_products_id."') LIMIT 1");
-						if (mysql_num_rows($sql_music_extra) == 0)  { // new item, insert into products
+								if (($ep_uses_mysqli ? mysqli_num_rows($sql_music_extra) : mysql_num_rows($sql_music_extra)) == 0)  { // new item, insert into products
 							$query = "INSERT INTO ".TABLE_PRODUCT_MUSIC_EXTRA." SET
 								products_id			= '".$v_products_id."',
 								artists_id     		= '".$v_artists_id."',
@@ -1031,9 +1168,9 @@ if ( ( strtolower(substr($file['name'],0,15)) <> "categorymeta-ep") && ( strtolo
 				// if date added is null, let's keep the existing date in db..
 				$v_date_added = ($v_date_added == 'NULL') ? $row['v_date_added'] : $v_date_added; // if NULL, use date in db
 				$v_date_added = zen_not_null($v_date_added) ? $v_date_added : CURRENT_TIMESTAMP; // if updating, but date added is null, we use today's date
-				$row = mysql_fetch_array($result);
+						$row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array($result));
 				$v_products_id = $row['products_id'];
-				$row = mysql_fetch_array($result); 
+						$row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array($result)); 
 				// CHADD - why is master_categories_id not being set on update???
 				$query = "UPDATE ".TABLE_PRODUCTS." SET
 					products_price = '".$v_products_price."',";
@@ -1101,7 +1238,7 @@ if ( ( strtolower(substr($file['name'],0,15)) <> "categorymeta-ep") && ( strtolo
 					// PRODUCT_MUSIC_EXTRA
 					if ($v_products_type == '2') {
 						$sql_music_extra = ep_4_query("SELECT * FROM ".TABLE_PRODUCT_MUSIC_EXTRA." WHERE (products_id = '".$v_products_id."') LIMIT 1");
-						if (mysql_num_rows($sql_music_extra) == 1)  { // update
+								if (($ep_uses_mysqli ? mysqli_num_rows($sql_music_extra) : mysql_num_rows($sql_music_extra)) == 1)  { // update
 							$query = "UPDATE ".TABLE_PRODUCT_MUSIC_EXTRA." SET
 								artists_id     		= '".$v_artists_id."',
 								record_company_id	= '".$v_record_company_id."',
@@ -1123,7 +1260,7 @@ if ( ( strtolower(substr($file['name'],0,15)) <> "categorymeta-ep") && ( strtolo
 					$sql = "SELECT products_id FROM ".TABLE_META_TAGS_PRODUCTS_DESCRIPTION." WHERE 
 						(products_id = '$v_products_id' AND language_id = '$key') LIMIT 1 ";
 					$result = ep_4_query($sql);
-					if ($row = mysql_fetch_array($result)) {
+							if ($row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array($result))) {
 						// UPDATE
 						$sql = "UPDATE ".TABLE_META_TAGS_PRODUCTS_DESCRIPTION." SET 
 							metatags_title = '".addslashes($v_metatags_title[$key])."',
@@ -1159,8 +1296,8 @@ if ( strtolower(substr($file['name'],0,14)) == "pricebreaks-ep") {
 			if ($v_products_discount_type != '0') { // if v_products_discount_type == 0 then there are no quantity breaks
 				if ($v_products_model != "") { // we check to see if this is a product in the current db, must have product model number
 					$result = ep_4_query("SELECT products_id FROM ".TABLE_PRODUCTS." WHERE (products_model = '".addslashes($v_products_model)."') LIMIT 1");
-					if (mysql_num_rows($result) != 0)  { // found entry
-						$row3 =  mysql_fetch_array($result);
+						if (($ep_uses_mysqli ? mysqli_num_rows($result) : mysql_num_rows($result)) != 0)  { // found entry
+							$row3 =  ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array($result));
 						$v_products_id = $row3['products_id'];
 
 						// remove all old associated quantity discounts
@@ -1192,8 +1329,8 @@ if ( strtolower(substr($file['name'],0,14)) == "pricebreaks-ep") {
 			} else { // products_discount_type == 0, so remove any old quantity_discounts
 				if ($v_products_model != "") { // we check to see if this is a product in the current db, must have product model number
 					$result = ep_4_query("SELECT products_id FROM ".TABLE_PRODUCTS." WHERE (products_model = '".addslashes($v_products_model)."') LIMIT 1");
-					if (mysql_num_rows($result) != 0)  { // found entry
-						$row3 =  mysql_fetch_array($result);
+						if (($ep_uses_mysqli ? mysqli_num_rows($result) : mysql_num_rows($result)) != 0)  { // found entry
+							$row3 =  ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array($result));
 						$v_products_id = $row3['products_id'];
 						// remove all associated quantity discounts
 						$db->Execute("DELETE FROM ".TABLE_PRODUCTS_DISCOUNT_QUANTITY." WHERE products_id = '".(int)$v_products_id."'");
@@ -1203,48 +1340,48 @@ if ( strtolower(substr($file['name'],0,14)) == "pricebreaks-ep") {
 }	
 			
 			
-			// BEGIN: Products Descriptions
-			// the following is common in both the updating an existing product and creating a new product
-			if (isset($v_products_name)) {
-				foreach( $v_products_name as $key => $name) {
-					$sql = "SELECT * FROM ".TABLE_PRODUCTS_DESCRIPTION." WHERE
-							products_id = ".$v_products_id." AND
-							language_id = ".$key;
-					$result = ep_4_query($sql);
-						
-					if (mysql_num_rows($result) == 0) {
-						$sql = "INSERT INTO ".TABLE_PRODUCTS_DESCRIPTION." (
-							products_id,
-							language_id,
-							products_name,
-							products_description,";
-						if ($ep_supported_mods['psd'] == true) {
-							$sql .= " products_short_desc,";
-						}
-						$sql .= " products_url )
-							VALUES (
-							'".$v_products_id."',
-							".$key.",
-							'".addslashes($name)."',
-							'".addslashes($v_products_description[$key])."',";
-						if ($ep_supported_mods['psd'] == true) {
-							$sql .= "'".addslashes($v_products_short_desc[$key])."',";
-						}
-						$sql .= "'".addslashes($v_products_url[$key])."')";
-						$result = ep_4_query($sql);
-					} else { // already in the description, update it
-						$sql = "UPDATE ".TABLE_PRODUCTS_DESCRIPTION." SET
-							products_name        ='".addslashes($name)."',
-							products_description ='".addslashes($v_products_description[$key])."',";
-						if ($ep_supported_mods['psd'] == true) {
-							$sql .= " products_short_desc = '".addslashes($v_products_short_desc[$key])."',";
-						}
-						$sql .= " products_url='".addslashes($v_products_url[$key])."'
-							WHERE products_id = '".$v_products_id."' AND language_id = '".$key."'";
-						$result = ep_4_query($sql);
-					}
-				}		
-			} // END: Products Descriptions End	
+            // BEGIN: Products Descriptions
+            // the following is common in both the updating an existing product and creating a new product // mc12345678 updated to allow omission of v_products_description in the import file.
+            if (isset($v_products_name)) {
+                foreach ($v_products_name as $key => $name) {
+                    $sql = "SELECT * FROM " . TABLE_PRODUCTS_DESCRIPTION . " WHERE
+                        products_id = " . $v_products_id . " AND
+                        language_id = " . $key;
+                    $result = ep_4_query($sql);
+
+					if (($ep_uses_mysqli ? mysqli_num_rows($result) : mysql_num_rows($result)) == 0) {
+                        $sql = "INSERT INTO " . TABLE_PRODUCTS_DESCRIPTION . " (
+                            products_id,
+                            language_id,
+                            products_name, " .
+                            ((isset($filelayout['v_products_description_' . $key]) || ( isset($filelayout['v_products_description_' . $key]) && $product_is_new) ) ? " products_description," : "");
+                        if ($ep_supported_mods['psd'] == true) {
+                            $sql .= " products_short_desc,";
+                        }
+                        $sql .= " products_url )
+                            VALUES (
+                            '" . $v_products_id . "',
+                            " . $key . ",
+                            '" . addslashes($name) . "', " .
+                            ((isset($filelayout['v_products_description_' . $key]) || ( isset($filelayout['v_products_description_' . $key]) && $product_is_new) ) ? "'" . addslashes($v_products_description[$key]) . "'," : "");
+                        if ($ep_supported_mods['psd'] == true) {
+                            $sql .= "'" . addslashes($v_products_short_desc[$key]) . "',";
+                        }
+                        $sql .= "'" . addslashes($v_products_url[$key]) . "')";
+                        $result = ep_4_query($sql);
+                    } else { // already in the description, update it
+                        $sql = "UPDATE ".TABLE_PRODUCTS_DESCRIPTION." SET
+       products_name        ='".addslashes($name)."', " .
+                            ((isset($filelayout['v_products_description_' . $key]) || ( isset($filelayout['v_products_description_' . $key]) && $product_is_new) ) ? "products_description ='" . addslashes($v_products_description[$key]) . "'," : "");
+                        if ($ep_supported_mods['psd'] == true) {
+                            $sql .= " products_short_desc = '" . addslashes($v_products_short_desc[$key]) . "',";
+                        }
+                        $sql .= " products_url='" . addslashes($v_products_url[$key]) . "'
+       WHERE products_id = '" . $v_products_id . "' AND language_id = '" . $key . "'";
+                        $result = ep_4_query($sql);
+                    }
+                }
+            } // END: Products Descriptions End	
 
 //==================================================================================================================================
 			// Assign product to category if linked
@@ -1258,7 +1395,7 @@ if ( strtolower(substr($file['name'],0,14)) == "pricebreaks-ep") {
 					WHERE
 					'.TABLE_PRODUCTS_TO_CATEGORIES.'.products_id='.$v_products_id.' AND
 					'.TABLE_PRODUCTS_TO_CATEGORIES.'.categories_id='.$v_categories_id);
-				if (mysql_num_rows($result_incategory) == 0) { // nope, this is a new category for this product
+					if (($ep_uses_mysqli ? mysqli_num_rows($result_incategory) : mysql_num_rows($result_incategory)) == 0) { // nope, this is a new category for this product
 					$res1 = ep_4_query('INSERT INTO '.TABLE_PRODUCTS_TO_CATEGORIES.' (products_id, categories_id)
 						VALUES ("'.$v_products_id.'", "'.$v_categories_id.'")');
 				} else { // already in this category, nothing to do!
@@ -1285,7 +1422,7 @@ if ( strtolower(substr($file['name'],0,14)) == "pricebreaks-ep") {
 				// Check if this product already has a special
 				$special = ep_4_query("SELECT products_id FROM ".TABLE_SPECIALS." WHERE products_id = ".$v_products_id);
 																
-				if (mysql_num_rows($special) == 0) { // not in db
+					if (($ep_uses_mysqli ? mysqli_num_rows($special) : mysql_num_rows($special)) == 0) { // not in db
 					if ($v_specials_price == '0') { // delete requested, but is not a special
 						$specials_print .= sprintf(EASYPOPULATE_4_SPECIALS_DELETE_FAIL, $v_products_model, substr(strip_tags($v_products_name[$epdlanguage_id]), 0, 10));
 						continue;

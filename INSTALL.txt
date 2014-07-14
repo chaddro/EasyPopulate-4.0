@@ -43,7 +43,7 @@ INSTALLATION:
    move your temp directory into your admin, or change the name to something that is obscure for security reasons.
 
    Note: If you are using Zencart 1.5 and want to move your Uploads directory into this folder, you will need to 
-   customize an .htaccess file to add allowed file types of .CSV and .TXT. 
+   customize an .htaccess file to add allowed file types of .csv/.CSV and .txt/.TXT. 
 
 6. Now click on Tools -> Easy Populate 4. The warning messages should be gone. Note that your temp/
    directory will need correct permissions. EP4 will give you a warning if it cannot write to the temp/ directory
@@ -75,5 +75,5 @@ I will continue to update github with improvement as they come. Once EP4 has pas
 to the Zencart team for consideration. Your feedback and testing is greatly appreciated!
 
 Thank you,
-Chadd
+Chadd and mc12345678
 
