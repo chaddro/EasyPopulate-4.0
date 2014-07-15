@@ -109,7 +109,7 @@ while ($contents = fgetcsv($handle, 0, $csv_delimiter, $csv_enclosure)) { // whi
 			// Get max index id for TABLE_PRODUCTS_OPTIONS_VALUES
 			$sql_max3 = "SELECT MAX(products_options_values_id) max FROM ".TABLE_PRODUCTS_OPTIONS_VALUES;
 			$result3 = ep_4_query($sql_max3);
-			$row3 = ($ep_uses_mysqli ? mysqli_fetch_array(result3) : mysql_fetch_array($result3));
+			$row3 = ($ep_uses_mysqli ? mysqli_fetch_array($result3) : mysql_fetch_array($result3));
 			$products_options_values_id = $row3['max'] + 1;
 			if (!is_numeric($products_options_values_id) ) { 
 				$products_options_values_id = 1;
@@ -277,7 +277,9 @@ while ($contents = fgetcsv($handle, 0, $csv_delimiter, $csv_enclosure)) { // whi
 				$row2 = ($ep_uses_mysqli ? mysqli_fetch_array($result2) : mysql_fetch_array($result2));
 				$products_options_values_to_products_options_id = $row2['max'] + 1;
 				$values_names_index++;
-				$products_options_values_sort_order += (round(($products_options_values_sort_order/10))) * 10 + $products_sort_order_increment; 
+				// mc12345678: allows for more room in sort order of options names: New = round(old/10)*10 + increment
+				// $products_options_values_sort_order = $products_options_values_sort_order + $products_sort_order_increment; 
+				$products_options_values_sort_order = (round(($products_options_values_sort_order/10))) * 10 + $products_sort_order_increment;
 			} // END: while #3
 			if (!$table_products_attributes_update) {
 				// FEEDBACK ========> implode(",", $values_names_array[1])
