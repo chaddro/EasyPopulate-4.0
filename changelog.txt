@@ -152,3 +152,5 @@
 					assigned in the same file, then will increment to 
 					10, 20, 30, etc... for each subsequent option upon import 
 					of the basic file.
+4.0.24   07-15-2014 Fixed typo in attribute import (missing $ on variable name), and also corrected the way index increment was
+					calculated.
