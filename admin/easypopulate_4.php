@@ -47,7 +47,7 @@ $ep_debug_logging_all = false; // do not comment out.. make false instead
 /* Test area end */
 
 // Current EP Version - Modded by Chadd
-$curver              = '4.0.24 - Beta 7-15-2014';
+$curver              = '4.0.25 - Beta 10-11-2014';
 $display_output      = ''; // results of import displayed after script run
 $ep_dltype           = NULL;
 $ep_stack_sql_error  = false; // function returns true on any 1 error, and notifies user of an error
@@ -178,6 +178,7 @@ if (($ep_uses_mysqli ? mysqli_num_rows($epdlanguage_query) : mysql_num_rows($epd
 }
 
 $langcode = ep_4_get_languages(); // array of currently used language codes ( 1, 2, 3, ...)
+$ep_4_SBAEnabled = ep_4_SBA1Exists();
 
 /*
 if ( isset($_GET['export2']) ) { // working on attributes export 
@@ -401,9 +402,7 @@ if (!$error && isset($_REQUEST["delete"]) && $_REQUEST["delete"]!=basename($_SER
     <a href="easypopulate_4.php?export=attrib_basic"><b>Basic Products Attributes</b> (basic single-line)</a><br /> 
     <a href="easypopulate_4.php?export=attrib_detailed"><b>Detailed Products Attributes</b> (detailed multi-line)</a><br />
 <?php
-	$ep_4_SBAEnabled = false;
-	if (ep_4_SBA1Exists() == true) { 
-		$ep_4_SBAEnabled = true;
+	if (ep_4_SBAEnabled != false) { 
 	?>
     <a href="easypopulate_4.php?export=SBA_detailed"><b>Detailed Stock By Attributes Data</b> (detailed multi-line)</a><br />
     <a href="easypopulate_4.php?export=SBAStock"><b>Stock of Items with Attributes Including SBA</b></a><br />

@@ -1,5 +1,5 @@
 <?php
-// $Id: easypopulate_4_export.php, v4.0.23 07-13-2014 mc12345678 $
+// $Id: easypopulate_4_export.php, v4.0.25 10-10-2014 mc12345678 $
 
 // get download type
 $ep_dltype = (isset($_POST['export'])) ? $_POST['export'] : $ep_dltype;
@@ -326,7 +326,7 @@ while ($row = ($ep_uses_mysqli ?  mysqli_fetch_array($result) : mysql_fetch_arra
 		// CATEGORIES EXPORT
 		// chadd - 12-13-2010 - logic change. $max_categories no longer required. better to loop back to root category and 
 		// concatenate the entire categories path into one string with $category_delimiter for separater.
-		if ( ($ep_dltype == 'full') OR ($ep_dltype == 'category') ) { // chadd - 12-02-2010 fixed error: missing parenthesis
+		if ( ($ep_dltype == 'full') || ($ep_dltype == 'category') ) { // chadd - 12-02-2010 fixed error: missing parenthesis
 			// NEW While-loop for unlimited category depth			
 			$category_delimiter = "^";
 			$thecategory_id = $row['v_categories_id']; // starting category_id
@@ -433,10 +433,10 @@ while ($row = ($ep_uses_mysqli ?  mysqli_fetch_array($result) : mysql_fetch_arra
 				o.language_id       = 1 ORDER BY p.products_id ASC';/*, a.options_id, v.products_options_values_id';*/
 			
 			$resultAttrib = ep_4_query($sqlAttrib);
-			$resultAttribCount = mysql_num_rows($resultAttrib);
+			$resultAttribCount = ($ep_uses_mysqli ? mysqli_num_rows($resultAttrib) : mysql_num_rows($resultAttrib));
 			
 			if ($resultAttribCount !== false) {
-				while ($rowAttrib = mysql_fetch_assoc($resultAttrib)){
+				while ($rowAttrib = ($ep_uses_mysqli ? mysqli_fetch_assoc($resultAttrib) : mysql_fetch_assoc($resultAttrib))) {
 					$row['v_products_attributes'] .= $rowAttrib['v_products_options_name'] . ': ' . $rowAttrib['v_products_options_values_name'] . '; ';
 				}
 			}
@@ -451,15 +451,16 @@ while ($row = ($ep_uses_mysqli ?  mysqli_fetch_array($result) : mysql_fetch_arra
 				s.products_id				as v_products_id, 
 				s.stock_id					 as v_stock_id,
 				s.stock_attributes				 as v_stock_attributes,
-				s.quantity					 as v_quantity 
-				FROM '
+				s.quantity					 as v_quantity' . ( $ep_4_SBAEnabled == '2' ? ',
+        s.customid            as v_customid ' : ' ') .
+				'FROM '
 				.TABLE_PRODUCTS.                ' as p,'
 				.TABLE_PRODUCTS_WITH_ATTRIBUTES_STOCK. ' as s
 				WHERE 
 				s.products_id		= p.products_id AND
 				p.products_id = \''. $row['v_products_id'] . '\'';
 			$resultSBA = ep_4_query($sqlSBA);
-			$resultSBACount = mysql_num_rows($resultSBA);
+			$resultSBACount = ($ep_uses_mysqli ? mysqli_num_rows($resultSBA) : mysql_num_rows($resultSBA));
 			
 			if ($resultSBACount !== false && $resultSBACount > 0) {
 				//If product is tracked by SBA
@@ -500,7 +501,7 @@ while ($row = ($ep_uses_mysqli ?  mysqli_fetch_array($result) : mysql_fetch_arra
 				//  clean the data then
 				//  Store the data.
 				$resultSBACounter = 1;
-				while ($rowSBA = mysql_fetch_assoc($resultSBA)){
+				while ($rowSBA = ($ep_uses_mysqli ? mysqli_fetch_assoc($resultSBA) : mysql_fetch_assoc($resultSBA))){
 //					print_r($rowSBA);
 					//$rowSBA    = mysql_fetch_array($resultSBA);
 					//  get the attribute and quantity data from the SBA table
@@ -523,7 +524,7 @@ while ($row = ($ep_uses_mysqli ?  mysqli_fetch_array($result) : mysql_fetch_arra
 							v.products_options_values_id = a.options_values_id AND
 							a.products_attributes_id = \''. trim($currentAttrib) . '\'';
 						$resultSBAAttributes = ep_4_query($sqlSBAAttributes);
-						$resultSBACountAttributes = mysql_fetch_assoc($resultSBAAttributes);
+						$resultSBACountAttributes = ($ep_uses_mysqli ? mysqli_fetch_assoc($resultSBAAttributes) : mysql_fetch_assoc($resultSBAAttributes));
 
 						$row['v_products_attributes'] .= (is_null($resultSBACountAttributes['v_SBA_value_name']) ? 'Option Does Not Exist' : $resultSBACountAttributes['v_SBA_option_name']) . ': ' . (is_null($resultSBACountAttributes['v_SBA_value_name']) ? 'Value Does Not Exist' : $resultSBACountAttributes['v_SBA_value_name']) . '; ';
 					}
@@ -531,6 +532,9 @@ while ($row = ($ep_uses_mysqli ?  mysqli_fetch_array($result) : mysql_fetch_arra
 					$row['v_products_quantity'] = $rowSBA['v_quantity'];
 					$row['v_SBA_tracked'] = 'X';
 					$row['v_table_tracker'] = $rowSBA['v_stock_id'];
+          if ($ep_4_SBAEnabled == '2') {
+            $row['v_customid'] = $rowSBA['v_customid'];
+          }
 					// loop through the SBA data until one before the end
 					// While not at the one before end
 					//  get the attribute and quantity data from the SBA table

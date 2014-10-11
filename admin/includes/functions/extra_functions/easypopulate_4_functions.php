@@ -1,5 +1,5 @@
 <?php
-// $Id: easypopulate_4_functions.php, v4.0.23 07-13-2014 mc12345678 $
+// $Id: easypopulate_4_functions.php, v4.0.25 10-10-2014 mc12345678 $
 
 function ep_4_curly_quotes($curly_text) {
 	$ep_curly_quotes = (int)EASYPOPULATE_4_CONFIG_CURLY_QUOTES;
@@ -97,10 +97,43 @@ function ep_4_SBA1Exists () {
 				}
 				echo '3<br />'; */
 			}
-			return true;
+			return '1';
+		} elseif ($numCols >= 6) {
+      $desired = 0;
+      $addToList = array();
+			while ($row = ($ep_uses_mysqli ? mysqli_fetch_array($colsarray) : mysql_fetch_array($colsarray))){
+				switch ($row['Field']) {
+					case 'stock_id':
+            $desired++;
+            break;
+					case 'products_id':
+            $desired++;
+						break;
+					case 'stock_attributes':
+            $desired++;
+						break;
+					case 'quantity':
+            $desired++;
+						break;
+					case 'sort':
+            $desired++;
+						break;
+          case 'customid';
+            $desired++;
+            break;
+          default:
+            $addToList = $row['Field'];
+            break;
+				}
+      }
+      if ($desired >= 6) {
+        return '2';
+      } else {
+        return false;
+      }
 		} else {
-			return false;
-		}
+      return false;
+    }
 //		$returnedcols = mysql_fetch_array($colsarray);
 //		$colnames = array_keys($returnedcols);
 /*		echo 'Num Rows: ' . $numCols . '<br />';
@@ -138,7 +171,11 @@ function ep_4_set_filelayout($ep_dltype, &$filelayout_sql, $sql_filter, $langcod
 			if ($ep_supported_mods['psd'] == true) { // products short description mod
 				$filelayout[] = 'v_products_short_desc_'.$l_id;
 			}
-		} 
+		}
+   	$ep_4_SBAEnabled = ep_4_SBA1Exists();
+    if ($ep_4_SBAEnabled == '2') {
+      $filelayout[] = 'v_customid';
+    }
 		//$filelayout[] =	'v_products_options_values_name'; // options values name from table PRODUCTS_OPTIONS_VALUES
 		$filelayout[] = 'v_SBA_tracked';
 		$filelayout[] = 'v_table_tracker';
@@ -605,8 +642,12 @@ function ep_4_set_filelayout($ep_dltype, &$filelayout_sql, $sql_filter, $langcod
 		$filelayout[] =	'v_stock_attributes'; 
 		$filelayout[] =	'v_products_model'; // product model from table PRODUCTS
 		$filelayout[] =	'v_quantity';
+   	$ep_4_SBAEnabled = ep_4_SBA1Exists();
+    if ($ep_4_SBAEnabled == '2') {
+      $filelayout[] = 'v_customid';
+    }
 		$filelayout[] =	'v_sort';
-		$filelayout[] =	'v_products_name'; // product model from table PRODUCTS
+		$filelayout[] =	'v_products_name'; // product name from table PRODUCTS
 		$filelayout[] =	'v_products_options_name'; // options name from table PRODUCTS_OPTIONS
 		$filelayout[] =	'v_products_options_values_name'; // options values name from table PRODUCTS_OPTIONS_VALUES
 		$filelayout[] =	'v_products_attributes_id';
@@ -687,8 +728,9 @@ function ep_4_set_filelayout($ep_dltype, &$filelayout_sql, $sql_filter, $langcod
 			s.stock_attributes				 as v_stock_attributes,
 			s.quantity					 as v_quantity,
 			s.sort						 as v_sort,
-			pd.products_name				 as v_products_name
-			FROM '
+			pd.products_name				 as v_products_name' . ( $ep_4_SBAEnabled == '2' ? ',
+        s.customid            as v_customid ' : ' ') .
+				'FROM '
 			.TABLE_PRODUCTS_ATTRIBUTES.     ' as a,'
 			.TABLE_PRODUCTS.                ' as p,'
 			.TABLE_PRODUCTS_OPTIONS.        ' as o,'

@@ -154,3 +154,10 @@
 					of the basic file.
 4.0.24   07-15-2014 Fixed typo in attribute import (missing $ on variable name), and also corrected the way index increment was
 					calculated.
+4.0.25   10-10-2014		Added capability of using EP4 with modifications shown 
+					in potteryhouse's version of SBA. (Recognizes customid column).
+					This may also open EP4 to other versions of SBA; however, 
+					this code has not been tested on other versions of SBA that 
+					use the customid field.  The detailed export was updated; 
+					however, removal of old SBA records still needs to be
+					addressed.  Updated the README text a little.
