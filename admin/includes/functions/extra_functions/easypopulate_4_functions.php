@@ -1,5 +1,5 @@
 <?php
-// $Id: easypopulate_4_functions.php, v4.0.25 10-10-2014 mc12345678 $
+// $Id: easypopulate_4_functions.php, v4.0.26 10-19-2014 mc12345678 $
 
 function ep_4_curly_quotes($curly_text) {
 	$ep_curly_quotes = (int)EASYPOPULATE_4_CONFIG_CURLY_QUOTES;
@@ -486,7 +486,7 @@ function ep_4_set_filelayout($ep_dltype, &$filelayout_sql, $sql_filter, $langcod
 		$filelayout = array();
 		$filelayout[] = 'v_categories_id';
 		$filelayout[] = 'v_categories_image';
-		foreach ($langcode as $key => $lang) { // create categories variables for each language id
+    foreach ($langcode as $key => $lang) { // create categories variables for each language id
 			$l_id = $lang['id'];
 			$filelayout[] = 'v_categories_name_'.$l_id;
 			$filelayout[] = 'v_categories_description_'.$l_id;
@@ -497,9 +497,11 @@ function ep_4_set_filelayout($ep_dltype, &$filelayout_sql, $sql_filter, $langcod
 			$filelayout[]   = 'v_metatags_keywords_'.$l_id;
 			$filelayout[]   = 'v_metatags_description_'.$l_id;
 		} 
+    $filelayout[] = 'v_sort_order';
 		$filelayout_sql = 'SELECT
 			c.categories_id    AS v_categories_id,
-			c.categories_image AS v_categories_image
+			c.categories_image AS v_categories_image,
+      c.sort_order    as v_sort_order
 			FROM '
 			.TABLE_CATEGORIES.' AS c';
 		break;

@@ -1,5 +1,5 @@
 <?php
-// $Id: easypopulate_4_import.php, v4.0.25 10-10-2014 mc12345678 $
+// $Id: easypopulate_4_import.php, v4.0.26 10-19-2014 mc12345678 $
 
 // BEGIN: Data Import Module
 if ( isset($_GET['import']) ) {
@@ -402,7 +402,7 @@ if ( isset($_GET['import']) ) {
 				// UPDATE
 				$sql = "UPDATE ".TABLE_CATEGORIES." SET 
 					categories_image = '".addslashes($items[$filelayout['v_categories_image']])."',
-					last_modified    = CURRENT_TIMESTAMP 
+					last_modified    = CURRENT_TIMESTAMP " . (array_key_exists('v_sort_order', $filelayout)  ? ", sort_order = " . $items[$filelayout['v_sort_order']] : "" ) . "
 					WHERE (categories_id = ".$items[$filelayout['v_categories_id']].")";
 				$result = ep_4_query($sql);
 				foreach ($langcode as $key => $lang) {
@@ -921,18 +921,15 @@ if ( ( strtolower(substr($file['name'],0,15)) <> "categorymeta-ep") && ( strtolo
 					// categories_name = '".addslashes($categories_names_array[$lid][$category_index])."'";
 					foreach ($langcode as $key => $lang2) {
 						$v_categories_name_check = 'v_categories_name_'.$lang2['id']; 
-						if (isset($$v_categories_name_check)) { // update	
 							$cat_lang_id = $lang2['id'];
 							$sql = "INSERT INTO ".TABLE_CATEGORIES_DESCRIPTION." SET 
 								categories_id   = '".$max_category_id."',
-								language_id     = '".$cat_lang_id."',
-								categories_name = '".addslashes(ep_4_curly_quotes($categories_names_array[$cat_lang_id][$category_index]))."'";
+								language_id     = '".$cat_lang_id."', 
+								categories_name = '";
+            if (isset($$v_categories_name_check)) { // update	
+              $sql .= addslashes(ep_4_curly_quotes($categories_names_array[$cat_lang_id][$category_index]))."'";
 						} else { // column is missing, so default to defined column's value
-							$cat_lang_id = $lang2['id'];
-							$sql = "INSERT INTO ".TABLE_CATEGORIES_DESCRIPTION." SET 
-								categories_id   = '".$max_category_id."',
-								language_id     = '".$cat_lang_id."',
-								categories_name = '".addslashes(ep_4_curly_quotes($thiscategoryname))."'";
+							$sql .= addslashes(ep_4_curly_quotes($thiscategoryname))."'";
 						}	
 						$result = ep_4_query($sql);
 					}

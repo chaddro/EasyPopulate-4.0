@@ -1,5 +1,5 @@
 <?php
-// $Id: easypopulate_4_export.php, v4.0.25 10-10-2014 mc12345678 $
+// $Id: easypopulate_4_export.php, v4.0.26 10-19-2014 mc12345678 $
 
 // get download type
 $ep_dltype = (isset($_POST['export'])) ? $_POST['export'] : $ep_dltype;
@@ -330,7 +330,9 @@ while ($row = ($ep_uses_mysqli ?  mysqli_fetch_array($result) : mysql_fetch_arra
 			// NEW While-loop for unlimited category depth			
 			$category_delimiter = "^";
 			$thecategory_id = $row['v_categories_id']; // starting category_id
-		  
+		  if ($ep_dltype == 'category') {
+        
+      }
 			// $fullcategory = array(); // this will have the entire category path separated by $category_delimiter
 			// if parent_id is not null ('0'), then follow it up.
 			while (!empty($thecategory_id)) {

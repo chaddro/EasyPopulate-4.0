@@ -161,3 +161,7 @@
 					use the customid field.  The detailed export was updated; 
 					however, removal of old SBA records still needs to be
 					addressed.  Updated the README text a little.
+4.0.26   10-19-2014      Added the sort_id associated with categories.  Import and Export are
+                         through the Categories Only (with Metatags) file(s).  If column is present
+                         then the sort_id will be modified accordingly.  If the column is absent
+                         there will be no change of the category's sort_order.
