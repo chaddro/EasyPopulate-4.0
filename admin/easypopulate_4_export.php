@@ -1,5 +1,5 @@
 <?php
-// $Id: easypopulate_4_export.php, v4.0.26 10-19-2014 mc12345678 $
+// $Id: easypopulate_4_export.php, v4.0.27 11-02-2014 mc12345678 $
 
 // get download type
 $ep_dltype = (isset($_POST['export'])) ? $_POST['export'] : $ep_dltype;
@@ -70,6 +70,10 @@ if ($ep_dltype == 'SBAStockProdFilter') {
 $filelayout = array();
 $filelayout_sql = '';
 $filelayout = ep_4_set_filelayout($ep_dltype,  $filelayout_sql, $sql_filter, $langcode, $ep_supported_mods, $custom_fields); 
+if (($ep_dltype == 'full' || $ep_dltype == 'categorymeta') && EASYPOPULATE_4_CONFIG_EXPORT_URI != '0') {
+  //require_once(DIR_FS_CATALOG . DIR_WS_FUNCTIONS . 'functions_categories.php');
+  $filelayout[] = 'v_html_uri';
+}
 $filelayout = array_flip($filelayout);
 // END: File Download Layouts
 
@@ -125,7 +129,6 @@ $tmpfpath = DIR_FS_CATALOG.''.$tempdir."$EXPORT_FILE".(($csv_delimiter == ",")?"
 $fp = fopen( $tmpfpath, "w+"); 
 
 $column_headers	= ""; // column headers
-
 $filelayout_header = $filelayout; 
 
 // prepare the table heading with layout values
@@ -321,7 +324,12 @@ while ($row = ($ep_uses_mysqli ?  mysqli_fetch_array($result) : mysql_fetch_arra
 				$row['v_categories_name_'.$lid]        = $row2['categories_name'];
 				$row['v_categories_description_'.$lid] = $row2['categories_description'];
 			} // foreach
-		} // if ($ep_dltype ...
+
+      if (EASYPOPULATE_4_CONFIG_EXPORT_URI != '0') {
+        $row['v_html_uri'] = zen_catalog_href_link(FILENAME_DEFAULT, 'cPath=' . zen_get_path($row['v_categories_id']),'NONSSL');
+      }
+
+    } // if ($ep_dltype ...
 		
 		// CATEGORIES EXPORT
 		// chadd - 12-13-2010 - logic change. $max_categories no longer required. better to loop back to root category and 
@@ -330,8 +338,14 @@ while ($row = ($ep_uses_mysqli ?  mysqli_fetch_array($result) : mysql_fetch_arra
 			// NEW While-loop for unlimited category depth			
 			$category_delimiter = "^";
 			$thecategory_id = $row['v_categories_id']; // starting category_id
-		  if ($ep_dltype == 'category') {
-        
+
+      if ($ep_dltype == 'full' && EASYPOPULATE_4_CONFIG_EXPORT_URI != '0'){
+        $sql_type = "SELECT type_handler FROM " . TABLE_PRODUCT_TYPES . " WHERE type_id = " . (int)zen_get_products_type($row['v_products_id']);
+        $sql_typename = $db->Execute($sql_type);
+//        $row['v_html_uri'] = zen_href_link(FILENAME_DEFAULT, 'main_page=' . $sql_typename->fields['type_handler'] . '_info&cPath=' . zen_get_generated_category_path_ids($row['v_master_categories_id']) . '&products_id=' . $row['v_products_id'],'NONSSL', false, true, false, true); //This generates an admin folder like link/reference not a catalog version.
+        $row['v_html_uri'] = zen_catalog_href_link($sql_typename->fields['type_handler'] . '_info', 'cPath=' . zen_get_generated_category_path_ids($row['v_master_categories_id']) . '&products_id=' . $row['v_products_id'],'NONSSL');
+//zen_catalog_href_link($page = '', $parameters = '', $connection = 'NONSSL')        //FILENAME_DEFAULT . '?main_page=' . zen_get_products_type($row['products_id'])
+        //function zen_href_link($page = '', $parameters = '', $connection = 'NONSSL', $add_session_id = true, $search_engine_safe = true, $static = false, $use_dir_ws_catalog = true) 
       }
 			// $fullcategory = array(); // this will have the entire category path separated by $category_delimiter
 			// if parent_id is not null ('0'), then follow it up.

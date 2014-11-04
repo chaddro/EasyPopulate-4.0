@@ -1,5 +1,5 @@
 <?php
-// $Id: easypopulate_4_functions.php, v4.0.26 10-19-2014 mc12345678 $
+// $Id: easypopulate_4_functions.php, v4.0.27 11-02-2014 mc12345678 $
 
 function ep_4_curly_quotes($curly_text) {
 	$ep_curly_quotes = (int)EASYPOPULATE_4_CONFIG_CURLY_QUOTES;
@@ -340,6 +340,7 @@ function ep_4_set_filelayout($ep_dltype, &$filelayout_sql, $sql_filter, $langcod
 			p.products_date_added			as v_date_added,
 			p.products_tax_class_id			as v_tax_class_id,
 			p.products_quantity				as v_products_quantity,
+			p.master_categories_id				as v_master_categories_id,
 			p.manufacturers_id				as v_manufacturers_id,
 			subc.categories_id				as v_categories_id,
 			p.products_status				as v_status,
@@ -1069,7 +1070,8 @@ function install_easypopulate_4() {
 			('Convert Character 0x92',             'EASYPOPULATE_4_CONFIG_CHAR_92', '1', 'Convert Character 0x92 characters in Product Names &amp; Descriptions (default 1).<br><br>0=No Change<br>1=Replace with Standard Single Quote<br>2=Replace with HMTL equivalant', ".$group_id.", '15', NULL, now(), NULL, 'zen_cfg_select_option(array(\"0\", \"1\", \"2\"),'),
 			('Enable Products Meta Data',          'EASYPOPULATE_4_CONFIG_META_DATA', '1', 'Enable Products Meta Data Columns (default 1).<br><br>0=Disable<br>1=Enable', ".$group_id.", '16', NULL, now(), NULL, 'zen_cfg_select_option(array(\"0\", \"1\"),'), 
 			('Enable Products Music Data',         'EASYPOPULATE_4_CONFIG_MUSIC_DATA', '0', 'Enable Products Music Data Columns (default 0).<br><br>0=Disable<br>1=Enable', ".$group_id.", '17', NULL, now(), NULL, 'zen_cfg_select_option(array(\"0\", \"1\"),'),
-			('User Defined Products Fields',       'EASYPOPULATE_4_CONFIG_CUSTOM_FIELDS', '', 'User Defined Products Table Fields (comma delimited, no spaces)', ".$group_id.", '18', NULL, now(), NULL, NULL)
+			('User Defined Products Fields',       'EASYPOPULATE_4_CONFIG_CUSTOM_FIELDS', '', 'User Defined Products Table Fields (comma delimited, no spaces)', ".$group_id.", '18', NULL, now(), NULL, NULL),
+			('Export URI with Prod and or Cat',       'EASYPOPULATE_4_CONFIG_EXPORT_URI', '0', 'Export the current products or categories URI when exporting data? (Yes - 1 or no - 0)', ".$group_id.", '19', NULL, now(), NULL, 'zen_cfg_select_option(array(\"0\", \"1\"),')
 		");
 	} elseif (substr($project,0,3) == "1.5") {
 		$db->Execute("INSERT INTO ".TABLE_CONFIGURATION_GROUP." (configuration_group_title, configuration_group_description, sort_order, visible) VALUES ('Easy Populate 4', 'Configuration Options for Easy Populate 4', '1', '1')");
@@ -1098,7 +1100,8 @@ function install_easypopulate_4() {
 			('Convert Character 0x92',             'EASYPOPULATE_4_CONFIG_CHAR_92', '1', 'Convert Character 0x92 characters in Product Names &amp; Descriptions (default 1).<br><br>0=No Change<br>1=Replace with Standard Single Quote<br>2=Replace with HMTL equivalant', ".$group_id.", '15', NULL, now(), NULL, 'zen_cfg_select_option(array(\"0\", \"1\", \"2\"),'),
 			('Enable Products Meta Data',          'EASYPOPULATE_4_CONFIG_META_DATA', '1', 'Enable Products Meta Data Columns (default 1).<br><br>0=Disable<br>1=Enable', ".$group_id.", '16', NULL, now(), NULL, 'zen_cfg_select_option(array(\"0\", \"1\"),'), 
 			('Enable Products Music Data',         'EASYPOPULATE_4_CONFIG_MUSIC_DATA', '0', 'Enable Products Music Data Columns (default 0).<br><br>0=Disable<br>1=Enable', ".$group_id.", '17', NULL, now(), NULL, 'zen_cfg_select_option(array(\"0\", \"1\"),'),
-			('User Defined Products Fields',       'EASYPOPULATE_4_CONFIG_CUSTOM_FIELDS', '', 'User Defined Products Table Fields (comma delimited, no spaces)', ".$group_id.", '18', NULL, now(), NULL, NULL)
+			('User Defined Products Fields',       'EASYPOPULATE_4_CONFIG_CUSTOM_FIELDS', '', 'User Defined Products Table Fields (comma delimited, no spaces)', ".$group_id.", '18', NULL, now(), NULL, NULL),
+			('Export URI with Prod and or Cat',       'EASYPOPULATE_4_CONFIG_EXPORT_URI', '0', 'Export the current products or categories URI when exporting data? (Yes - 1 or no - 0)', ".$group_id.", '19', NULL, now(), NULL, 'zen_cfg_select_option(array(\"0\", \"1\"),')
 		");
 	} else { // unsupported version 
 		// i should do something here!

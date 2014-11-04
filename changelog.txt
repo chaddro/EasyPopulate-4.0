@@ -165,3 +165,16 @@
                          through the Categories Only (with Metatags) file(s).  If column is present
                          then the sort_id will be modified accordingly.  If the column is absent
                          there will be no change of the category's sort_order.
+4.0.26a  10-25-2014      Corrected the display of the SBA options.  Previously SBA menu options
+					displayed for all users not just those that had SBA installed.  This was
+					the only modification made to this version.
+4.0.26b  10-26-2014		Added a menu display of the status of SBA being installed similar to other
+					options previously incorporated by chadderruski (such as products short
+					descriptions, product unit of measure, etc...) Also updated some of the
+					html formatting.
+4.0.27   10-27-2014      Provided export of product and category URIs as generated from the admin
+					function zen_catalog_href_link.  If CEON URI Mapping is installed, then
+					the active uri is provided by that code.  Other URI rewriters may provide
+					the same functionality when installed and active; however, that has not
+					been tested.
+					

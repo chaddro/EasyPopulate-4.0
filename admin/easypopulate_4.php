@@ -1,5 +1,5 @@
 <?php
-// $Id: easypopulate_4.php, v4.0.26a 10-25-2014 mc12345678 $
+// $Id: easypopulate_4.php, v4.0.27 11-02-2014 mc12345678 $
 
 // CSV VARIABLES - need to make this configurable in the ADMIN
 // $csv_delimiter = "\t"; // "\t" = tab AND "," = COMMA
@@ -47,7 +47,7 @@ $ep_debug_logging_all = false; // do not comment out.. make false instead
 /* Test area end */
 
 // Current EP Version - Modded by Chadd
-$curver              = '4.0.26a - Beta 10-25-2014';
+$curver              = '4.0.27 - Beta 11-02-2014';
 $display_output      = ''; // results of import displayed after script run
 $ep_dltype           = NULL;
 $ep_stack_sql_error  = false; // function returns true on any 1 error, and notifies user of an error
@@ -58,7 +58,7 @@ $has_specials        = false;
 $ep_supported_mods = array();
 
 // default smart-tags setting when enabled. This can be added to.
-$smart_tags = array("\r\n|\r|\n" => '<br />', ); // need to check into this more
+$smart_tags = array("\r\n|\r|\n" => '<br/>', ); // need to check into this more
 
 if (substr($tempdir, -1) != '/') $tempdir .= '/';
 if (substr($tempdir, 0, 1) == '/') $tempdir = substr($tempdir, 1);
@@ -259,11 +259,11 @@ if (!$error && isset($_REQUEST["delete"]) && $_REQUEST["delete"]!=basename($_SER
     
 	<div style="text-align:right; float:right; width:25%"><a href="<?php echo zen_href_link(FILENAME_EASYPOPULATE_4, 'epinstaller=remove') ?>">Un-Install EP4</a>
     <?php
-		echo '<br><b><u>Configuration Settings</u></b><br>';
-		echo 'Upload Directory: <b>'.$tempdir.'</b><br>'; 
-		echo 'Verbose Feedback: '.(($ep_feedback) ? '<font color="green">TRUE</font>':"FALSE").'<br>';
-		echo 'Split Records: '.$ep_split_records.'<br>';
-		echo 'Execution Time: '.$ep_execution.'<br>';
+		echo '<br/><b><u>Configuration Settings</u></b><br/>';
+		echo 'Upload Directory: <b>'.$tempdir.'</b><br/>'; 
+		echo 'Verbose Feedback: '.(($ep_feedback) ? '<font color="green">TRUE</font>':"FALSE").'<br/>';
+		echo 'Split Records: '.$ep_split_records.'<br/>';
+		echo 'Execution Time: '.$ep_execution.'<br/>';
 		switch ($ep_curly_quotes) {
 			case 0:
 			$ep_curly_text = "No Change";
@@ -286,41 +286,43 @@ if (!$error && isset($_REQUEST["delete"]) && $_REQUEST["delete"]!=basename($_SER
 			$ep_char92_text = "HTML";
 			break;
 		}
-		echo 'Convert Curly Quotes: '.$ep_curly_text.'<br>';
-		echo 'Convert Char 0x92: '.$ep_char92_text.'<br>';
-		echo 'Enable Products Metatags: '.$ep_metatags.'<br>';
-		echo 'Enable Products Music: '.$ep_music.'<br>';
+		echo 'Convert Curly Quotes: '.$ep_curly_text.'<br/>';
+		echo 'Convert Char 0x92: '.$ep_char92_text.'<br/>';
+		echo 'Enable Products Metatags: '.$ep_metatags.'<br/>';
+		echo 'Enable Products Music: '.$ep_music.'<br/>';
 			
-		echo '<br><b><u>Custom Products Fields</u></b><br>';
-		echo 'Product Short Descriptions: '.(($ep_supported_mods['psd']) ? '<font color="green">TRUE</font>':"FALSE").'<br>';
-		echo 'Product Unit of Measure: '.(($ep_supported_mods['uom']) ? '<font color="green">TRUE</font>':"FALSE").'<br>';
-		echo 'Product UPC Code: '.(($ep_supported_mods['upc']) ? '<font color="green">TRUE</font>':"FALSE").'<br>';
+		echo '<br/><b><u>Custom Products Fields</u></b><br/>';
+		echo 'Product Short Descriptions: '.(($ep_supported_mods['psd']) ? '<font color="green">TRUE</font>':"FALSE").'<br/>';
+		echo 'Product Unit of Measure: '.(($ep_supported_mods['uom']) ? '<font color="green">TRUE</font>':"FALSE").'<br/>';
+		echo 'Product UPC Code: '.(($ep_supported_mods['upc']) ? '<font color="green">TRUE</font>':"FALSE").'<br/>';
 		// Google Product Category for Google Merchant Center
-		echo 'Google Product Category: '.(($ep_supported_mods['gpc']) ? '<font color="green">TRUE</font>':"FALSE").'<br>';
-		echo "Manufacturer's Suggested Retail Price: ".(($ep_supported_mods['msrp']) ? '<font color="green">TRUE</font>':"FALSE").'<br>';
-		echo "Group Pricing Per Item: ".(($ep_supported_mods['gppi']) ? '<font color="green">TRUE</font>':"FALSE").'<br>';
-		echo "Exclusive Products Mod: ".(($ep_supported_mods['excl']) ? '<font color="green">TRUE</font>':"FALSE").'<br>';
+		echo 'Google Product Category: '.(($ep_supported_mods['gpc']) ? '<font color="green">TRUE</font>':"FALSE").'<br/>';
+		echo "Manufacturer's Suggested Retail Price: ".(($ep_supported_mods['msrp']) ? '<font color="green">TRUE</font>':"FALSE").'<br/>';
+		echo "Group Pricing Per Item: ".(($ep_supported_mods['gppi']) ? '<font color="green">TRUE</font>':"FALSE").'<br/>';
+		echo "Exclusive Products Mod: ".(($ep_supported_mods['excl']) ? '<font color="green">TRUE</font>':"FALSE").'<br/>';
+ 		echo "Stock By Attributes Mod: ".(($ep_4_SBAEnabled != false) ? '<font color="green">TRUE</font>':"FALSE").'<br/>';
 
-		echo "<br><b><u>User Defined Products Fields: </b></u><br>";
+
+		echo "<br/><b><u>User Defined Products Fields: </b></u><br/>";
 		$i = 0;
 		foreach ($custom_field_names as $field) {
-			echo $field.': '.(($custom_field_check[$i]) ? '<font color="green">TRUE</font>':"FALSE").'<br>';
+			echo $field.': '.(($custom_field_check[$i]) ? '<font color="green">TRUE</font>':"FALSE").'<br/>';
 			$i++;
 		}
 		
-		echo '<br><b><u>Installed Languages</u></b> <br>';
+		echo '<br/><b><u>Installed Languages</u></b> <br/>';
 		foreach ($langcode as $key => $lang) {
-			echo $lang['id'].'-'.$lang['code'].': '.$lang['name'].'<br>';
+			echo $lang['id'].'-'.$lang['code'].': '.$lang['name'].'<br/>';
 		}
-		echo 'Default Language: '.	$epdlanguage_id .'-'. $epdlanguage_name.'<br>';
-		echo 'Internal Character Encoding: '.mb_internal_encoding().'<br>';
-		echo 'DB Collation: '.$collation.'<br>';
+		echo 'Default Language: '.	$epdlanguage_id .'-'. $epdlanguage_name.'<br/>';
+		echo 'Internal Character Encoding: '.mb_internal_encoding().'<br/>';
+		echo 'DB Collation: '.$collation.'<br/>';
 		
-		echo '<br><b><u>Database Field Lengths</u></b><br>';
-		echo 'categories_name:'.$categories_name_max_len.'<br>';
-		echo 'manufacturers_name:'.$manufacturers_name_max_len.'<br>';
-		echo 'products_model:'.$products_model_max_len.'<br>';
-		echo 'products_name:'.$products_name_max_len.'<br>';
+		echo '<br/><b><u>Database Field Lengths</u></b><br/>';
+		echo 'categories_name:'.$categories_name_max_len.'<br/>';
+		echo 'manufacturers_name:'.$manufacturers_name_max_len.'<br/>';
+		echo 'products_model:'.$products_model_max_len.'<br/>';
+		echo 'products_name:'.$products_name_max_len.'<br/>';
 	
 	/*  // some error checking
 		echo '<br><br>Problem Data: '. mysql_num_rows($ajeh_result);
@@ -339,13 +341,13 @@ if (!$error && isset($_REQUEST["delete"]) && $_REQUEST["delete"]!=basename($_SER
 	<div style="text-align:left">
             
     <form ENCTYPE="multipart/form-data" ACTION="easypopulate_4.php" METHOD="POST">
-        <div align = "left"><br />
-            <b>Upload EP File</b><br />
+        <div align = "left"><br/>
+            <b>Upload EP File</b><br/>
             <?php echo "Http Max Upload File Size: $upload_max_filesize bytes (".round($upload_max_filesize/1024/1024)." Mbytes)<br/>";?>
             <input TYPE="hidden" name="MAX_FILE_SIZE" value="<?php echo $upload_max_filesize; ?>">
             <input name="uploadfile" type="file" size="50">
             <input type="submit" name="buttoninsert" value="Upload File">
-            <br /><br><br>
+            <br/><br/><br/>
         </div>
     </form>
 
@@ -376,7 +378,7 @@ if (!$error && isset($_REQUEST["delete"]) && $_REQUEST["delete"]!=basename($_SER
 			array( "id" => '1', 'text' => "Model/Price/Qty" ),
 			array( "id" => '2', 'text' => "Model/Price/Breaks" ));
 		
-		echo "<b>Filterable Exports:</b><br>";
+		echo "<b>Filterable Exports:</b><br/>";
 		
 		echo zen_draw_pull_down_menu('ep_export_type', $export_type_array) . ' ';
 		echo ' ' . zen_draw_pull_down_menu('ep_category_filter', array_merge(array( 0 => array( "id" => '', 'text' => "Categories" )), zen_get_category_tree())) . ' ';
@@ -384,42 +386,42 @@ if (!$error && isset($_REQUEST["delete"]) && $_REQUEST["delete"]!=basename($_SER
 		echo ' ' . zen_draw_pull_down_menu('ep_status_filter', $status_array) . ' ';
 		echo zen_draw_input_field('export', 'Export', ' style="padding: 0px"', false, 'submit');
 		?>				
-    <br /><br>
+    <br/><br/>
     </div>
 
-    <b>Product &amp; Pricing Export/Import Options:</b><br />
+    <b>Product &amp; Pricing Export/Import Options:</b><br/>
     <!-- Download file links -->
-    <a href="easypopulate_4.php?export=full"><b>Complete Products</b> (with Metatags)</a><br />
-    <a href="easypopulate_4.php?export=priceqty"><b>Model/Price/Qty</b> (with Specials)</a><br />
-    <a href="easypopulate_4.php?export=pricebreaks"><b>Model/Price/Breaks</b></a><br />
-    <a href="easypopulate_4.php?export=featured"><b>Featured Products</b></a><br />
+    <a href="easypopulate_4.php?export=full"><b>Complete Products</b> (with Metatags)</a><br/>
+    <a href="easypopulate_4.php?export=priceqty"><b>Model/Price/Qty</b> (with Specials)</a><br/>
+    <a href="easypopulate_4.php?export=pricebreaks"><b>Model/Price/Breaks</b></a><br/>
+    <a href="easypopulate_4.php?export=featured"><b>Featured Products</b></a><br/>
     
-    <br><b>Category Export/Import Options</b><br>
-    <a href="easypopulate_4.php?export=category"><b>Model/Category</b></a><br />
-    <a href="easypopulate_4.php?export=categorymeta"><b>Categories Only</b> (with Metatags)</a><br />
+    <br/><b>Category Export/Import Options</b><br/>
+    <a href="easypopulate_4.php?export=category"><b>Model/Category</b></a><br/>
+    <a href="easypopulate_4.php?export=categorymeta"><b>Categories Only</b> (with Metatags)</a><br/>
     
-    <br><b>Attribute Export/Import Options</b><br>
-    <a href="easypopulate_4.php?export=attrib_basic"><b>Basic Products Attributes</b> (basic single-line)</a><br /> 
-    <a href="easypopulate_4.php?export=attrib_detailed"><b>Detailed Products Attributes</b> (detailed multi-line)</a><br />
+    <br/><b>Attribute Export/Import Options</b><br/>
+    <a href="easypopulate_4.php?export=attrib_basic"><b>Basic Products Attributes</b> (basic single-line)</a><br/> 
+    <a href="easypopulate_4.php?export=attrib_detailed"><b>Detailed Products Attributes</b> (detailed multi-line)</a><br/>
 <?php
 	if ($ep_4_SBAEnabled != false) { 
 	?>
-    <a href="easypopulate_4.php?export=SBA_detailed"><b>Detailed Stock By Attributes Data</b> (detailed multi-line)</a><br />
-    <a href="easypopulate_4.php?export=SBAStock"><b>Stock of Items with Attributes Including SBA</b></a><br />
+    <a href="easypopulate_4.php?export=SBA_detailed"><b>Detailed Stock By Attributes Data</b> (detailed multi-line)</a><br/>
+    <a href="easypopulate_4.php?export=SBAStock"><b>Stock of Items with Attributes Including SBA</b></a><br/>
 
-    <a href="easypopulate_4.php?export=SBAStockProdFilter"><b>Stock of Items with Attributes Including SBA Sorted Ascending</b></a><br />
+    <a href="easypopulate_4.php?export=SBAStockProdFilter"><b>Stock of Items with Attributes Including SBA Sorted Ascending</b></a><br/>
 
 <?php } ?>
     
-    <br>DIAGNOSTIC EXPORTS - Note: NOT FOR IMPORTING ATTRIBUTES!<br>
-    <a href="easypopulate_4.php?export=options"><b>Attribute Options Names</b></a><br />
-    <a href="easypopulate_4.php?export=values"><b>Attribute Options Values</b></a><br />
-    <a href="easypopulate_4.php?export=optionvalues"><b>Attribute Options-Names-to-Values</b></a><br />
+    <br>DIAGNOSTIC EXPORTS - Note: NOT FOR IMPORTING ATTRIBUTES!<br/>
+    <a href="easypopulate_4.php?export=options"><b>Attribute Options Names</b></a><br/>
+    <a href="easypopulate_4.php?export=values"><b>Attribute Options Values</b></a><br/>
+    <a href="easypopulate_4.php?export=optionvalues"><b>Attribute Options-Names-to-Values</b></a><br/>
 
 	<?php   
     // List uploaded files in multifile mode
 	// Table header
-	echo '<br><br>';
+	echo '<br/><br/>';
 	echo "<table id=\"epfiles\"    width=\"80%\" border=1 cellspacing=\"2\" cellpadding=\"2\">\n";
 	echo "<tr><th>File Name</th><th>Size</th><th>Date &amp; Time</th><th>Type</th><th>Split</th><th>Import</th><th>Delete</th><th>Download</th>\n";
     // $upload_dir = DIR_FS_CATALOG.$tempdir; // defined above
@@ -504,11 +506,11 @@ if (!$error && isset($_REQUEST["delete"]) && $_REQUEST["delete"]!=basename($_SER
 <?php
 	echo $display_output; // upload results
 	if (strlen($specials_print) > strlen(EASYPOPULATE_4_SPECIALS_HEADING)) {
-		echo '<br />' . $specials_print . EASYPOPULATE_4_SPECIALS_FOOTER; // specials summary
+		echo '<br/>' . $specials_print . EASYPOPULATE_4_SPECIALS_FOOTER; // specials summary
 	}	
 ?>
 </div>
-<br />
+<br/>
 <?php require(DIR_WS_INCLUDES . 'footer.php'); ?>
 </body>
 </html>
