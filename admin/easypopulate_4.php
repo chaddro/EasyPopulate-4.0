@@ -1,5 +1,5 @@
 <?php
-// $Id: easypopulate_4.php, v4.0.27 11-02-2014 mc12345678 $
+// $Id: easypopulate_4.php, v4.0.28 11-25-2014 mc12345678 $
 
 // CSV VARIABLES - need to make this configurable in the ADMIN
 // $csv_delimiter = "\t"; // "\t" = tab AND "," = COMMA
@@ -47,7 +47,7 @@ $ep_debug_logging_all = false; // do not comment out.. make false instead
 /* Test area end */
 
 // Current EP Version - Modded by Chadd
-$curver              = '4.0.27 - Beta 11-02-2014';
+$curver              = '4.0.28 - Beta 11-25-2014';
 $display_output      = ''; // results of import displayed after script run
 $ep_dltype           = NULL;
 $ep_stack_sql_error  = false; // function returns true on any 1 error, and notifies user of an error
@@ -140,7 +140,9 @@ if ($ep_uses_mysqli) {
 	$collation = mysql_client_encoding(); // should be either latin1 or utf8
 }
 if ($collation == 'utf8') {
-	mb_internal_encoding("UTF-8");
+  if (function_exists('mb_internal_encoding')) {
+    mb_internal_encoding("UTF-8");
+  }
 }
 
 if ( ($collation == 'utf8') && ((substr($project,0,5) == "1.3.8") || (substr($project,0,5) == "1.3.9")) ) {
@@ -315,7 +317,7 @@ if (!$error && isset($_REQUEST["delete"]) && $_REQUEST["delete"]!=basename($_SER
 			echo $lang['id'].'-'.$lang['code'].': '.$lang['name'].'<br/>';
 		}
 		echo 'Default Language: '.	$epdlanguage_id .'-'. $epdlanguage_name.'<br/>';
-		echo 'Internal Character Encoding: '.mb_internal_encoding().'<br/>';
+		echo 'Internal Character Encoding: '.(function_exists('mb_internal_encoding') ? mb_internal_encoding() : 'mb_internal_encoding not available').'<br/>';
 		echo 'DB Collation: '.$collation.'<br/>';
 		
 		echo '<br/><b><u>Database Field Lengths</u></b><br/>';
