@@ -1,5 +1,5 @@
 <?php
-// $Id: easypopulate_4_functions.php, v4.0.27 11-02-2014 mc12345678 $
+// $Id: easypopulate_4_functions.php, v4.0.28 01-03-2015 mc12345678 $
 
 function ep_4_curly_quotes($curly_text) {
 	$ep_curly_quotes = (int)EASYPOPULATE_4_CONFIG_CURLY_QUOTES;
@@ -28,7 +28,7 @@ function ep_4_curly_quotes($curly_text) {
 function ep4_zen_field_length($tbl, $fld) {
     global $db;
 	$project = PROJECT_VERSION_MAJOR.'.'.PROJECT_VERSION_MINOR;
-	$ep_uses_mysqli = (substr($project, 0, 5) == "1.5.3");
+	$ep_uses_mysqli = ((PROJECT_VERSION_MAJOR > '1' || PROJECT_VERSION_MINOR >= '5.3') ? true : false);
 
 	$meta = array();
 	$result = ($ep_uses_mysqli ? mysqli_query("SELECT $fld FROM $tbl") : mysql_query("SELECT $fld FROM $tbl"));
@@ -42,7 +42,7 @@ function ep4_zen_field_length($tbl, $fld) {
 
 function ep_4_get_languages() {
 	$project = PROJECT_VERSION_MAJOR.'.'.PROJECT_VERSION_MINOR;
-	$ep_uses_mysqli = (substr($project, 0, 5) == "1.5.3");
+	$ep_uses_mysqli = ((PROJECT_VERSION_MAJOR > '1' || PROJECT_VERSION_MINOR >= '5.3') ? true : false);
 	$langcode = array();
 	$languages_query = ep_4_query("SELECT languages_id, name, code FROM ".TABLE_LANGUAGES." ORDER BY sort_order");
 	$i = 1;
@@ -59,7 +59,7 @@ function ep_4_get_languages() {
 
 function ep_4_SBA1Exists () {
 	$project = PROJECT_VERSION_MAJOR.'.'.PROJECT_VERSION_MINOR;
-	$ep_uses_mysqli = (substr($project, 0, 5) == "1.5.3");
+	$ep_uses_mysqli = ((PROJECT_VERSION_MAJOR > '1' || PROJECT_VERSION_MINOR >= '5.3') ? true : false);
 	// The current thought is to have one of these Exists files for each version of SBA to consider; however, they also all could fall under one SBA_Exists check provided some return is made and a comparison done on the other end about what was returned.  
 	//Check to see if any version of Stock with attributes is installed (If so, and properly programmed, there should be a define for the table associated with the stock.  There may be more than one, and if so, they should all be verified for the particular SBA.
 	if (defined('TABLE_PRODUCTS_WITH_ATTRIBUTES_STOCK')) {
@@ -134,6 +134,74 @@ function ep_4_SBA1Exists () {
 		} else {
       return false;
     }
+//		$returnedcols = mysql_fetch_array($colsarray);
+//		$colnames = array_keys($returnedcols);
+/*		echo 'Num Rows: ' . $numCols . '<br />';
+		if ($returnedcols['Field'] == 'stock_id') {
+			echo 'true <br />';
+		} else {
+			echo 'false <br />';
+		}
+		echo '3<br />';
+		echo $returnedcols . '111<br />';
+		print_r($returnedcols);
+		echo '3<br />'; */
+		
+/*		while ($row = mysql_fetch_array($colsarray)){
+			print_r($row);
+			echo '4<br />';
+		}
+		echo '4<br />';*/
+		//return true;
+	} else {
+		return false;
+	}
+}
+
+function ep_4_CEONURIExists () {
+	$project = PROJECT_VERSION_MAJOR.'.'.PROJECT_VERSION_MINOR;
+	$ep_uses_mysqli = ((PROJECT_VERSION_MAJOR > '1' || PROJECT_VERSION_MINOR >= '5.3') ? true : false);
+	// The current thought is to have one of these Exists files for each version of SBA to consider; however, they also all could fall under one SBA_Exists check provided some return is made and a comparison done on the other end about what was returned.  
+	//Check to see if any version of Stock with attributes is installed (If so, and properly programmed, there should be a define for the table associated with the stock.  There may be more than one, and if so, they should all be verified for the particular SBA.
+	if (defined('TABLE_CEON_URI_MAPPINGS')) {
+		//Now that have identified that the table (applicable to mc12345678's store, has been identified as in existence, now need to look at the setup of the table (Number of columns and if each column identified below is in the table, or conversely if the table's column matches the list below.
+		//Columns in table: stock_id, products_id, stock_attributes, quantity, and sort.
+//		echo 'In<br />';
+//		$colsarray = $db->Execute('SHOW COLUMNS FROM ' . TABLE_PRODUCTS_WITH_ATTRIBUTES_STOCK);
+		$colsarray = ep_4_query('SHOW COLUMNS FROM ' . TABLE_CEON_URI_MAPPINGS);
+//		echo 'After execute<br />';
+		$numCols = ($ep_uses_mysqli ? mysqli_num_rows($colsarray) : mysql_num_rows($colsarray));
+		if ($numCols == 9) {
+			while ($row = ($ep_uses_mysqli ? mysqli_fetch_array($colsarray) : mysql_fetch_array($colsarray))){
+				switch ($row['Field']) {
+					case 'uri':
+						break;
+					case 'language_id':
+						break;
+					case 'current_uri':
+						break;
+					case 'main_page':
+						break;
+					case 'query_string_parameters':
+						break;
+					case 'associated_db_id':
+						break;
+					case 'alternate_uri':
+						break;
+					case 'redirection_type_code':
+						break;
+					case 'date_added':
+						break;
+					default:
+						return false;
+						break;
+						
+				}
+			}
+			return true;
+		} else {
+			return false;
+		}
 //		$returnedcols = mysql_fetch_array($colsarray);
 //		$colnames = array_keys($returnedcols);
 /*		echo 'Num Rows: ' . $numCols . '<br />';
@@ -828,7 +896,7 @@ if (!function_exists(zen_get_sub_categories)) {
 	function zen_get_sub_categories(&$categories, $categories_id) {
 		global $db;
 		$project = PROJECT_VERSION_MAJOR.'.'.PROJECT_VERSION_MINOR;
-		$ep_uses_mysqli = (substr($project, 0, 5) == "1.5.3");
+		$ep_uses_mysqli = ((PROJECT_VERSION_MAJOR > '1' || PROJECT_VERSION_MINOR >= '5.3') ? true : false);
 		$sub_categories_query = ($ep_uses_mysqli ? mysqli_query($db->link, "SELECT categories_id FROM ".TABLE_CATEGORIES.
 			" WHERE parent_id = '".(int)$categories_id."'") : mysql_query("SELECT categories_id FROM ".TABLE_CATEGORIES.
 			" WHERE parent_id = '".(int)$categories_id."'"));
@@ -882,7 +950,7 @@ function ep_4_get_tax_class_rate($tax_class_id) {
 	global $db;
 	$tax_multiplier = 0;
 	$project = PROJECT_VERSION_MAJOR.'.'.PROJECT_VERSION_MINOR;
-	$ep_uses_mysqli = (substr($project, 0, 5) == "1.5.3");
+	$ep_uses_mysqli = ((PROJECT_VERSION_MAJOR > '1' || PROJECT_VERSION_MINOR >= '5.3') ? true : false);
 	 
 	$tax_query = ($ep_uses_mysqli ? mysqli_query($db->link, "SELECT SUM(tax_rate) AS tax_rate FROM ".TABLE_TAX_RATES.
 		" WHERE tax_class_id = '".zen_db_input($tax_class_id)."' GROUP BY tax_priority") : mysql_query("SELECT SUM(tax_rate) AS tax_rate FROM ".TABLE_TAX_RATES.
@@ -898,7 +966,7 @@ function ep_4_get_tax_class_rate($tax_class_id) {
 function ep_4_get_tax_title_class_id($tax_class_title) {
 	global $db;
 	$project = PROJECT_VERSION_MAJOR.'.'.PROJECT_VERSION_MINOR;
-	$ep_uses_mysqli = (substr($project, 0, 5) == "1.5.3");
+	$ep_uses_mysqli = ((PROJECT_VERSION_MAJOR > '1' || PROJECT_VERSION_MINOR >= '5.3') ? true : false);
 	$classes_query = ($ep_uses_mysqli ? mysqli_query($db->link, "SELECT tax_class_id FROM ".TABLE_TAX_CLASS.
 		" WHERE tax_class_title = '".zen_db_input($tax_class_title)."'") : mysql_query("SELECT tax_class_id FROM ".TABLE_TAX_CLASS.
 		" WHERE tax_class_title = '".zen_db_input($tax_class_title)."'"));
@@ -934,7 +1002,7 @@ function smart_tags_4($string,$tags,$crsub,$doit) {
 function ep_4_check_table_column($table_name,$column_name) {
 	global $db;
 	$project = PROJECT_VERSION_MAJOR.'.'.PROJECT_VERSION_MINOR;
-	$ep_uses_mysqli = (substr($project, 0, 5) == "1.5.3");
+	$ep_uses_mysqli = ((PROJECT_VERSION_MAJOR > '1' || PROJECT_VERSION_MINOR >= '5.3') ? true : false);
 	$sql = "SHOW COLUMNS FROM ".$table_name;
 	$result = ep_4_query($sql);
 	while ($row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array($result))) {
@@ -949,7 +1017,7 @@ function ep_4_check_table_column($table_name,$column_name) {
 function ep_4_remove_product($product_model) {
  	global $db, $ep_debug_logging, $ep_debug_logging_all, $ep_stack_sql_error;
 	$project = PROJECT_VERSION_MAJOR.'.'.PROJECT_VERSION_MINOR;
-	$ep_uses_mysqli = (substr($project, 0, 5) == "1.5.3");
+	$ep_uses_mysqli = ((PROJECT_VERSION_MAJOR > '1' || PROJECT_VERSION_MINOR >= '5.3') ? true : false);
 	$sql = "SELECT products_id FROM ".TABLE_PRODUCTS." WHERE products_model = '".zen_db_input($product_model)."'";
 	$products = $db->Execute($sql);
 	if (($ep_uses_mysqli ? mysqli_errno($db->link) : mysql_errno())) {
@@ -1031,7 +1099,7 @@ function write_debug_log_4($string) {
 function ep_4_query($query) {
 	global $ep_debug_logging, $ep_debug_logging_all, $ep_stack_sql_error, $db;
 	$project = PROJECT_VERSION_MAJOR.'.'.PROJECT_VERSION_MINOR;
-	$ep_uses_mysqli = (substr($project, 0, 5) == "1.5.3");
+	$ep_uses_mysqli = ((PROJECT_VERSION_MAJOR > '1' || PROJECT_VERSION_MINOR >= '5.3') ? true : false);
 	$result = ($ep_uses_mysqli ? mysqli_query($db->link, $query) : mysql_query($query));
 	if (($ep_uses_mysqli ? mysqli_errno($db->link) : mysql_errno())) {
 		$ep_stack_sql_error = true;
@@ -1073,9 +1141,9 @@ function install_easypopulate_4() {
 			('User Defined Products Fields',       'EASYPOPULATE_4_CONFIG_CUSTOM_FIELDS', '', 'User Defined Products Table Fields (comma delimited, no spaces)', ".$group_id.", '18', NULL, now(), NULL, NULL),
 			('Export URI with Prod and or Cat',       'EASYPOPULATE_4_CONFIG_EXPORT_URI', '0', 'Export the current products or categories URI when exporting data? (Yes - 1 or no - 0)', ".$group_id.", '19', NULL, now(), NULL, 'zen_cfg_select_option(array(\"0\", \"1\"),')
 		");
-	} elseif (substr($project,0,3) == "1.5") {
+	} elseif (PROJECT_VERSION_MAJOR > '1' || PROJECT_VERSION_MINOR >= '5.0') {
 		$db->Execute("INSERT INTO ".TABLE_CONFIGURATION_GROUP." (configuration_group_title, configuration_group_description, sort_order, visible) VALUES ('Easy Populate 4', 'Configuration Options for Easy Populate 4', '1', '1')");
-		if (substr($project,0,5) == "1.5.3") {
+		if (PROJECT_VERSION_MAJOR > '1' || PROJECT_VERSION_MINOR >= '5.3') {
 			$group_id = mysqli_insert_id($db->link);
 		} else {
 		$group_id = mysql_insert_id();
@@ -1111,7 +1179,7 @@ function install_easypopulate_4() {
 function remove_easypopulate_4() {
 	global $db;
 	$project = PROJECT_VERSION_MAJOR.'.'.PROJECT_VERSION_MINOR;
-	$ep_uses_mysqli = (substr($project, 0, 5) == "1.5.3");
+	$ep_uses_mysqli = ((PROJECT_VERSION_MAJOR > '1' || PROJECT_VERSION_MINOR >= '5.3') ? true : false);
 	if ( (substr($project,0,5) == "1.3.8") || (substr($project,0,5) == "1.3.9") ) {
 		$sql = "SELECT configuration_group_id FROM ".TABLE_CONFIGURATION_GROUP." WHERE configuration_group_title = 'Easy Populate 4' LIMIT 1";
 		$result = ep_4_query($sql);
@@ -1172,4 +1240,3 @@ function register_globals_vars_check_4 () {
 	global $HTTP_POST_FILES;
 	print "HTTP_POST_FILES: "; print_r($HTTP_POST_FILES); echo '<br />';
 }
-?>

@@ -34,7 +34,7 @@ Also there is NO streaming upload or download support. Sorry if you liked this f
 
 6) Basic Attribute Import. Please read the notes below carefully for how to use this feature which is still in development. Currently, you can at Import create your products_options_name (your attribute name, ie. color) , products_options_type (checkbox, dropdown, etc) and, products_options_values_name (red, green, blue).
 
-Be sure to backup your data before importing your files. Remember, this is still "beta". I have made every attempt to make this a solid bug free product, but it does require more testing. I have added a lot of error trapping, but I'm sure I've missed things.
+LASTLY but definitely not LEAST and applicable to all of EP4: Be sure to backup your data before importing your files. Remember, this is still "beta". I have made every attempt to make this a solid bug free product, but it does require more testing. I have added a lot of error trapping, but I'm sure I've missed things.
 
 
 IMPORTING ATTRIBUTES

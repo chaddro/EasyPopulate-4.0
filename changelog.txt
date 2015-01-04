@@ -177,4 +177,9 @@
 					the active uri is provided by that code.  Other URI rewriters may provide
 					the same functionality when installed and active; however, that has not
 					been tested.
-					
+4.0.28   01-03-2015      Added bypass to mb_internal_string and notification.
+					Also modified version check to support ZC 1.5.4 and above.
+					Future versions of ZC may still require this to be revised, but at least
+					this program will not need to be updated merely to support a version check.
+					Incorporated admin logging of database inserts and updates similar (and beyond)
+					those contained in ZC 1.5.4.  Deletions were not incorporated.

@@ -1,5 +1,5 @@
 <?php
-// $Id: easypopulate_4.php, v4.0.28 11-25-2014 mc12345678 $
+// $Id: easypopulate_4.php, v4.0.28 01-03-2015 mc12345678 $
 
 // CSV VARIABLES - need to make this configurable in the ADMIN
 // $csv_delimiter = "\t"; // "\t" = tab AND "," = COMMA
@@ -26,7 +26,7 @@ $ep_curly_quotes  = (int)EASYPOPULATE_4_CONFIG_CURLY_QUOTES;
 $ep_char_92       = (int)EASYPOPULATE_4_CONFIG_CHAR_92;
 $ep_metatags      = (int)EASYPOPULATE_4_CONFIG_META_DATA; // 0-Disable, 1-Enable
 $ep_music         = (int)EASYPOPULATE_4_CONFIG_MUSIC_DATA; // 0-Disable, 1-Enable
-$ep_uses_mysqli   = (PROJECT_VERSION_MAJOR.'.'.PROJECT_VERSION_MINOR == '1.5.3' ? true : false);
+$ep_uses_mysqli   = (PROJECT_VERSION_MAJOR > '1' || PROJECT_VERSION_MINOR >= '5.3' ? true : false);
 
 @set_time_limit($ep_execution);  // executin limit in seconds. 300 = 5 minutes before timeout, 0 means no timelimit
 
@@ -47,7 +47,7 @@ $ep_debug_logging_all = false; // do not comment out.. make false instead
 /* Test area end */
 
 // Current EP Version - Modded by Chadd
-$curver              = '4.0.28 - Beta 11-25-2014';
+$curver              = '4.0.28 - Beta 01-03-2015';
 $display_output      = ''; // results of import displayed after script run
 $ep_dltype           = NULL;
 $ep_stack_sql_error  = false; // function returns true on any 1 error, and notifies user of an error
@@ -170,6 +170,13 @@ if ( ($collation == 'utf8') && ((substr($project,0,5) == "1.3.8") || (substr($pr
 // default langauage should not be important since all installed languages are used $langcode[]
 // and we should iterate through that array (even if only 1 stored value)
 // $epdlanguage_id is used only in categories generation code since the products import code doesn't support multi-language categories
+/* @var $epdlanguage_query type array */
+//$epdlanguage_query = $db->Execute("SELECT languages_id, name FROM ".TABLE_LANGUAGES." WHERE code = '".DEFAULT_LANGUAGE."'");
+if (!defined(DEFAULT_LANGUAGE)) {
+	$epdlanguage_query = ep_4_query("SELECT languages_id, code FROM ".TABLE_LANGUAGES." ORDER BY languages_id LIMIT 1");
+	$epdlanguage = ($ep_uses_mysqli ? mysqli_fetch_array($epdlanguage_query) : mysql_fetch_array($epdlanguage_query));
+	define('DEFAULT_LANGUAGE', $epdlanguage['code']);
+}
 $epdlanguage_query = ep_4_query("SELECT languages_id, name FROM ".TABLE_LANGUAGES." WHERE code = '".DEFAULT_LANGUAGE."'");
 if (($ep_uses_mysqli ? mysqli_num_rows($epdlanguage_query) : mysql_num_rows($epdlanguage_query))) {
 	$epdlanguage = ($ep_uses_mysqli ? mysqli_fetch_array($epdlanguage_query) : mysql_fetch_array($epdlanguage_query));
@@ -186,7 +193,13 @@ $ep_4_SBAEnabled = ep_4_SBA1Exists();
 if ( isset($_GET['export2']) ) { // working on attributes export 
 	include_once('easypopulate_4_export2.php'); // this file contains all data import code
 } */
-
+$ep4CEONURIDoesExist = false;
+if (ep_4_CEONURIExists() == true) {
+	$ep4CEONURIDoesExist = true;
+	if (!sizeof($languages)) {
+		$languages = zen_get_languages();
+	}
+}
 if ( isset($_POST['export']) OR isset($_GET['export'])  ) {
 	include_once('easypopulate_4_export.php'); // this file contains all data export code
 }
@@ -303,6 +316,7 @@ if (!$error && isset($_REQUEST["delete"]) && $_REQUEST["delete"]!=basename($_SER
 		echo "Group Pricing Per Item: ".(($ep_supported_mods['gppi']) ? '<font color="green">TRUE</font>':"FALSE").'<br/>';
 		echo "Exclusive Products Mod: ".(($ep_supported_mods['excl']) ? '<font color="green">TRUE</font>':"FALSE").'<br/>';
  		echo "Stock By Attributes Mod: ".(($ep_4_SBAEnabled != false) ? '<font color="green">TRUE</font>':"FALSE").'<br/>';
+    echo "CEON URI Rewriter Mod: " . (($ep4CEONURIDoesExist == true) ? '<font color="green">TRUE</font>' : "FALSE") . '<br/>';
 
 
 		echo "<br/><b><u>User Defined Products Fields: </b></u><br/>";
@@ -327,12 +341,12 @@ if (!$error && isset($_REQUEST["delete"]) && $_REQUEST["delete"]!=basename($_SER
 		echo 'products_name:'.$products_name_max_len.'<br/>';
 	
 	/*  // some error checking
-		echo '<br><br>Problem Data: '. mysql_num_rows($ajeh_result);
-		echo '<br>Memory Usage: '.memory_get_usage(); 
-		echo '<br>Memory Peak: '.memory_get_peak_usage();
-		echo '<br><br>';
+		echo '<br/><br/>Problem Data: '. mysql_num_rows($ajeh_result);
+		echo '<br/>Memory Usage: '.memory_get_usage(); 
+		echo '<br/>Memory Peak: '.memory_get_peak_usage();
+		echo '<br/><br/>';
 		print_r($langcode);
-		echo '<br><br>code: '.$langcode[1]['id'];
+		echo '<br/><br/>code: '.$langcode[1]['id'];
 	*/
 		//register_globals_vars_check_4(); // testing
 	
@@ -494,11 +508,11 @@ if (!$error && isset($_REQUEST["delete"]) && $_REQUEST["delete"]!=basename($_SER
 	echo "<div>";
 		$test_string = "Πλαστικά^Εξαρτήματα";
 		$test_array1 = explode("^", $test_string);
-		echo "<br>Using explode() with: ".$test_string."<br>";
+		echo "<br/>Using explode() with: ".$test_string."<br/>";
 		print_r($test_array1);
 		
 		$test_array2 = mb_split('\x5e', $test_string);
-		echo "<br><br>Using mb_split() with: ".$test_string."<br>";
+		echo "<br/><br/>Using mb_split() with: ".$test_string."<br/>";
 		print_r($test_array2);
 	echo "</div>";
 	*/
