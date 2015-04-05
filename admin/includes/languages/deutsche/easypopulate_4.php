@@ -64,12 +64,12 @@ define('EASYPOPULATE_4_SPECIALS_FOOTER', '</p>'); // close paragraph
 // error log defines - for ep_debug_log.txt
 define('EASYPOPULATE_4_ERRORLOG_SQL_ERROR', 'MySQL error %s: %s\nWhen executing:\n%sn');
 
-define('EASYPOPULATE_4_REMOVE_SETTINGS', 'Un-Install EP4');
-define('EASYPOPULATE_4_CONFIG_SETTINGS', 'Configuration Settings');
-define('EASYPOPULATE_4_CONFIG_UPLOAD', 'Upload Directory: ');
-define('EASYPOPULATE_4_DISPLAY_SPLIT_SHORT', 'Split Records: ');
-define('EASYPOPULATE_4_DISPLAY_EXEC_TIME', 'Execution Time: ');
-define('EASYPOPULATE_4_DISPLAY_ENABLE_META', 'Enable Products Metatags: ');
-define('EASYPOPULATE_4_DISPLAY_ENABLE_MUSIC', 'Enable Products Music: ');
+define('EASYPOPULATE_4_REMOVE_SETTINGS', 'Easy Populate 4 deinstallieren' );
+define('EASYPOPULATE_4_CONFIG_SETTINGS', 'Konfigurationseinstellungen');
+define('EASYPOPULATE_4_CONFIG_UPLOAD', 'Upload Verzeichnis: ');
+define('EASYPOPULATE_4_DISPLAY_SPLIT_SHORT', 'Einträge aufteilen: ');
+define('EASYPOPULATE_4_DISPLAY_EXEC_TIME', 'Ausführungszeit: ');
+define('EASYPOPULATE_4_DISPLAY_ENABLE_META', 'Metatags der Artikel aktivieren:  ');
+define('EASYPOPULATE_4_DISPLAY_ENABLE_MUSIC', 'Artikeltyp Musik aktivieren: ');
 
 ?>

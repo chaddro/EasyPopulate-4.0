@@ -1,5 +1,5 @@
 <?php
-// $Id: easypopulate_4_import.php, v4.0.28 01-03-2015 mc12345678 $
+// $Id: easypopulate_4_import.php, v4.0.29 04-03-2015 mc12345678 $
 
 // BEGIN: Data Import Module
 if ( isset($_GET['import']) ) {
@@ -35,6 +35,10 @@ if ( isset($_GET['import']) ) {
 	if ($ep_supported_mods['msrp'] == true) { // Manufacturer's Suggested Retail Price
 		$default_these[] = 'v_products_msrp';
 	}
+  if ($ep_supported_mods['map'] == true) { // Manufacturer's Advertised Price
+    $default_these[] = 'v_map_enabled';
+    $default_these[] = 'v_map_price';
+  }
 	if ($ep_supported_mods['gppi'] == true) { // Group Pricing Per Item - 4-24-2012
 		$default_these[] = 'v_products_group_a_price';
 		$default_these[] = 'v_products_group_b_price';
@@ -197,6 +201,12 @@ if ( isset($_GET['import']) ) {
 				// UPDATE
 				$sql = "UPDATE ".TABLE_PRODUCTS_ATTRIBUTES." SET 
 					options_values_price              = ".$items[$filelayout['v_options_values_price']].",
+					";
+        if ($ep_supported_mods['dual']) {
+          $sql .= "options_values_price_w              = ".$items[$filelayout['v_options_values_price_w']].",";
+        }
+
+        $sql .= "
 					price_prefix                      = '".$items[$filelayout['v_price_prefix']]."',
 					products_options_sort_order       = ".$items[$filelayout['v_products_options_sort_order']].",
 					product_attribute_is_free         = ".$items[$filelayout['v_product_attribute_is_free']].",
@@ -289,7 +299,7 @@ if ( isset($_GET['import']) ) {
 					stock_attributes                  = '".$items[$filelayout['v_stock_attributes']]."',
 					quantity					    = ".$items[$filelayout['v_quantity']].",
 					sort						    = ".$items[$filelayout['v_sort']]. ( $ep_4_SBAEnabled == '2' ? ",
-          customid            = ".$items[$filelayout['v_customid']] : " ") .
+          customid            = '" . $items[$filelayout['v_customid']] . "' " : " ") .
 				"
 					WHERE (
 					stock_id = ".$items[$filelayout['v_stock_id']]." )";
@@ -518,6 +528,10 @@ if ( ( strtolower(substr($file['name'],0,15)) <> "categorymeta-ep") && ( strtolo
 		if ($ep_supported_mods['msrp'] == true) { // Manufacturer's Suggested Retail Price
 			$sql .= 'p.products_msrp as v_products_msrp,';
 		}
+    if ($ep_supported_mods['map'] == true) { // Manufacturer's Advertised Price
+      $sql .= 'p.map_enabled as v_map_enabled,';
+      $sql .= 'p.map_price as v_map_price,';
+    }
 		if ($ep_supported_mods['gppi'] == true) { // Group Pricing Per Item
 			$sql .= 'p.products_group_a_price as v_products_group_a_price,';
 			$sql .= 'p.products_group_b_price as v_products_group_b_price,';
@@ -586,7 +600,7 @@ if ( ( strtolower(substr($file['name'],0,15)) <> "categorymeta-ep") && ( strtolo
 			foreach ($langcode as $key => $lang) {
 				$sql2 = 'SELECT * FROM '.TABLE_PRODUCTS_DESCRIPTION.' WHERE products_id = '.$row['v_products_id'].' AND language_id = '.$lang['id'];
 				$result2 = ep_4_query($sql2);
-						$row2 = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array($result2));
+						$row2 = ($ep_uses_mysqli ? mysqli_fetch_array($result2) : mysql_fetch_array($result2));
 				// create variables (v_products_name_1, v_products_name_2, etc. which corresponds to our column headers) and assign data
 				$row['v_products_name_'.$lang['id']] = ep_4_curly_quotes($row2['products_name']);
 				
@@ -1173,6 +1187,10 @@ if ( ( strtolower(substr($file['name'],0,15)) <> "categorymeta-ep") && ( strtolo
 				if ($ep_supported_mods['msrp'] == true) { // Manufacturer's Suggested Retail Price
 					$query .= "products_msrp = '".$v_products_msrp."',";
 				}
+        if ($ep_supported_mods['map'] == true) { // Manufacturer's Advertised Price
+          $query .= "map_enabled = '".$v_map_enabled."',";
+          $query .= "map_price = '".$v_map_price."',";
+        }
 				if ($ep_supported_mods['gppi'] == true) { // Group Pricing Per Item
 					$query .= "products_group_a_price = '".$v_products_group_a_price."',";
 					$query .= "products_group_b_price = '".$v_products_group_b_price."',";
@@ -1269,6 +1287,10 @@ if ( ( strtolower(substr($file['name'],0,15)) <> "categorymeta-ep") && ( strtolo
 				if ($ep_supported_mods['msrp'] == true) { // Manufacturer's Suggested Retail Price
 					$query .= "products_msrp = '".$v_products_msrp."',";
 				}
+        if ($ep_supported_mods['map'] == true) { // Manufacturer's Advertised Price
+          $query .= "map_enabled = '".$v_map_enabled."',";
+          $query .= "map_price = '".$v_map_price."',";
+        }
 				if ($ep_supported_mods['gppi'] == true) { // Group Pricing Per Item
 					$query .= "products_group_a_price = '".$v_products_group_a_price."',";
 					$query .= "products_group_b_price = '".$v_products_group_b_price."',";

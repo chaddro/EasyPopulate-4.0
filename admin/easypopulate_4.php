@@ -1,5 +1,5 @@
 <?php
-// $Id: easypopulate_4.php, v4.0.28 01-03-2015 mc12345678 $
+// $Id: easypopulate_4.php, v4.0.29 04-03-2015 mc12345678 $
 
 // CSV VARIABLES - need to make this configurable in the ADMIN
 // $csv_delimiter = "\t"; // "\t" = tab AND "," = COMMA
@@ -47,7 +47,7 @@ $ep_debug_logging_all = false; // do not comment out.. make false instead
 /* Test area end */
 
 // Current EP Version - Modded by Chadd
-$curver              = '4.0.28 - Beta 01-03-2015';
+$curver              = '4.0.29 - Beta 04-03-2015';
 $display_output      = ''; // results of import displayed after script run
 $ep_dltype           = NULL;
 $ep_stack_sql_error  = false; // function returns true on any 1 error, and notifies user of an error
@@ -58,7 +58,7 @@ $has_specials        = false;
 $ep_supported_mods = array();
 
 // default smart-tags setting when enabled. This can be added to.
-$smart_tags = array("\r\n|\r|\n" => '<br/>', ); // need to check into this more
+$smart_tags = array("\r\n|\r|\n" => '<br />', ); // need to check into this more
 
 if (substr($tempdir, -1) != '/') $tempdir .= '/';
 if (substr($tempdir, 0, 1) == '/') $tempdir = substr($tempdir, 1);
@@ -99,8 +99,11 @@ $ep_supported_mods['uom'] = ep_4_check_table_column(TABLE_PRODUCTS,'products_pri
 $ep_supported_mods['upc'] = ep_4_check_table_column(TABLE_PRODUCTS,'products_upc');       // upc = UPC Code, added by Chadd
 $ep_supported_mods['gpc'] = ep_4_check_table_column(TABLE_PRODUCTS,'products_gpc'); // gpc = google product category for Google Merchant Center, added by Chadd 10-1-2011
 $ep_supported_mods['msrp'] = ep_4_check_table_column(TABLE_PRODUCTS,'products_msrp'); // msrp = manufacturer's suggested retail price, added by Chadd 1-9-2012
+$ep_supported_mods['map'] = ep_4_check_table_column(TABLE_PRODUCTS,'map_enabled');
+$ep_supported_mods['map'] = ($ep_supported_mods['map'] && ep_4_check_table_column(TABLE_PRODUCTS, 'map_price'));
 $ep_supported_mods['gppi'] = ep_4_check_table_column(TABLE_PRODUCTS,'products_group_a_price'); // gppi = group pricing per item, added by Chadd 4-24-2012
 $ep_supported_mods['excl'] = ep_4_check_table_column(TABLE_PRODUCTS,'products_exclusive'); // exclu = Custom Mod for Exclusive Products: 04-24-2012
+$ep_supported_mods['dual'] = ep_4_check_table_column(TABLE_PRODUCTS_ATTRIBUTES, 'options_values_price_w');
 // END: check for existance of various mods
 
 // custom products fields check
@@ -272,13 +275,13 @@ if (!$error && isset($_REQUEST["delete"]) && $_REQUEST["delete"]!=basename($_SER
 	<?php 	echo zen_draw_separator('pixel_trans.gif', '1', '10'); ?>
 	<div class="pageHeading"><?php echo "Easy Populate $curver"; ?></div>
     
-	<div style="text-align:right; float:right; width:25%"><a href="<?php echo zen_href_link(FILENAME_EASYPOPULATE_4, 'epinstaller=remove') ?>">Un-Install EP4</a>
+	<div style="text-align:right; float:right; width:25%"><a href="<?php echo zen_href_link(FILENAME_EASYPOPULATE_4, 'epinstaller=remove') ?>"><?php echo EASYPOPULATE_4_REMOVE_SETTINGS; ?></a>
     <?php
-		echo '<br/><b><u>Configuration Settings</u></b><br/>';
-		echo 'Upload Directory: <b>'.$tempdir.'</b><br/>'; 
+		echo '<br/><b><u>' . EASYPOPULATE_4_CONFIG_SETTINGS . '</u></b><br/>';
+		echo EASYPOPULATE_4_CONFIG_UPLOAD . '<b>'.$tempdir.'</b><br/>'; 
 		echo 'Verbose Feedback: '.(($ep_feedback) ? '<font color="green">TRUE</font>':"FALSE").'<br/>';
-		echo 'Split Records: '.$ep_split_records.'<br/>';
-		echo 'Execution Time: '.$ep_execution.'<br/>';
+		echo EASYPOPULATE_4_DISPLAY_SPLIT_SHORT . $ep_split_records.'<br/>';
+		echo EASYPOPULATE_4_DISPLAY_EXEC_TIME . $ep_execution.'<br/>';
 		switch ($ep_curly_quotes) {
 			case 0:
 			$ep_curly_text = "No Change";
@@ -303,8 +306,8 @@ if (!$error && isset($_REQUEST["delete"]) && $_REQUEST["delete"]!=basename($_SER
 		}
 		echo 'Convert Curly Quotes: '.$ep_curly_text.'<br/>';
 		echo 'Convert Char 0x92: '.$ep_char92_text.'<br/>';
-		echo 'Enable Products Metatags: '.$ep_metatags.'<br/>';
-		echo 'Enable Products Music: '.$ep_music.'<br/>';
+		echo EASYPOPULATE_4_DISPLAY_ENABLE_META.$ep_metatags.'<br/>';
+		echo EASYPOPULATE_4_DISPLAY_ENABLE_MUSIC.$ep_music.'<br/>';
 			
 		echo '<br/><b><u>Custom Products Fields</u></b><br/>';
 		echo 'Product Short Descriptions: '.(($ep_supported_mods['psd']) ? '<font color="green">TRUE</font>':"FALSE").'<br/>';
@@ -313,11 +316,12 @@ if (!$error && isset($_REQUEST["delete"]) && $_REQUEST["delete"]!=basename($_SER
 		// Google Product Category for Google Merchant Center
 		echo 'Google Product Category: '.(($ep_supported_mods['gpc']) ? '<font color="green">TRUE</font>':"FALSE").'<br/>';
 		echo "Manufacturer's Suggested Retail Price: ".(($ep_supported_mods['msrp']) ? '<font color="green">TRUE</font>':"FALSE").'<br/>';
-		echo "Group Pricing Per Item: ".(($ep_supported_mods['gppi']) ? '<font color="green">TRUE</font>':"FALSE").'<br/>';
+    echo "Manufacturer's Advertised Price: ".(($ep_supported_mods['map']) ? '<font color="green">TRUE</font>':"FALSE").'<br/>';
+    echo "Group Pricing Per Item: ".(($ep_supported_mods['gppi']) ? '<font color="green">TRUE</font>':"FALSE").'<br/>';
 		echo "Exclusive Products Mod: ".(($ep_supported_mods['excl']) ? '<font color="green">TRUE</font>':"FALSE").'<br/>';
  		echo "Stock By Attributes Mod: ".(($ep_4_SBAEnabled != false) ? '<font color="green">TRUE</font>':"FALSE").'<br/>';
     echo "CEON URI Rewriter Mod: " . (($ep4CEONURIDoesExist == true) ? '<font color="green">TRUE</font>' : "FALSE") . '<br/>';
-
+    echo "Dual Pricing Mod: " . (($ep_supported_mods['dual']) ? '<font color="green">TRUE</font>':"FALSE").'<br/>';
 
 		echo "<br/><b><u>User Defined Products Fields: </b></u><br/>";
 		$i = 0;
@@ -522,11 +526,11 @@ if (!$error && isset($_REQUEST["delete"]) && $_REQUEST["delete"]!=basename($_SER
 <?php
 	echo $display_output; // upload results
 	if (strlen($specials_print) > strlen(EASYPOPULATE_4_SPECIALS_HEADING)) {
-		echo '<br/>' . $specials_print . EASYPOPULATE_4_SPECIALS_FOOTER; // specials summary
+		echo '<br />' . $specials_print . EASYPOPULATE_4_SPECIALS_FOOTER; // specials summary
 	}	
 ?>
 </div>
-<br/>
+<br />
 <?php require(DIR_WS_INCLUDES . 'footer.php'); ?>
 </body>
 </html>

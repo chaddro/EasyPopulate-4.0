@@ -183,3 +183,8 @@
 					this program will not need to be updated merely to support a version check.
 					Incorporated admin logging of database inserts and updates similar (and beyond)
 					those contained in ZC 1.5.4.  Deletions were not incorporated.
+4.0.29   04-03-2015		Added support for products_map modification (Manufacturer's Advertised Price)
+					Added MSRP export to areas where previously begun but not fully incorporated.
+					Modified import of customid for SBA-detailed-attributes to treat as a string.
+					Began incorporating language overrides, specifically with German as the first alternate language.
+					Added support for the plugin dual pricing.
