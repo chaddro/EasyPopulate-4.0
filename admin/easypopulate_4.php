@@ -1,5 +1,5 @@
 <?php
-// $Id: easypopulate_4.php, v4.0.29 04-03-2015 mc12345678 $
+// $Id: easypopulate_4.php, v4.0.30 06-27-2015 mc12345678 $
 
 // CSV VARIABLES - need to make this configurable in the ADMIN
 // $csv_delimiter = "\t"; // "\t" = tab AND "," = COMMA
@@ -30,7 +30,7 @@ $ep_uses_mysqli   = (PROJECT_VERSION_MAJOR > '1' || PROJECT_VERSION_MINOR >= '5.
 
 @set_time_limit($ep_execution);  // executin limit in seconds. 300 = 5 minutes before timeout, 0 means no timelimit
 
-if (!$error) { 
+if ((isset($error) && !$error) || !isset($error)) { 
   $upload_max_filesize=ini_get("upload_max_filesize");
   if (preg_match("/([0-9]+)K/i",$upload_max_filesize,$tempregs)) $upload_max_filesize=$tempregs[1]*1024;
   if (preg_match("/([0-9]+)M/i",$upload_max_filesize,$tempregs)) $upload_max_filesize=$tempregs[1]*1024*1024;
@@ -46,8 +46,8 @@ $ep_debug_logging_all = false; // do not comment out.. make false instead
 //$sql_fail_test == true; // used to cause an sql error on new product upload - tests error handling & logs
 /* Test area end */
 
-// Current EP Version - Modded by Chadd
-$curver              = '4.0.29 - Beta 04-03-2015';
+// Current EP Version - Modded by mc12345678 after Chadd had done so much
+$curver              = '4.0.30 - Beta 06-27-2015';
 $display_output      = ''; // results of import displayed after script run
 $ep_dltype           = NULL;
 $ep_stack_sql_error  = false; // function returns true on any 1 error, and notifies user of an error
@@ -228,7 +228,7 @@ if (isset($_FILES['uploadfile'])) {
 }
 
 // Handle file deletion (delete only in the current directory for security reasons)
-if (!$error && isset($_REQUEST["delete"]) && $_REQUEST["delete"]!=basename($_SERVER["SCRIPT_FILENAME"])) { 
+if (((isset($error) && !$error) || !isset($error)) && isset($_REQUEST["delete"]) && $_REQUEST["delete"]!=basename($_SERVER["SCRIPT_FILENAME"])) { 
   if (preg_match("/(\.(sql|gz|csv|txt|log))$/i",$_REQUEST["delete"]) && @unlink($upload_dir.basename($_REQUEST["delete"]))) {
 	// $messageStack->add(sprintf($_REQUEST["delete"]." was deleted successfully"), 'success');
 	zen_redirect(zen_href_link(FILENAME_EASYPOPULATE_4));
@@ -323,7 +323,7 @@ if (!$error && isset($_REQUEST["delete"]) && $_REQUEST["delete"]!=basename($_SER
     echo "CEON URI Rewriter Mod: " . (($ep4CEONURIDoesExist == true) ? '<font color="green">TRUE</font>' : "FALSE") . '<br/>';
     echo "Dual Pricing Mod: " . (($ep_supported_mods['dual']) ? '<font color="green">TRUE</font>':"FALSE").'<br/>';
 
-		echo "<br/><b><u>User Defined Products Fields: </b></u><br/>";
+		echo "<br/><b><u>User Defined Products Fields: </u></b><br/>";
 		$i = 0;
 		foreach ($custom_field_names as $field) {
 			echo $field.': '.(($custom_field_check[$i]) ? '<font color="green">TRUE</font>':"FALSE").'<br/>';
@@ -407,7 +407,7 @@ if (!$error && isset($_REQUEST["delete"]) && $_REQUEST["delete"]!=basename($_SER
 		echo zen_draw_input_field('export', 'Export', ' style="padding: 0px"', false, 'submit');
 		?>				
     <br/><br/>
-    </div>
+    </div></form>
 
     <b>Product &amp; Pricing Export/Import Options:</b><br/>
     <!-- Download file links -->
@@ -442,8 +442,7 @@ if (!$error && isset($_REQUEST["delete"]) && $_REQUEST["delete"]!=basename($_SER
     // List uploaded files in multifile mode
 	// Table header
 	echo '<br/><br/>';
-	echo "<table id=\"epfiles\"    width=\"80%\" border=1 cellspacing=\"2\" cellpadding=\"2\">\n";
-	echo "<tr><th>File Name</th><th>Size</th><th>Date &amp; Time</th><th>Type</th><th>Split</th><th>Import</th><th>Delete</th><th>Download</th>\n";
+//	echo "<table id=\"epfiles\"    width=\"80%\" border=1 cellspacing=\"2\" cellpadding=\"2\">\n";
     // $upload_dir = DIR_FS_CATALOG.$tempdir; // defined above
 	if ($dirhandle = opendir($upload_dir)) {
 		$files = array();
@@ -451,13 +450,81 @@ if (!$error && isset($_REQUEST["delete"]) && $_REQUEST["delete"]!=basename($_SER
 		closedir($dirhandle);
 		$file_count = 0;
 		sort($files);
-		foreach ($files as $dirfile) { 
-			if ( ($dirfile != ".") && ($dirfile != "..") && preg_match("/\.(sql|gz|csv|txt|log)$/i",$dirfile) ) {
-				$file_count++;
-				echo '<tr><td>'.$dirfile.'</td>
-					<td align="right">'.filesize($upload_dir.$dirfile).'</td>
-					<td align="center">'.date ("Y-m-d H:i:s", filemtime($upload_dir.$dirfile)).'</td>';
-				$ext = strtolower(end(explode('.', $dirfile)));
+    /* 
+     * Have a list of files... Now need to work through them to identify what they can do.
+     * After identified what they can do, need to generate the screen view of their option(s).  Ideally, every file will have the same capability, but will be grouped with a title and associated action.  
+     * So need to identify the "#" of groups, and loop through the files for those groups.  Probably a case statement
+     */
+
+    $filenames = 
+      array(
+        "attrib-basic-ep"=>ATTRIB_BASIC_EP,
+        "attrib-detailed-ep"=>ATTRIB_DETAILED_EP_DESC, 
+        "category-ep"=>CATEGORY_EP_DESC, 
+        "categorymeta-ep"=>CATEGORYMETA_EP_DESC, 
+        "featured-ep"=>FEATURED_EP_DESC, 
+        "pricebreaks-ep"=>PRICEBREAKS_EP_DESC, 
+        "priceqty-ep"=>PRICEQTY_EP_DESC, 
+        "sba-detailed-ep"=>SBA_DETAILED_EP_DESC, 
+        "sba-stock-ep"=>SBA_STOCK_EP_DESC
+      );
+      
+    $filetypes = array();
+    
+    for ($i = 0; $i < sizeof($files); $i++) {
+			if ( ($files[$i] != ".") && ($files[$i] != "..") && preg_match("/\.(sql|gz|csv|txt|log)$/i",$files[$i]) ) {
+        $found = false;
+
+        foreach ($filenames as $key=>$val) {
+          if (strtolower(substr($files[$i],0,strlen($key))) == strtolower($key)) { 
+            $filetypes[$key][] = $i;
+            $found = true;
+            break;
+          }
+        }
+
+        if ($found == false) {
+          // Treat as an everything else file.
+          $filetypes['zzzzzzzz'][] = $i;
+        }
+      } // End of if file is one to manage here.
+    } // End For $i of $files
+    ksort($filetypes);
+    
+    $filenames = 
+      array_merge($filenames, array("zzzzzzzz"=>CATCHALL_EP_DESC));
+
+    echo "\n";
+    echo "\n";
+    echo "<table id=\"epfiles\"    width=\"80%\" border=1 cellspacing=\"2\" cellpadding=\"2\">\n";
+    if (EP4_SHOW_ALL_FILETYPES == 'Hidden') {
+      echo "<tr><th>File Name</th><th>Size</th><th>Date &amp; Time</th><th>Type</th><th>Split</th><th>Import</th><th>Delete</th><th>Download</th>\n";
+    }
+    
+    foreach ((EP4_SHOW_ALL_FILETYPES != 'False' ? $filenames : $filetypes ) as $key=>$val) {
+      (EP4_SHOW_ALL_FILETYPES != 'False' ? $val = $filetypes[$key] : '');
+      if (EP4_SHOW_ALL_FILETYPES == 'Hidden') {
+        $val = array();
+        for ($i = 0; $i < sizeof($files); $i++){
+          $val[$i] = $i;
+        }
+      }
+      
+      $file_count = 0;
+      //Display the information needed to start use of a filetype.
+      $plural_state = "<strong>" . (sizeof($val) > 1 ? EP_DESC_PLURAL : EP_DESC_SING) . "</strong>";
+      if (EP4_SHOW_ALL_FILETYPES != 'Hidden') {
+        echo "<tr><td colspan=\"8\">" . sprintf($filenames[$key], "<strong>" . $key . "</strong>", $plural_state) . "</td></tr>"; 
+        echo "<tr><th>File Name</th><th>Size</th><th>Date &amp; Time</th><th>Type</th><th>Split</th><th>Import</th><th>Delete</th><th>Download</th>\n";
+      }
+      
+      for ($i=0; $i < sizeof($val); $i++) {
+			if (EP4_SHOW_ALL_FILETYPES != 'Hidden' || (EP4_SHOW_ALL_FILETYPES == 'Hidden' && ($files[$i] != ".") && ($files[$i] != "..") && preg_match("/\.(sql|gz|csv|txt|log)$/i",$files[$i]) )) {
+        $file_count++;
+				echo '<tr><td>'.$files[$val[$i]].'</td>
+					<td align="right">'.filesize($upload_dir.$files[$val[$i]]).'</td>
+					<td align="center">'.date ("Y-m-d H:i:s", filemtime($upload_dir.$files[$val[$i]])).'</td>';
+				$ext = strtolower(end(explode('.', $files[$val[$i]])));
 				// file type
 				switch ($ext) {
 					case 'sql':
@@ -480,30 +547,49 @@ if (!$error && isset($_REQUEST["delete"]) && $_REQUEST["delete"]!=basename($_SER
 				// file management
 				if ($ext == 'csv') {
 					// $_SERVER["PHP_SELF"] vs $_SERVER['SCRIPT_NAME']
-					echo "<td align=center><a href=\"".$_SERVER['SCRIPT_NAME']."?split=".$dirfile."\">Split</a></td>\n";
-					if (strtolower(substr($dirfile,0,12))== "sba-stock-ep") {
-					echo "<td align=center><a href=\"".$_SERVER['SCRIPT_NAME']."?import=".$dirfile."\">Import</a><br/><a href=\"".$_SERVER['SCRIPT_NAME']."?import=".$dirfile."&sync=1\">Import w/Sync</a></td>\n";
+					echo "<td align=center><a href=\"".$_SERVER['SCRIPT_NAME']."?split=".$files[$val[$i]]."\">Split</a></td>\n";
+					if (strtolower(substr($files[$val[$i]],0,12))== "sba-stock-ep") {
+					echo "<td align=center><a href=\"".$_SERVER['SCRIPT_NAME']."?import=".$files[$val[$i]]."\">Import</a><br/><a href=\"".$_SERVER['SCRIPT_NAME']."?import=".$files[$val[$i]]."&amp;sync=1\">Import w/Sync</a></td>\n";
 					} else {
-					echo "<td align=center><a href=\"".$_SERVER['SCRIPT_NAME']."?import=".$dirfile."\">Import</a></td>\n";
+					echo "<td align=center><a href=\"".$_SERVER['SCRIPT_NAME']."?import=".$files[$val[$i]]."\">Import</a></td>\n";
 					}
-					echo "<td align=center><a href=\"".$_SERVER['SCRIPT_NAME']."?delete=".urlencode($dirfile)."\">Delete file</a></td>";
-					echo "<td align=center><a href=".DIR_WS_CATALOG.$tempdir.$dirfile." target=_blank>Download</a></td></tr>\n";
+					echo "<td align=center><a href=\"".$_SERVER['SCRIPT_NAME']."?delete=".urlencode($files[$val[$i]])."\">Delete file</a></td>";
+					echo "<td align=center><a href=\"".DIR_WS_CATALOG.$tempdir.$files[$val[$i]]."\" target=_blank>Download</a></td></tr>\n";
 				} else {		  
 					echo "<td>&nbsp;</td>\n";
 					echo "<td>&nbsp;</td>\n";
-					echo "<td align=center><a href=\"".$_SERVER['SCRIPT_NAME']."?delete=".urlencode($dirfile)."\">Delete file</a></td>";
-					echo "<td align=center><a href=".DIR_WS_CATALOG.$tempdir.$dirfile." target=_blank>Download</a></td></tr>\n";
+					echo "<td align=center><a href=\"".$_SERVER['SCRIPT_NAME']."?delete=".urlencode($files[$val[$i]])."\">Delete file</a></td>";
+					echo "<td align=center><a href=\"".DIR_WS_CATALOG.$tempdir.$files[$val[$i]]."\" target=_blank>Download</a></td></tr>\n";
 				}
-			} // if (file types)
-		} // foreach
-		if ( $file_count == 0 ) {
-			echo "<tr><td COLSPAN=8><font color='red'><b>No Supported Data Files</b></font></td></tr>\n";
-		} // if (sizeof($files)>0)
+      } 
+      } // End loop within a filetype
+      if ( $file_count == 0 && EP4_SHOW_ALL_FILETYPES != 'Hidden') {
+        echo "<tr><td COLSPAN=8><font color='red'><b>No Supported Data Files </b></font></td></tr>\n";
+      } // if (sizeof($files)>0)
+      if (EP4_SHOW_ALL_FILETYPES == 'Hidden') {
+        break;
+      }
+    } // End foreach filetype 
+    if (EP4_SHOW_ALL_FILETYPES != 'Hidden') {
+      echo "</table>\n";
+      if (sizeof($filetypes) == 0) {
+        echo "<table id=\"epfiles\"    width=\"80%\" border=1 cellspacing=\"2\" cellpadding=\"2\">\n";
+        echo "<tr><td COLSPAN=8><font color='red'><b>No Supported Data Files</b></font></td></tr>\n";
+        echo "</table>\n";
+      }
+    }
 	} else { // can't open directory
 		echo "<tr><td COLSPAN=8><font color='red'><b>Error Opening Upload Directory:</b></font> ".$tempdir."</td></tr>\n";
 		$error=true;
 	} // opendir()
-	echo "</table>\n";
+  if (EP4_SHOW_ALL_FILETYPES == 'Hidden') {
+    echo "</table>\n";
+    if (sizeof($filetypes) == 0) {
+      echo "<table id=\"epfiles\"    width=\"80%\" border=1 cellspacing=\"2\" cellpadding=\"2\">\n";
+      echo "<tr><td COLSPAN=8><font color='red'><b>No Supported Data Files</b></font></td></tr>\n";
+      echo "</table>\n";
+    }
+  }
 	
 	
 
