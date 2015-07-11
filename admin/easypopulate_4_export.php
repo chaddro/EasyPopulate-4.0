@@ -372,7 +372,7 @@ while ($row = ($ep_uses_mysqli ?  mysqli_fetch_array($result) : mysql_fetch_arra
 			// trim off trailing category delimiter '^'
 			foreach ($langcode as $key => $lang) {
 				$lid = $lang['id'];
-				$row['v_categories_name_'.$lid] = rtrim($row['v_categories_name_'.$lid], "^");		
+				$row['v_categories_name_'.$lid] = rtrim($row['v_categories_name_'.$lid], $category_delimiter);		
 			} // foreach
 		} // if() delimited categories path
 		
@@ -750,4 +750,3 @@ if (function_exists('memory_get_usage')) {
 $time_end = microtime(true);
 $time = $time_end - $time_start;	
 $display_output .= '<br>Execution Time: '.$time.' seconds.';
-?>
