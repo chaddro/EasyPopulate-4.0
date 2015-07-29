@@ -40,6 +40,12 @@ define('EASYPOPULATE_4_MSGSTACK_DROSS_DELETE_FAIL', '<b>Deleting of product data
 define('EASYPOPULATE_4_MSGSTACK_DROSS_DELETE_SUCCESS', 'Deleting of product data debris succeeded!');
 define('EASYPOPULATE_4_MSGSTACK_DROSS_DETECTED', '<b>%s partially deleted product(s) found!</b> Delete this dross to prevent unwanted zencart behaviour by clicking <a href="%s">here.</a><br />You are seeing this because there are references in tables to a product that no longer exists, which is usually caused by an incomplete product deletion. This can cause Zen Cart to misbehave in certain circumstances.');
 define('EASYPOPULATE_4_MSGSTACK_DATE_FORMAT_FAIL', '%s is not a valid date format. If you upload any date other than raw format (such as from Excel) you will mangle your dates. Please fix this by correcting your date format in the Easy Populate config.');
+define('EASYPOPULATE_4_ORDERS_DROPDOWN_FIRST', 'Order Type');
+define('EASYPOPULATE_4_ORDERS_FULL', 'Orders Full');
+define('EASYPOPULATE_4_ORDERS_NEWFULL', 'Orders New Full');
+define('EASYPOPULATE_4_ORDERS_NO_ATTRIBS', 'Orders No Attributes');
+define('EASYPOPULATE_4_ORDERS_ATTRIBS', 'Orders Attributes Only');
+define('EASYPOPULATE_4_ORDERS_DROPDOWN_TITLE', '<b>Filterable Orders Exports:</b><br/>');
 
 // install - msg stack alerts - output via $messageStack
 define('EASYPOPULATE_4_MSGSTACK_INSTALL_DELETE_SUCCESS','Redundant file <b>%s</b> was deleted from <b>YOUR_ADMIN%s</b> directory.');
@@ -72,6 +78,7 @@ define('ATTRIB_BASIC_EP','Prefix: %1$s. %2$s will be processed through the Basic
 define('ATTRIB_DETAILED_EP_DESC','Prefix: %1$s. %2$s will be processed through the Detailed Attributes filters.');
 define('SBA_DETAILED_EP_DESC','Prefix: %1$s. %2$s will be processed through the Detailed Stock by Attributes filters.');
 define('SBA_STOCK_EP_DESC','Prefix: %1$s. %2$s will be processed through the Stock by Attributes Stock Modification filters.');
+define('ORDERS_EP_DESC', 'Prefix: %1$s. %2$s will not be processed for import.');
 define('CATCHALL_EP_DESC', 'This contains any other file. %2$s will be processed like the upload of a full data file.');
 
 // error log defines - for ep_debug_log.txt

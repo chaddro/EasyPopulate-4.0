@@ -203,7 +203,7 @@ if (ep_4_CEONURIExists() == true) {
 		$languages = zen_get_languages();
 	}
 }
-if ( isset($_POST['export']) OR isset($_GET['export'])  ) {
+if ( isset($_POST['export']) OR isset($_GET['export']) || isset($_POST['exportorder']) ) {
 	include_once('easypopulate_4_export.php'); // this file contains all data export code
 }
 if ( isset($_GET['import']) ) {
@@ -408,7 +408,28 @@ if (((isset($error) && !$error) || !isset($error)) && isset($_REQUEST["delete"])
 		?>				
     <br/><br/>
     </div></form>
-
+  <?php
+	echo zen_draw_form('custom2', 'easypopulate_4.php', 'id="custom2"', 'post'); 
+	?>
+	
+    <div align = "left">
+		<?php	
+		$order_export_type_array  = array(array( "id" => '0', 'text' => EASYPOPULATE_4_ORDERS_DROPDOWN_FIRST ),
+			array( "id" => '1', 'text' => EASYPOPULATE_4_ORDERS_FULL ),
+			array( "id" => '2', 'text' => EASYPOPULATE_4_ORDERS_NEWFULL ),
+			array( "id" => '3', 'text' => EASYPOPULATE_4_ORDERS_NO_ATTRIBS ),
+      array( "id" => '4', 'text' => EASYPOPULATE_4_ORDERS_ATTRIBS ));
+		$order_status_export_array = array ();
+		echo EASYPOPULATE_4_ORDERS_DROPDOWN_TITLE;
+		
+		echo zen_draw_pull_down_menu('ep_order_export_type', $order_export_type_array) . ' ';
+    echo zen_cfg_pull_down_order_statuses(NULL, 'order_status');
+		echo zen_draw_input_field('exportorder', 'Export', ' style="padding: 0px"', false, 'submit');
+		?>				
+    <br/><br/>
+    </div></form>
+    
+    
     <b>Product &amp; Pricing Export/Import Options:</b><br/>
     <!-- Download file links -->
     <a href="easypopulate_4.php?export=full"><b>Complete Products</b> (with Metatags)</a><br/>
@@ -466,7 +487,11 @@ if (((isset($error) && !$error) || !isset($error)) && isset($_REQUEST["delete"])
         "pricebreaks-ep"=>PRICEBREAKS_EP_DESC, 
         "priceqty-ep"=>PRICEQTY_EP_DESC, 
         "sba-detailed-ep"=>SBA_DETAILED_EP_DESC, 
-        "sba-stock-ep"=>SBA_STOCK_EP_DESC
+        "sba-stock-ep"=>SBA_STOCK_EP_DESC,
+        "orders-full-ep"=>ORDERSEXPORT_LINK_SAVE1,
+        "orders-fullb-ep"=>ORDERSEXPORT_LINK_SAVE1B,
+        "orders-noattribs-ep"=>ORDERSEXPORT_LINK_SAVE2,
+        "orders-onlyAttribs-ep"=>ORDERSEXPORT_LINK_SAVE3
       );
       
     $filetypes = array();

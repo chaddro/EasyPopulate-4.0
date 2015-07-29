@@ -198,7 +198,12 @@ function ep_4_CEONURIExists () {
 						
 				}
 			}
+      
+      if (file_exists(DIR_FS_CATALOG . DIR_WS_CLASSES . 'class.CeonURIMappingAdmin.php') ) {
 			return true;
+      } else {
+        return false;
+      }
 		} else {
 			return false;
 		}
@@ -927,7 +932,73 @@ $filelayout_sql .= '
 			otv.products_options_id        = o.products_options_id AND
 			otv.products_options_values_id = v.products_options_values_id'; 
 		break;
+
+  case 'orders_3': // No attributes
+  case 'orders_1': // Export All
+  case 'orders_2': // New Export all
+  case 'orders_4': // Attributes Only
+    // Filelayout is the same for orders_1 and orders_2
+    $filelayout[] =	'v_date_purchased'; 
+    $filelayout[] =	'v_orders_status_name';
+    $filelayout[] =	'v_orders_id' ; 
+    $filelayout[] =	'v_customers_id'; 
+    $filelayout[] =	'v_customers_name'; 
+    $filelayout[] =	'v_customers_company'; 
+    $filelayout[] =	'v_customers_street_address'; 
+    $filelayout[] =	'v_customers_suburb'; 
+    $filelayout[] =	'v_customers_city'; 
+    $filelayout[] =	'v_customers_postcode'; 
+    //'v_customers_state'; 
+    $filelayout[] =	'v_customers_country'; 
+    $filelayout[] =	'v_customers_telephone'; 
+    $filelayout[] =	'v_customers_email_address'; 
+    $filelayout[] =	'v_products_model'; 
+    $filelayout[] =	'v_products_name'; 
+    if ($ep_dltype != 'orders_3') {
+    $filelayout[] =	'v_products_options'; 
+    $filelayout[] =	'v_products_options_values';
+    }
+    $filelayout[] = 'v_products_comments';
+
+    // 'all types of query'
+    $filelayout_sql = "SELECT DISTINCT 
+      zo.orders_id as v_orders_id,
+      zop.products_id as v_products_id,
+      customers_id as v_customers_id,
+      customers_name as v_customers_name,
+      customers_company as v_customers_company,
+      customers_street_address as v_customers_street_address,
+      customers_suburb as v_customers_suburb,
+      customers_city as v_customers_city,
+      customers_postcode as v_customers_postcode,
+      customers_country as v_customers_country,
+      customers_telephone as v_customers_telephone,
+      customers_email_address as v_customers_email_address,
+      date_purchased as v_date_purchased,
+      orders_status_name as v_orders_status_name,
+      products_model as v_products_model,
+      products_name as v_products_name,
+      " . ( $ep_dltype != 'orders_3' ?
+	  "products_options as v_products_options,
+      products_options_values as v_products_options_values,
+	  " : "") . 
+	  "zo.order_total as v_total_cost,
+      osh.comments as V_orders_comments 
+      FROM " . TABLE_ORDERS . " zo, " . ($ep_dltype != 'orders_3' ? TABLE_ORDERS_PRODUCTS_ATTRIBUTES . " opa, " : "") . 
+	  TABLE_ORDERS_PRODUCTS . " zop, " . TABLE_ORDERS_STATUS." zos, " .
+	  TABLE_ORDERS_STATUS_HISTORY . " osh 
+      WHERE zo.orders_id = zop.orders_id AND
+	  osh.orders_id = zo.orders_id 
+      " . (($ep_dltype == 'orders_2' || $ep_dltype == 'orders_4') ? " AND zos.orders_status_id != :orders_status_id: " : "") . 
+	  ($ep_dltype != 'orders_3' ? " AND zop.orders_products_id = opa.orders_products_id" : "") . "
+      AND zo.orders_status = zos.orders_status_id 
+		";
+    $filelayout_sql = $db->bindVars($filelayout_sql, ':orders_status_id:', $_POST['configuration[order_status]'], 'integer');
+
+//    echo $filelayout[] = $filelayout_sql;
+    break;
 	}
+  
 return $filelayout;;
 }
 
@@ -1075,6 +1146,25 @@ function ep_4_remove_product($product_model) {
 	}
 	return;
 }
+
+function ep_4_rmv_chars($filelayout, $active_row, $csv_delimiter = "^") {
+//  $datarow = ep_4_rmv_chars($filelayout, $active_row, $csv_delimiter);
+  $dataRow = '';
+
+  $problem_chars = array("\r", "\n", "\t"); // carriage return, newline, tab
+  foreach ($filelayout as $key => $value) {
+//		$thetext = $active_row[$key];
+    // remove carriage returns, newlines, and tabs - needs review
+    $thetext = str_replace($problem_chars, ' ', $active_row[$key]);
+    // encapsulate data in quotes, and escape embedded quotes in data
+    $dataRow .= '"' . str_replace('"', '""', $thetext) . '"' . $csv_delimiter;
+  }
+  // Remove trailing tab, then append the end-of-line
+  $dataRow = rtrim($dataRow, $csv_delimiter) . "\n";
+
+  return $dataRow;
+}
+
 
 // DEPRECATED: no calls to this function!
 // reset products master categories ID - I do not believe this works correctly - chadd

@@ -1,8 +1,8 @@
 <?php
-// $Id: easypopulate_4_export.php, v4.0.27 11-02-2014 mc12345678 $
+// $Id: easypopulate_4_export.php, v4.0.31 07-19-2015 mc12345678 $
 
 // get download type
-$ep_dltype = (isset($_POST['export'])) ? $_POST['export'] : $ep_dltype;
+$ep_dltype = (isset($_POST['export'])) ? $_POST['export'] : (isset($_POST['exportorder']) ? $_POST['exportorder'] : $ep_dltype);
 $display_output = '';
 
 //if (isset($_POST['filter'])) {
@@ -32,6 +32,19 @@ if ( isset($_POST['ep_export_type']) ) {
 		$ep_dltype = 'priceqty'; // Model/Price/Qty
 	} elseif ($_POST['ep_export_type']=='2') {
 		$ep_dltype = 'pricebreaks'; // Model/Price/Breaks
+	}
+}
+
+// override for $ep_dltype
+if ( isset($_POST['ep_order_export_type']) ) {
+	if ($_POST['ep_order_export_type']=='1') { 
+		$ep_dltype = 'orders_1'; // Full Orders Export
+	} elseif ($_POST['ep_order_export_type']=='2') {
+		$ep_dltype = 'orders_2'; // New Full Orders Export
+	} elseif ($_POST['ep_order_export_type']=='3') {
+		$ep_dltype = 'orders_3'; // No Attributes
+	} elseif ($_POST['ep_order_export_type']=='4') {
+		$ep_dltype = 'orders_4'; // Attributes Only
 	}
 }
 
@@ -121,6 +134,18 @@ switch ($ep_dltype) { // chadd - changed to use $EXPORT_FILE
 	case 'optionvalues':
 	$EXPORT_FILE = 'OptVals-EP';
 	break;
+  case 'orders_1':
+    $EXPORT_FILE = 'orders_1-EP';
+    break;
+  case 'orders_2':
+    $EXPORT_FILE = 'orders_2-EP';
+    break;
+  case 'orders_3':
+    $EXPORT_FILE = 'orders_3-EP';
+    break;
+  case 'orders_4':
+    $EXPORT_FILE = 'orders_4-EP';
+    break;
 }
 $EXPORT_FILE .= strftime('%Y%b%d-%H%M%S'); // chadd - changed for hour.minute.second
 
@@ -173,9 +198,9 @@ while ($row = ($ep_uses_mysqli ?  mysqli_fetch_array($result) : mysql_fetch_arra
 			$dataRow = '';
 			$problem_chars = array("\r", "\n", "\t"); // carriage return, newline, tab
 			foreach($filelayout as $key => $value) {
-				$thetext = $active_row[$key];
+//					$thetext = $active_row[$key];
 				// remove carriage returns, newlines, and tabs - needs review
-				$thetext = str_replace($problem_chars,' ',$thetext);
+					$thetext = str_replace($problem_chars, ' ', $active_row[$key]);
 				// encapsulate data in quotes, and escape embedded quotes in data
 				$dataRow .= '"'.str_replace('"','""',$thetext).'"'.$csv_delimiter;
 			}
@@ -198,9 +223,9 @@ while ($row = ($ep_uses_mysqli ?  mysqli_fetch_array($result) : mysql_fetch_arra
 			$dataRow = '';
 			$problem_chars = array("\r", "\n", "\t"); // carriage return, newline, tab
 			foreach($filelayout as $key => $value) {
-				$thetext = $active_row[$key];
+//					$thetext = $active_row[$key];
 				// remove carriage returns, newlines, and tabs - needs review
-				$thetext = str_replace($problem_chars,' ',$thetext);
+					$thetext = str_replace($problem_chars, ' ', $active_row[$key]);
 				// encapsulate data in quotes, and escape embedded quotes in data
 				$dataRow .= '"'.str_replace('"','""',$thetext).'"'.$csv_delimiter;
 			}
@@ -224,9 +249,32 @@ while ($row = ($ep_uses_mysqli ?  mysqli_fetch_array($result) : mysql_fetch_arra
 		$active_row['v_products_options_values_name_'.$l_id] = $row['v_products_options_values_name'];
 	} // end of special case 'attrib_basic'
 	
-} else { // standard export processing
+  } else { // standard export processing
 
-		if ($ep_dltype == 'attrib_detailed') {
+		if ($ep_dltype == 'orders_1' || $ep_dltype == 'orders_2' || $ep_dltype == 'orders_3' || $ep_dltype == 'orders_4') {
+      if ((!isset($tracker['v_orders_id']) && !zen_not_null($tracker['v_orders_id'])) || $row['v_orders_id'] != $tracker['v_orders_id']) {
+        $tracker['v_orders_id'] = $row['v_orders_id'];
+      } else {
+        $row['v_orders_id'] = NULL; // Clear all things at the beginning so that do not have the extra data to write.
+		$row['v_customers_id'] = NULL;
+		$row['v_customers_name'] = NULL;
+		$row['v_date_purchased'] = NULL;
+		$row['v_orders_status_name'] = NULL;
+		$row['v_customers_company'] = NULL;
+		$row['v_customers_street_address'] = NULL;
+		$row['v_customers_suburb'] = NULL;
+		$row['v_customers_city'] = NULL;
+		$row['v_customers_postcode'] = NULL;
+		$row['v_customers_country'] = NULL;
+		$row['v_customers_telephone'] = NULL;
+		$row['v_customers_email_address'] = NULL;
+      } 
+	    if (isset($row['v_orders_id']) || !isset($tracker['v_products_id']) || (isset($tracker['v_products_id']) && $tracker['v_products_id'] != $row['v_products_id'])) {
+        $tracker['v_products_id'] = $row['v_products_id'];
+      } else {
+        $row['v_products_id'] = NULL;
+      }
+    } elseif ($ep_dltype == 'attrib_detailed') {
 			if (isset($filelayout['v_products_attributes_filename'])) { 
 				$sql2 = 'SELECT * FROM '.TABLE_PRODUCTS_ATTRIBUTES_DOWNLOAD.' WHERE products_attributes_id = '.$row['v_products_attributes_id'].' LIMIT 1';
 				$result2 = ep_4_query($sql2);
@@ -241,8 +289,7 @@ while ($row = ($ep_uses_mysqli ?  mysqli_fetch_array($result) : mysql_fetch_arra
 					$row['v_products_attributes_maxcount'] = '';
 				}
 			}				
-		} 
-		elseif ($ep_dltype == 'SBA_detailed') {
+		} elseif ($ep_dltype == 'SBA_detailed') {
 				if (isset($filelayout['v_products_attributes_filename'])) /* Believe this should be an SBA filename; however, need to look at the filename assignment function to see how this works.  */{ 
 					$sql2 = 'SELECT * FROM '.TABLE_PRODUCTS_ATTRIBUTES_DOWNLOAD.' WHERE products_attributes_id = '.$row['v_products_attributes_id'].' LIMIT 1';
 					$result2 = ep_4_query($sql2);
@@ -268,7 +315,9 @@ while ($row = ($ep_uses_mysqli ?  mysqli_fetch_array($result) : mysql_fetch_arra
 			foreach ($langcode as $key => $lang) {
 				$lid = $lang['id'];
 				// metaData start
-				$sqlMeta = 'SELECT * FROM '.TABLE_META_TAGS_PRODUCTS_DESCRIPTION.' WHERE products_id = '.$row['v_products_id'].' AND language_id = '.$lid.' LIMIT 1 ';
+      $sqlMeta = 'SELECT * FROM ' . TABLE_META_TAGS_PRODUCTS_DESCRIPTION . ' WHERE products_id = :products_id: AND language_id = :language_id: LIMIT 1 ';
+      $sqlMeta = $db->bindVars($sqlMeta, ':products_id:', $row['v_products_id'], 'integer');
+      $sqlMeta = $db->bindVars($sqlMeta, ':language_id:', $lid, 'integer');
 				$resultMeta = ep_4_query($sqlMeta);
 				$rowMeta = ($ep_uses_mysqli ? mysqli_fetch_array($resultMeta) : mysql_fetch_array($resultMeta));
 				$row['v_metatags_title_'.$lid]       = $rowMeta['metatags_title'];
@@ -487,9 +536,9 @@ while ($row = ($ep_uses_mysqli ?  mysqli_fetch_array($result) : mysql_fetch_arra
 					if (strpos($key, "v_products_description") !== false ){
 						$row[$key] = strip_tags($row[$key]);
 					}
-					$thetext = $row[$key];
+		//			$thetext = $row[$key];
 					// remove carriage returns, newlines, and tabs - needs review
-					$thetext = str_replace($problem_chars,' ',$thetext);
+					$thetext = str_replace($problem_chars,' ',$row[$key]);
 					// $thetext = str_replace("\r",' ',$thetext);
 					// $thetext = str_replace("\n",' ',$thetext);
 					// $thetext = str_replace("\t",' ',$thetext);
@@ -563,9 +612,9 @@ while ($row = ($ep_uses_mysqli ?  mysqli_fetch_array($result) : mysql_fetch_arra
 							if (strpos($key, "v_products_description") !== false ){
 								$row[$key] = strip_tags($row[$key]);
 							}
-							$thetext = $row[$key];
+//							$thetext = $row[$key];
 							// remove carriage returns, newlines, and tabs - needs review
-							$thetext = str_replace($problem_chars,' ',$thetext);
+							$thetext = str_replace($problem_chars,' ',$row[$key]);
 							// $thetext = str_replace("\r",' ',$thetext);
 							// $thetext = str_replace("\n",' ',$thetext);
 							// $thetext = str_replace("\t",' ',$thetext);
@@ -692,9 +741,9 @@ while ($row = ($ep_uses_mysqli ?  mysqli_fetch_array($result) : mysql_fetch_arra
 		$dataRow ='';
 		$problem_chars = array("\r", "\n", "\t"); // carriage return, newline, tab
 		foreach($filelayout as $key => $value) {
-			$thetext = $row[$key];
+//		$thetext = $row[$key];
 			// remove carriage returns, newlines, and tabs - needs review
-			$thetext = str_replace($problem_chars,' ',$thetext);
+		$thetext = str_replace($problem_chars, ' ', $row[$key]);
 			// $thetext = str_replace("\r",' ',$thetext);
 			// $thetext = str_replace("\n",' ',$thetext);
 			// $thetext = str_replace("\t",' ',$thetext);
@@ -723,9 +772,9 @@ if ($ep_dltype == 'attrib_basic') { // must write last record
 	$dataRow = '';
 	$problem_chars = array("\r", "\n", "\t"); // carriage return, newline, tab
 	foreach($filelayout as $key => $value) {
-		$thetext = $active_row[$key];
+//		$thetext = $active_row[$key];
 		// remove carriage returns, newlines, and tabs - needs review
-		$thetext = str_replace($problem_chars,' ',$thetext);
+		$thetext = str_replace($problem_chars, ' ', $active_row[$key]);
 		// encapsulate data in quotes, and escape embedded quotes in data
 		$dataRow .= '"'.str_replace('"','""',$thetext).'"'.$csv_delimiter;
 	}
