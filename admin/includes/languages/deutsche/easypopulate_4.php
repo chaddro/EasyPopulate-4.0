@@ -61,28 +61,28 @@ define('EASYPOPULATE_4_SPECIALS_DELETE', '<font color="fuchsia"><b>DELETED! - Mo
 define('EASYPOPULATE_4_SPECIALS_DELETE_FAIL', '<font color="darkviolet"><b>NOT FOUND! - Model:</b> %s - cannot delete special...</font><br />');
 define('EASYPOPULATE_4_SPECIALS_FOOTER', '</p>'); // close paragraph
 
-define('EP_DESC_PLURAL', 'They');
-define('EP_DESC_SING', 'It');
-define('FEATURED_EP_DESC','Prefix: %1$s. %2$s will be processed through the featured filters.');
-define('PRICEQTY_EP_DESC','Prefix: %1$s. %2$s will be processed through the Price Quantity filters.');
-define('PRICEBREAKS_EP_DESC','Prefix: %1$s. %2$s will be processed through the Price Breaks filters.');
-define('CATEGORY_EP_DESC','Prefix: %1$s. %2$s will be processed through the Category filters.');
-define('CATEGORYMETA_EP_DESC','Prefix: %1$s. %2$s will be processed through the Category Meta filters.');
-define('ATTRIB_BASIC_EP','Prefix: %1$s. %2$s will be processed through the Basic Attribute filters.');
-define('ATTRIB_DETAILED_EP_DESC','Prefix: %1$s. %2$s will be processed through the Detailed Attributes filters.');
-define('SBA_DETAILED_EP_DESC','Prefix: %1$s. %2$s will be processed through the Detailed Stock by Attributes filters.');
-define('SBA_STOCK_EP_DESC','Prefix: %1$s. %2$s will be processed through the Stock by Attributes Stock Modification filters.');
-define('CATCHALL_EP_DESC', 'This contains any other file. %2$s will be processed like the upload of a full data file.');
+define('EP_DESC_PLURAL', 'Sie werden');
+define('EP_DESC_SING', 'Es wird');
+define('FEATURED_EP_DESC','Prefix: %1$s. %2$s durch die featured Filter ausgefuehrt werden.');
+define('PRICEQTY_EP_DESC','Prefix: %1$s. %2$s durch die Price Quantity Filter ausgefuehrt werden.');
+define('PRICEBREAKS_EP_DESC','Prefix: %1$s. %2$s durch die Price Breaks Filter ausgefuehrt werden.');
+define('CATEGORY_EP_DESC','Prefix: %1$s. %2$s durch die Category Filter ausgefuehrt werden.');
+define('CATEGORYMETA_EP_DESC','Prefix: %1$s. %2$s durch die Category Meta Filter ausgefuehrt werden.');
+define('ATTRIB_BASIC_EP','Prefix: %1$s. %2$s durch die Basic Attribute Filter ausgefuehrt werden.');
+define('ATTRIB_DETAILED_EP_DESC','Prefix: %1$s. %2$s durch die Detailed Attributes Filter ausgefuehrt werden.');
+define('SBA_DETAILED_EP_DESC','Prefix: %1$s. %2$s durch die Detailed Stock by Attributes Filter ausgefuehrt werden.');
+define('SBA_STOCK_EP_DESC','Prefix: %1$s. %2$s durch die Stock by Attributes Stock Modification Filter ausgefuehrt werden.');
+define('CATCHALL_EP_DESC', 'Alle anderen. %2$s durch die upload of a full data file Filter ausgefuehrt werden.');
 
 // error log defines - for ep_debug_log.txt
 define('EASYPOPULATE_4_ERRORLOG_SQL_ERROR', 'MySQL error %s: %s\nWhen executing:\n%sn');
 
-define('EASYPOPULATE_4_REMOVE_SETTINGS', 'Un-Install EP4');
-define('EASYPOPULATE_4_CONFIG_SETTINGS', 'Configuration Settings');
-define('EASYPOPULATE_4_CONFIG_UPLOAD', 'Upload Directory: ');
-define('EASYPOPULATE_4_DISPLAY_SPLIT_SHORT', 'Split Records: ');
-define('EASYPOPULATE_4_DISPLAY_EXEC_TIME', 'Execution Time: ');
-define('EASYPOPULATE_4_DISPLAY_ENABLE_META', 'Enable Products Metatags: ');
-define('EASYPOPULATE_4_DISPLAY_ENABLE_MUSIC', 'Enable Products Music: ');
+define('EASYPOPULATE_4_REMOVE_SETTINGS', 'Easy Populate 4 deinstallieren' );
+define('EASYPOPULATE_4_CONFIG_SETTINGS', 'Konfigurationseinstellungen');
+define('EASYPOPULATE_4_CONFIG_UPLOAD', 'Upload Verzeichnis: ');
+define('EASYPOPULATE_4_DISPLAY_SPLIT_SHORT', 'Einträge aufteilen: ');
+define('EASYPOPULATE_4_DISPLAY_EXEC_TIME', 'Ausführungszeit: ');
+define('EASYPOPULATE_4_DISPLAY_ENABLE_META', 'Metatags der Artikel aktivieren:  ');
+define('EASYPOPULATE_4_DISPLAY_ENABLE_MUSIC', 'Artikeltyp Musik aktivieren: ');
 
 ?>

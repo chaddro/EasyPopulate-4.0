@@ -183,3 +183,23 @@
 					this program will not need to be updated merely to support a version check.
 					Incorporated admin logging of database inserts and updates similar (and beyond)
 					those contained in ZC 1.5.4.  Deletions were not incorporated.
+4.0.29   04-03-2015		Added support for products_map modification (Manufacturer's Advertised Price)
+					Added MSRP export to areas where previously begun but not fully incorporated.
+					Modified import of customid for SBA-detailed-attributes to treat as a string.
+					Began incorporating language overrides, specifically with German as the first alternate language.
+					Added support for the plugin dual pricing.
+4.0.30   06-27-2015		Added a new way of displaying files on the EP4 screen to show
+					more information such as the prefix to the file types that are
+					processed.  This is to reduce the questions related to not
+					reading the instructions and understanding that certain files
+					are processed only by their name prefix.  Everything else is 
+					processed as if it was a full update file.  Also addressed a
+					warning received in PHP 5.4+ related to testing a variable not
+					initialized.  Previously 'if (!$error)' was sufficient, which
+					it is if $error has been assigned; however, if not assigned,
+					this results in a warning message in the logs folder.  So,
+					instead to maintain consistent usage/functionality will check
+					if it is set and if it is set to verify that it is not an
+					error, and if it never was set then that would need to be 
+					known as well.  end result: if (!$error) { has been changed to
+					if ((isset($error) && !$error) || !isset($error)) {.

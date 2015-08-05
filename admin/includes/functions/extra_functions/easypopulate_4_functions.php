@@ -1,5 +1,5 @@
 <?php
-// $Id: easypopulate_4_functions.php, v4.0.28 01-03-2015 mc12345678 $
+// $Id: easypopulate_4_functions.php, v4.0.30 06-27-2015 mc12345678 $
 
 function ep_4_curly_quotes($curly_text) {
 	$ep_curly_quotes = (int)EASYPOPULATE_4_CONFIG_CURLY_QUOTES;
@@ -300,7 +300,11 @@ function ep_4_set_filelayout($ep_dltype, &$filelayout_sql, $sql_filter, $langcod
 		if ($ep_supported_mods['msrp'] == true) { // Requested Mod Support - Manufacturer's Suggest Retail Price
 			$filelayout[] = 'v_products_msrp'; 
 		}
-		if ($ep_supported_mods['gppi'] == true) { // Requested Mod Support - Group Pricing Per Item
+		if ($ep_supported_mods['map'] == true) { // Requested Mod Support - Manufacturer's Advertised Price
+      $filelayout[] = 'v_map_enabled';
+      $filelayout[] = 'v_map_price';
+    }
+    if ($ep_supported_mods['gppi'] == true) { // Requested Mod Support - Group Pricing Per Item
 			$filelayout[] = 'v_products_group_a_price';
 			$filelayout[] = 'v_products_group_b_price';
 			$filelayout[] = 'v_products_group_c_price';
@@ -383,6 +387,10 @@ function ep_4_set_filelayout($ep_dltype, &$filelayout_sql, $sql_filter, $langcod
 		if ($ep_supported_mods['msrp'] == true) { // Requested Mod Support - Manufacturer's Suggest Retail Price
 			$filelayout_sql .=  'p.products_msrp as v_products_msrp,'; 
 		}	
+		if ($ep_supported_mods['map'] == true) { // Requested Mod Support - Manufacturer's Advertised Price
+      $filelayout_sql .= 'p.map_enabled as v_map_enabled,';
+      $filelayout_sql .= 'p.map_price as v_map_price,';
+    }
 		if ($ep_supported_mods['gppi'] == true) { // Requested Mod Support - Group Pricing Per Item
 			$filelayout_sql .=  'p.products_group_a_price as v_products_group_a_price,';
 			$filelayout_sql .=  'p.products_group_b_price as v_products_group_b_price,';
@@ -464,6 +472,10 @@ function ep_4_set_filelayout($ep_dltype, &$filelayout_sql, $sql_filter, $langcod
 		if ($ep_supported_mods['msrp'] == true) { // Manufacturer's Suggested Retail Price
 			$filelayout[] = 'v_products_msrp'; 
 		}
+		if ($ep_supported_mods['map'] == true) { // Requested Mod Support - Manufacturer's Advertised Price
+      $filelayout[] = 'v_map_enabled';
+      $filelayout[] = 'v_map_price';
+    }
 		$filelayout[] = 'v_products_quantity';
 		$filelayout_sql = 'SELECT
 			p.products_id     as v_products_id,
@@ -475,6 +487,13 @@ function ep_4_set_filelayout($ep_dltype, &$filelayout_sql, $sql_filter, $langcod
 		if ($ep_supported_mods['uom'] == true) { // price UOM mod
 			$filelayout_sql .= 'p.products_price_uom as v_products_price_uom,';
 		}
+		if ($ep_supported_mods['msrp'] == true) { // Requested Mod Support - Manufacturer's Suggest Retail Price
+			$filelayout_sql .=  'p.products_msrp as v_products_msrp,'; 
+		}	
+		if ($ep_supported_mods['map'] == true) { // Requested Mod Support - Manufacturer's Advertised Price
+      $filelayout_sql .= 'p.map_enabled as v_map_enabled,';
+      $filelayout_sql .= 'p.map_price as v_map_price,';
+    }
 		$filelayout_sql .= 'p.products_tax_class_id as v_tax_class_id,
 			p.products_quantity as v_products_quantity
 			FROM '		
@@ -497,6 +516,10 @@ function ep_4_set_filelayout($ep_dltype, &$filelayout_sql, $sql_filter, $langcod
 		if ($ep_supported_mods['msrp'] == true) { // Manufacturer's Suggested Retail Price
 			$filelayout[] = 'v_products_msrp'; 
 		}
+		if ($ep_supported_mods['map'] == true) { // Requested Mod Support - Manufacturer's Advertised Price
+      $filelayout[] = 'v_map_enabled';
+      $filelayout[] = 'v_map_price';
+    }
 		$filelayout[] =	'v_products_discount_type';
 		$filelayout[] =	'v_products_discount_type_from';
 		// discount quantities base on $max_qty_discounts	
@@ -516,6 +539,13 @@ function ep_4_set_filelayout($ep_dltype, &$filelayout_sql, $sql_filter, $langcod
 		if ($ep_supported_mods['uom'] == true) { // price UOM mod
 			$filelayout_sql .= 'p.products_price_uom as v_products_price_uom,';
 		}
+		if ($ep_supported_mods['msrp'] == true) { // Requested Mod Support - Manufacturer's Suggest Retail Price
+			$filelayout_sql .=  'p.products_msrp as v_products_msrp,'; 
+		}	
+		if ($ep_supported_mods['map'] == true) { // Requested Mod Support - Manufacturer's Advertised Price
+      $filelayout_sql .= 'p.map_enabled as v_map_enabled,';
+      $filelayout_sql .= 'p.map_price as v_map_price,';
+    }
 		$filelayout_sql .= 'p.products_discount_type as v_products_discount_type,
 			p.products_discount_type_from as v_products_discount_type_from
 			FROM '
@@ -585,6 +615,9 @@ function ep_4_set_filelayout($ep_dltype, &$filelayout_sql, $sql_filter, $langcod
 		$filelayout[] =	'v_options_values_id';
 		$filelayout[] =	'v_products_options_values_name'; // options values name from table PRODUCTS_OPTIONS_VALUES
 		$filelayout[] =	'v_options_values_price';
+    if ($ep_supported_mods['dual']) {
+      $filelayout[] = 'v_options_values_price_w';
+    }
 		$filelayout[] =	'v_price_prefix';
 		$filelayout[] =	'v_products_options_sort_order';
 		$filelayout[] =	'v_product_attribute_is_free';
@@ -629,7 +662,13 @@ function ep_4_set_filelayout($ep_dltype, &$filelayout_sql, $sql_filter, $langcod
 			a.options_values_id                 as v_options_values_id,
 			v.products_options_values_id        as v_products_options_values_id,
 			v.products_options_values_name      as v_products_options_values_name,
-			a.options_values_price              as v_options_values_price,
+			a.options_values_price              as v_options_values_price, ';
+    if ($ep_supported_mods['dual']) {
+$filelayout_sql .= '
+      a.options_values_price_w            as v_options_values_price_w,
+      ';
+    }
+$filelayout_sql .= '
 			a.price_prefix                      as v_price_prefix,
 			a.products_options_sort_order       as v_products_options_sort_order,
 			a.product_attribute_is_free         as v_product_attribute_is_free,
@@ -1139,14 +1178,15 @@ function install_easypopulate_4() {
 			('Enable Products Meta Data',          'EASYPOPULATE_4_CONFIG_META_DATA', '1', 'Enable Products Meta Data Columns (default 1).<br><br>0=Disable<br>1=Enable', ".$group_id.", '16', NULL, now(), NULL, 'zen_cfg_select_option(array(\"0\", \"1\"),'), 
 			('Enable Products Music Data',         'EASYPOPULATE_4_CONFIG_MUSIC_DATA', '0', 'Enable Products Music Data Columns (default 0).<br><br>0=Disable<br>1=Enable', ".$group_id.", '17', NULL, now(), NULL, 'zen_cfg_select_option(array(\"0\", \"1\"),'),
 			('User Defined Products Fields',       'EASYPOPULATE_4_CONFIG_CUSTOM_FIELDS', '', 'User Defined Products Table Fields (comma delimited, no spaces)', ".$group_id.", '18', NULL, now(), NULL, NULL),
-			('Export URI with Prod and or Cat',       'EASYPOPULATE_4_CONFIG_EXPORT_URI', '0', 'Export the current products or categories URI when exporting data? (Yes - 1 or no - 0)', ".$group_id.", '19', NULL, now(), NULL, 'zen_cfg_select_option(array(\"0\", \"1\"),')
+			('Export URI with Prod and or Cat',       'EASYPOPULATE_4_CONFIG_EXPORT_URI', '0', 'Export the current products or categories URI when exporting data? (Yes - 1 or no - 0)', ".$group_id.", '19', NULL, now(), NULL, 'zen_cfg_select_option(array(\"0\", \"1\"),'),
+			('Show all EP4 Filetypes with Files',       'EP4_SHOW_ALL_FILETYPES', 'True', 'When looking at the EP4 Tools screen, should the filename prefix for all specific file types be displayed for all possible file types (True [default]), should only the method(s) that will be used to process the files present be displayed (False), or should there be no assistance be provided on filenaming on the main page (Hidden) like it was until this feature was added? (True, False, or Hidden)', ".$group_id.", '25', NULL, now(), NULL, 'zen_cfg_select_option(array(\"True\", \"False\", \"Hidden\"),')
 		");
 	} elseif (PROJECT_VERSION_MAJOR > '1' || PROJECT_VERSION_MINOR >= '5.0') {
 		$db->Execute("INSERT INTO ".TABLE_CONFIGURATION_GROUP." (configuration_group_title, configuration_group_description, sort_order, visible) VALUES ('Easy Populate 4', 'Configuration Options for Easy Populate 4', '1', '1')");
 		if (PROJECT_VERSION_MAJOR > '1' || PROJECT_VERSION_MINOR >= '5.3') {
 			$group_id = mysqli_insert_id($db->link);
 		} else {
-		$group_id = mysql_insert_id();
+    	$group_id = mysql_insert_id();
 		}
 		$db->Execute("UPDATE ".TABLE_CONFIGURATION_GROUP." SET sort_order = ".$group_id." WHERE configuration_group_id = ".$group_id);
 		
@@ -1169,7 +1209,8 @@ function install_easypopulate_4() {
 			('Enable Products Meta Data',          'EASYPOPULATE_4_CONFIG_META_DATA', '1', 'Enable Products Meta Data Columns (default 1).<br><br>0=Disable<br>1=Enable', ".$group_id.", '16', NULL, now(), NULL, 'zen_cfg_select_option(array(\"0\", \"1\"),'), 
 			('Enable Products Music Data',         'EASYPOPULATE_4_CONFIG_MUSIC_DATA', '0', 'Enable Products Music Data Columns (default 0).<br><br>0=Disable<br>1=Enable', ".$group_id.", '17', NULL, now(), NULL, 'zen_cfg_select_option(array(\"0\", \"1\"),'),
 			('User Defined Products Fields',       'EASYPOPULATE_4_CONFIG_CUSTOM_FIELDS', '', 'User Defined Products Table Fields (comma delimited, no spaces)', ".$group_id.", '18', NULL, now(), NULL, NULL),
-			('Export URI with Prod and or Cat',       'EASYPOPULATE_4_CONFIG_EXPORT_URI', '0', 'Export the current products or categories URI when exporting data? (Yes - 1 or no - 0)', ".$group_id.", '19', NULL, now(), NULL, 'zen_cfg_select_option(array(\"0\", \"1\"),')
+			('Export URI with Prod and or Cat',       'EASYPOPULATE_4_CONFIG_EXPORT_URI', '0', 'Export the current products or categories URI when exporting data? (Yes - 1 or no - 0)', ".$group_id.", '19', NULL, now(), NULL, 'zen_cfg_select_option(array(\"0\", \"1\"),'),
+			('Show all EP4 Filetypes with Files',       'EP4_SHOW_ALL_FILETYPES', 'True', 'When looking at the EP4 Tools screen, should the filename prefix for all specific file types be displayed for all possible file types (True [default]), should only the method(s) that will be used to process the files present be displayed (False), or should there be no assistance be provided on filenaming on the main page (Hidden) like it was until this feature was added? (True, False, or Hidden)', ".$group_id.", '25', NULL, now(), NULL, 'zen_cfg_select_option(array(\"True\", \"False\", \"Hidden\"),')
 		");
 	} else { // unsupported version 
 		// i should do something here!
