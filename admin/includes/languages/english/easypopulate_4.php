@@ -1,5 +1,5 @@
 <?php
-// $Id: easypopulate_4.php, v4.0.21 06-01-2012 chadderuski $
+// $Id: easypopulate_4.php, v4.0.31 08-29-2015 mc12345678 $
 
 // $display_output defines
 
@@ -91,5 +91,35 @@ define('EASYPOPULATE_4_DISPLAY_SPLIT_SHORT', 'Split Records: ');
 define('EASYPOPULATE_4_DISPLAY_EXEC_TIME', 'Execution Time: ');
 define('EASYPOPULATE_4_DISPLAY_ENABLE_META', 'Enable Products Metatags: ');
 define('EASYPOPULATE_4_DISPLAY_ENABLE_MUSIC', 'Enable Products Music: ');
+define('EASYPOPULATE_4_DISPLAY_CUSTOM_PRODUCT_FIELDS', 'Custom Products Fields');
+define('EASYPOPULATE_4_DISPLAY_STATUS_PRODUCT_SHORT_DESC', 'Product Short Descriptions: ');
+define('EASYPOPULATE_4_DISPLAY_STATUS_PRODUCT_UNIT_MEAS', 'Product Unit of Measure: ');
+define('EASYPOPULATE_4_DISPLAY_STATUS_PRODUCT_UPC', 'Product UPC Code: ');
+define('EASYPOPULATE_4_DISPLAY_STATUS_PRODUCT_GOOGLE_CAT', 'Google Product Category: ');
+define('EASYPOPULATE_4_DISPLAY_STATUS_PRODUCT_MSRP', 'Manufacturer\'s Suggested Retail Price: ');
+define('EASYPOPULATE_4_DISPLAY_STATUS_PRODUCT_MAP', 'Manufacturer\'s Advertised Price: ');
+define('EASYPOPULATE_4_DISPLAY_STATUS_PRODUCT_GP', 'Group Pricing Per Item: ');
+define('EASYPOPULATE_4_DISPLAY_STATUS_PRODUCT_EXCLUSIVE', 'Exclusive Products Mod: ');
+define('EASYPOPULATE_4_DISPLAY_STATUS_PRODUCT_SBA', 'Stock By Attributes Mod: ');
+define('EASYPOPULATE_4_DISPLAY_STATUS_PRODUCT_CEON', 'CEON URI Rewriter Mod: ');
+define('EASYPOPULATE_4_DISPLAY_STATUS_PRODUCT_DPM', 'Dual Pricing Mod: ');
+define('EASYPOPULATE_4_DISPLAY_USER_DEF_FIELDS', 'User Defined Products Fields: ');
+define('EASYPOPULATE_4_DISPLAY_INSTALLED_LANG', 'Installed Languages');
+define('EASYPOPULATE_4_DISPLAY_INSTALLED_LANG_DEF', 'Default Language: ');
+define('EASYPOPULATE_4_DISPLAY_INT_CHAR_ENC', 'Internal Character Encoding: ');
+define('EASYPOPULATE_4_DISPLAY_DB_COLL', 'DB Collation: ');
+define('EASYPOPULATE_4_DISPLAY_DB_FLD_LGTH', 'Database Field Lengths');
+define('EASYPOPULATE_4_DISPLAY_TITLE_UPLOAD', 'Upload EP File');
+define('EASYPOPULATE_4_DISPLAY_MAX_UP_SIZE', 'Http Max Upload File Size: %1$d bytes (%2$d Mbytes)');
+define('EASYPOPULATE_4_DISPLAY_UPLOAD_BUTTON_TEXT', 'Upload File');
+define('EASYPOPULATE_4_DD_STATUS_DEFAULT', 'Status');
+define('EASYPOPULATE_4_DD_STATUS_ACTIVE', 'active');
+define('EASYPOPULATE_4_DD_STATUS_INACTIVE', 'inactive');
+define('EASYPOPULATE_4_DD_STATUS_ALL', 'all');
+define('EASYPOPULATE_4_DD_DOWNLOAD_DEFAULT', 'Download Type');
+define('EASYPOPULATE_4_DD_DOWNLOAD_COMPLETE', 'Complete Products');
+define('EASYPOPULATE_4_DD_DOWNLOAD_QUANTITY', 'Model/Price/Qty');
+define('EASYPOPULATE_4_DD_DOWNLOAD_BREAKS', 'Model/Price/Breaks');
+
 
 ?>

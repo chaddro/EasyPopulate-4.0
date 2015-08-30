@@ -203,3 +203,17 @@
 					error, and if it never was set then that would need to be 
 					known as well.  end result: if (!$error) { has been changed to
 					if ((isset($error) && !$error) || !isset($error)) {.
+4.0.31   08-01-2015		Corrected how dates are imported for specials in PHP 5.5 - 5.6 to match
+					how ZC has to prevent dates converting from 0001-01-01 to 1970-01-01.
+					Added ability to import using products_id.
+					Modified method of handling the storage directory.  Previous versions
+					if the admin directory was desired had to be entered and
+					would be stored in the database.  There is no other default
+					ZC function that stores the admin directory in the database.
+					This could become a security issue if access to the database
+					is somehow inappropriately obtained.
+					Modified how some of the queries are handled to ensure
+					continued compatibility with ZC.
+					Modified the output links to account for files being
+					stored in different locations on the server based on
+					catalog/admin selections.

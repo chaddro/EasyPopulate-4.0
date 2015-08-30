@@ -1,6 +1,6 @@
 REQUIREMENTS:
 
-Zencart 1.38/1.39 or 1.5
+Zencart 1.38/1.39 or 1.5 except 1.5.2
 PHP 4.3.2 or above.
 
 PRIOR TO INSTALLATION:
@@ -13,6 +13,16 @@ http://www.zen-cart.com/index.php?main_page=product_contrib_info&products_id=81
 
 Also note that EasyPopulate 4.0 Beta will install and run independently of all other 
 versions of easypopulate. Names 1.2.5.4 (and flavors) and EP Advance 3.0.3.
+
+INSTALLATION (Upgrade from any prior version of EP4) is suggested as follows:
+
+1) From the configuration->Easy Populate menu, document all of the settings so that they may be re-entered after installation.
+2) From the tools->Easy Populate 4 menu, uninstall EP4 through the link in the upper right corner.
+3) Load the files from the attached zip file into their standard location as is done through the below EP4 installation instruction.
+4) Refresh the Tools->EP4 window.
+5) Select the install option in the middle of the Tools->EP4 window.
+6) Return to the configuration->Easy Populate window and re-enter the settings captured in step 1.  Also review the new options made available to support use of the rewriter.  
+
 
 INSTALLATION:
 
@@ -58,8 +68,7 @@ This will remove the Configuration keys for EP4. You will then need to delete EP
 
 POST INSTALLATION NOTES:
 
-My EP4 will display the current version and Beta date. This will help you keep track of your version and updates as I post them
-go github.
+EP4 will display the current version and Beta date. This will help you keep track of your version and updates as they are posted to github.
 
 On the right-hand side of your screen you will see some additional information:
 
@@ -71,7 +80,7 @@ On the right-hand side of your screen you will see some additional information:
 Supported Mods: These are where you'll find additional fields that have been added to the products table.
 Note that Product Unit of Measure (UOM) and Product UPC Code are two of my own custom mods.
 
-I will continue to update github with improvement as they come. Once EP4 has passed "beta" I will submit it 
+Github will continue to be updated with improvements as they come. Once EP4 has passed "beta" it will be submitted 
 to the Zencart team for consideration. Your feedback and testing is greatly appreciated!
 
 Thank you,

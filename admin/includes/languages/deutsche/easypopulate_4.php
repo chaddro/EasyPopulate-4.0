@@ -1,5 +1,5 @@
 <?php
-// $Id: easypopulate_4.php, v4.0.21 06-01-2012 chadderuski $
+// $Id: easypopulate_4.php, v4.0.31 08-29-2015 mc12345678 $
 
 // $display_output defines
 
@@ -40,6 +40,12 @@ define('EASYPOPULATE_4_MSGSTACK_DROSS_DELETE_FAIL', '<b>Deleting of product data
 define('EASYPOPULATE_4_MSGSTACK_DROSS_DELETE_SUCCESS', 'Deleting of product data debris succeeded!');
 define('EASYPOPULATE_4_MSGSTACK_DROSS_DETECTED', '<b>%s partially deleted product(s) found!</b> Delete this dross to prevent unwanted zencart behaviour by clicking <a href="%s">here.</a><br />You are seeing this because there are references in tables to a product that no longer exists, which is usually caused by an incomplete product deletion. This can cause Zen Cart to misbehave in certain circumstances.');
 define('EASYPOPULATE_4_MSGSTACK_DATE_FORMAT_FAIL', '%s is not a valid date format. If you upload any date other than raw format (such as from Excel) you will mangle your dates. Please fix this by correcting your date format in the Easy Populate config.');
+define('EASYPOPULATE_4_ORDERS_DROPDOWN_FIRST', 'Order Type');
+define('EASYPOPULATE_4_ORDERS_FULL', 'Orders Full');
+define('EASYPOPULATE_4_ORDERS_NEWFULL', 'Orders New Full');
+define('EASYPOPULATE_4_ORDERS_NO_ATTRIBS', 'Orders No Attributes');
+define('EASYPOPULATE_4_ORDERS_ATTRIBS', 'Orders Attributes Only');
+define('EASYPOPULATE_4_ORDERS_DROPDOWN_TITLE', '<b>Filterable Orders Exports:</b><br/>');
 
 // install - msg stack alerts - output via $messageStack
 define('EASYPOPULATE_4_MSGSTACK_INSTALL_DELETE_SUCCESS','Redundant file <b>%s</b> was deleted from <b>YOUR_ADMIN%s</b> directory.');
@@ -72,6 +78,7 @@ define('ATTRIB_BASIC_EP','Prefix: %1$s. %2$s durch die Basic Attribute Filter au
 define('ATTRIB_DETAILED_EP_DESC','Prefix: %1$s. %2$s durch die Detailed Attributes Filter ausgefuehrt werden.');
 define('SBA_DETAILED_EP_DESC','Prefix: %1$s. %2$s durch die Detailed Stock by Attributes Filter ausgefuehrt werden.');
 define('SBA_STOCK_EP_DESC','Prefix: %1$s. %2$s durch die Stock by Attributes Stock Modification Filter ausgefuehrt werden.');
+define('ORDERS_EP_DESC', 'Prefix: %1$s. %2$s will not be processed for import.');
 define('CATCHALL_EP_DESC', 'Alle anderen. %2$s durch die upload of a full data file Filter ausgefuehrt werden.');
 
 // error log defines - for ep_debug_log.txt
@@ -84,5 +91,35 @@ define('EASYPOPULATE_4_DISPLAY_SPLIT_SHORT', 'Einträge aufteilen: ');
 define('EASYPOPULATE_4_DISPLAY_EXEC_TIME', 'Ausführungszeit: ');
 define('EASYPOPULATE_4_DISPLAY_ENABLE_META', 'Metatags der Artikel aktivieren:  ');
 define('EASYPOPULATE_4_DISPLAY_ENABLE_MUSIC', 'Artikeltyp Musik aktivieren: ');
+define('EASYPOPULATE_4_DISPLAY_CUSTOM_PRODUCT_FIELDS', 'Individuelle zusätzliche Artikelfelder von verschiedenen Erweiterungen');
+define('EASYPOPULATE_4_DISPLAY_STATUS_PRODUCT_SHORT_DESC', 'Artikel Kurzbeschreibung (Products Short Descriptions): ');
+define('EASYPOPULATE_4_DISPLAY_STATUS_PRODUCT_UNIT_MEAS', 'Product Unit of Measure: ');
+define('EASYPOPULATE_4_DISPLAY_STATUS_PRODUCT_UPC', 'Product UPC Code: ');
+define('EASYPOPULATE_4_DISPLAY_STATUS_PRODUCT_GOOGLE_CAT', 'Google Produkt Kategorie: ');
+define('EASYPOPULATE_4_DISPLAY_STATUS_PRODUCT_MSRP', 'Manufacturer\'s Suggested Retail Price: ');
+define('EASYPOPULATE_4_DISPLAY_STATUS_PRODUCT_MAP', 'Manufacturer\'s Advertised Price: ');
+define('EASYPOPULATE_4_DISPLAY_STATUS_PRODUCT_GP', 'Gruppenpreise pro Artikel: ');
+define('EASYPOPULATE_4_DISPLAY_STATUS_PRODUCT_EXCLUSIVE', '');
+define('EASYPOPULATE_4_DISPLAY_STATUS_PRODUCT_SBA', 'Stock By Attributes: ');
+define('EASYPOPULATE_4_DISPLAY_STATUS_PRODUCT_CEON', 'CEON URI: ');
+define('EASYPOPULATE_4_DISPLAY_STATUS_PRODUCT_DPM', 'Dual Pricing: ');
+define('EASYPOPULATE_4_DISPLAY_USER_DEF_FIELDS', 'Weitere individuelle Artikelfelder: ');
+define('EASYPOPULATE_4_DISPLAY_INSTALLED_LANG', 'Installierte Sprachen');
+define('EASYPOPULATE_4_DISPLAY_INSTALLED_LANG_DEF', 'Standard Sprache: ');
+define('EASYPOPULATE_4_DISPLAY_INT_CHAR_ENC', 'Internal Character Encoding: ');
+define('EASYPOPULATE_4_DISPLAY_DB_COLL', 'Datenbank Kollation: ');
+define('EASYPOPULATE_4_DISPLAY_DB_FLD_LGTH', 'Datenbank Feldlängen');
+define('EASYPOPULATE_4_DISPLAY_TITLE_UPLOAD', 'Datei für den Import hochladen');
+define('EASYPOPULATE_4_DISPLAY_MAX_UP_SIZE', 'Http Maximale Dateigröße für den Upload: %1$d bytes (%2$d Mbytes)');
+define('EASYPOPULATE_4_DISPLAY_UPLOAD_BUTTON_TEXT', 'Hochladen');
+define('EASYPOPULATE_4_DD_STATUS_DEFAULT', 'Status');
+define('EASYPOPULATE_4_DD_STATUS_ACTIVE', 'aktiv');
+define('EASYPOPULATE_4_DD_STATUS_INACTIVE', 'inaktiv');
+define('EASYPOPULATE_4_DD_STATUS_ALL', 'alle');
+define('EASYPOPULATE_4_DD_DOWNLOAD_DEFAULT', 'Download Typ');
+define('EASYPOPULATE_4_DD_DOWNLOAD_COMPLETE', 'Alle Artikel');
+define('EASYPOPULATE_4_DD_DOWNLOAD_QUANTITY', 'Artikelnummer/Preis/Anzahl');
+define('EASYPOPULATE_4_DD_DOWNLOAD_BREAKS', 'Artikelnummer/Preis/Staffelpreise');
+
 
 ?>
