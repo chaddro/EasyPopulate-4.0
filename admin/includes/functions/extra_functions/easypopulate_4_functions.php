@@ -824,7 +824,7 @@ $filelayout_sql .= '
 		// d = table PRODUCTS_ATTRIBUTES_DOWNLOAD
 		// s = table PRODUCTS_WITH_ATTRIBUTES_STOCK
 		// pd = table PRODUCTS_DESCRIPTIONS
-		$filelayout_sql = 'SELECT
+		$filelayout_sql = 'SELECT DISTINCT
 			a.products_attributes_id            as v_products_attributes_id,
 			a.products_id                       as v_products_id,
 			p.products_model				    as v_products_model,

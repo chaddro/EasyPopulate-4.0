@@ -394,7 +394,7 @@ if (!is_null($_GET['import']) && isset($_GET['import'])) {
           $sql = $db->bindVars($sql, ':stock_attributes:', $items[$filelayout['v_stock_attributes']], 'string');
           $sql = $db->bindVars($sql, ':quantity:', $items[$filelayout['v_quantity']], 'float');
           $sql = $db->bindVars($sql, ':sort:', $items[$filelayout['v_sort']], 'integer');
-          $sql = $db->bindVars($sql, ':customid:', $items[$filelayout['v_customid']], 'string');
+          $sql = $db->bindVars($sql, ':customid:', (zen_not_null($items[$filelayout['v_customid']]) ? $items[$filelayout['v_customid']] : 'NULL'), (zen_not_null($items[$filelayout['v_customid']]) ? 'string' : 'passthru'));
           $sql = $db->bindVars($sql, ':stock_id:', $items[$filelayout['v_stock_id']], 'integer');
           
           $result = ep_4_query($sql);
@@ -493,12 +493,13 @@ if (!is_null($_GET['import']) && isset($_GET['import'])) {
           }
         } elseif ($items[(int) $filelayout['v_SBA_tracked']] == "X") {
           $sql = "UPDATE " . TABLE_PRODUCTS_WITH_ATTRIBUTES_STOCK . " SET 
-					quantity					    = " . $items[(int) $filelayout['v_products_quantity']] . ($ep_4_SBAEnabled == '2' ? ", customid  = '" . $items[(string) $filelayout['v_customid']] . "' " : "") . "
+            quantity              = " . $items[(int) $filelayout['v_products_quantity']] . ($ep_4_SBAEnabled == '2' ? ", customid  = :customid: " : "") . "
 					WHERE (
 					stock_id = " . $items[$filelayout['v_table_tracker']] . " )";
+          $sql = $db->bindVars($sql, ':customid:', (zen_not_null($items[$filelayout['v_customid']]) ? $items[$filelayout['v_customid']] : 'NULL'), (zen_not_null($items[$filelayout['v_customid']]) ? 'string' : 'passthru'));
           if ($result = ep_4_query($sql)) {
             zen_record_admin_activity('Updated products with attributes stock ' . (int) $items[$filelayout['v_table_tracker']] . ' via EP4.', 'info');
-            $display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_UPDATE_PRODUCT, $items[(int) $filelayout['v_products_model']]) . $items[(int) $filelayout['v_products_quantity']] . ($ep_4_SBAEnabled == '2' ? " " . $items[(string) $filelayout['v_customid']] : "");
+            $display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_UPDATE_PRODUCT, $items[$filelayout['v_products_model']]) . $items[$filelayout['v_products_quantity']] . ($ep_4_SBAEnabled == '2' ? " " . $items[$filelayout['v_customid']] : "");
             $ep_update_count++;
             if ($sync) {
               $stock->update_parent_products_stock((int) $query[$items[(int) $filelayout['v_products_model']]][(int) $filelayout['v_table_tracker']]);
