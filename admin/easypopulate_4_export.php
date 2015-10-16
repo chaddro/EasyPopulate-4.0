@@ -1,5 +1,5 @@
 <?php
-// $Id: easypopulate_4_export.php, v4.0.31 08-01-2015 mc12345678 $
+// $Id: easypopulate_4_export.php, v4.0.31b 10-16-2015 mc12345678 $
 
 // get download type
 $ep_dltype = (isset($_POST['export'])) ? $_POST['export'] : (isset($_POST['exportorder']) ? $_POST['exportorder'] : $ep_dltype);
@@ -730,7 +730,7 @@ while ($row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array
   if (isset($filelayout['v_manufacturers_name'])) {
     if (($row['v_manufacturers_id'] != '0') && ($row['v_manufacturers_id'] != '')) { // '0' is correct, but '' NULL is possible
       $sql2 = 'SELECT manufacturers_name FROM ' . TABLE_MANUFACTURERS . ' WHERE manufacturers_id = :manufacturers_id:';
-      $sql2 = $db->bindVars($sql2, ':manufacturers_id:', $row['v_manufactureres_id'], 'integer');
+      $sql2 = $db->bindVars($sql2, ':manufacturers_id:', $row['v_manufacturers_id'], 'integer');
       $result2 = ep_4_query($sql2);
       $row2 = ($ep_uses_mysqli ? mysqli_fetch_array($result2) : mysql_fetch_array($result2));
       $row['v_manufacturers_name'] = $row2['manufacturers_name'];
