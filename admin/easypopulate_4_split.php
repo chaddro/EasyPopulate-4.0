@@ -1,12 +1,12 @@
 <?php
-// $Id: easypopulate_4_split.php, v4.0.21 06-01-2012 chadderuski $
+// $Id: easypopulate_4_split.php, v4.0.31c 02-05-2016 mc12345678 $
 
 if ( isset($_GET['split']) ) { 
 	$file_name = $_GET['split'];
 } else {
 	die("invalid program entry");
 }
-$file_location = DIR_FS_CATALOG . $tempdir . $file_name;
+$file_location = (EP4_ADMIN_TEMP_DIRECTORY !== 'true' ? DIR_FS_CATALOG : DIR_FS_ADMIN) . $tempdir . $file_name;
 // if no error, retreive header row
 if (!file_exists($file_location)) {
 	echo "ERROR: File Does Not Exist: ".$file_location."<br>";
@@ -32,7 +32,7 @@ while ( ($file_data = fgets($handle)) !== false ) { // read 1 line of data and e
 		// str_pad($split_counter, 2, "0", STR_PAD_LEFT)
 		$split_filename = substr($file_name, 0, strlen($file_name)-4)."_".str_pad($split_counter, 2, "0", STR_PAD_LEFT).".csv";
 		// $split_filename = substr($file_name, 0, strlen($file_name)-4)."_".$split_counter.".csv";
-		$split_location = DIR_FS_CATALOG . $tempdir . $split_filename;
+		$split_location = (EP4_ADMIN_TEMP_DIRECTORY !== 'true' ? DIR_FS_CATALOG : DIR_FS_ADMIN) . $tempdir . $split_filename;
 		$split_handle = fopen($split_location, "w") or die("can't create split file");
 		// write header
 		fwrite($split_handle, $file_header);
