@@ -1,5 +1,5 @@
 <?php
-// $Id: easypopulate_4_export.php, v4.0.31b 10-16-2015 mc12345678 $
+// $Id: easypopulate_4_export.php, v4.0.31c 02-05-2016 mc12345678 $
 
 // get download type
 $ep_dltype = (isset($_POST['export'])) ? $_POST['export'] : (isset($_POST['exportorder']) ? $_POST['exportorder'] : $ep_dltype);
@@ -388,7 +388,7 @@ while ($row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array
     } // foreach
 
     if (EASYPOPULATE_4_CONFIG_EXPORT_URI != '0') {
-      $row['v_html_uri'] = zen_catalog_href_link(FILENAME_DEFAULT, 'cPath=' . zen_get_path($row['v_categories_id']), 'NONSSL');
+      $row['v_html_uri'] = zen_catalog_href_link(FILENAME_DEFAULT, zen_get_path($row['v_categories_id']), 'NONSSL');
     }
   } // if ($ep_dltype categorymeta...
 		
