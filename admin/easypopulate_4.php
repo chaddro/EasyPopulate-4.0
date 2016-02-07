@@ -401,9 +401,9 @@ if (((isset($error) && !$error) || !isset($error)) && (!is_null($_POST["delete"]
           <div align = "left"><br />
             <b><?php echo EASYPOPULATE_4_DISPLAY_TITLE_UPLOAD; ?></b><br />
             <?php echo sprintf(EASYPOPULATE_4_DISPLAY_MAX_UP_SIZE, $upload_max_filesize, round($upload_max_filesize / 1024 / 1024)) . '<br />'; ?>
-            <input TYPE="hidden" name="MAX_FILE_SIZE" value="<?php echo $upload_max_filesize; ?>">
-            <input name="uploadfile" type="file" size="50">
-            <input type="submit" name="buttoninsert" value=<?php echo EASYPOPULATE_4_DISPLAY_UPLOAD_BUTTON_TEXT; ?>>
+            <?php echo zen_draw_hidden_field('MAX_FILE_SIZE', $upload_max_filesize, $parameters = ''); ?>
+            <?php echo zen_draw_file_field('uploadfile', false); ?>
+            <?php echo zen_draw_input_field("buttoninsert", EASYPOPULATE_4_DISPLAY_UPLOAD_BUTTON_TEXT, '', false, 'submit', true); ?>
             <br /><br /><br />
           </div>
         </form>
