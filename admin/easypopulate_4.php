@@ -83,6 +83,9 @@ $specials_print = EASYPOPULATE_4_SPECIALS_HEADING;
 $has_specials = false;
 $zco_notifier->notify('EP4_START');
 
+// Load language file(s) for main screen menu(s).
+require(DIR_FS_ADMIN . DIR_WS_LANGUAGES . $_SESSION['language'] . '/easypopulate_4_menus.php');
+
 // all mods go in this array as 'name' => 'true' if exist. eg $ep_supported_mods['psd'] => true means it exists.
 $ep_supported_mods = array();
 
@@ -413,7 +416,7 @@ if (((isset($error) && !$error) || !isset($error)) && (!is_null($_REQUEST["delet
         <div align = "left">
              <?php
              $manufacturers_array = array();
-             $manufacturers_array[] = array("id" => '', 'text' => "Manufacturers");
+             $manufacturers_array[] = array("id" => '', 'text' => EASYPOPULATE_4_DISPLAY_MANUFACTURERS);
              if ($ep_uses_mysqli) {
                $manufacturers_query = mysqli_query($db->link, "SELECT manufacturers_id, manufacturers_name FROM " . TABLE_MANUFACTURERS . " ORDER BY manufacturers_name");
                while ($manufacturers = mysqli_fetch_array($manufacturers_query)) {
@@ -432,13 +435,13 @@ if (((isset($error) && !$error) || !isset($error)) && (!is_null($_REQUEST["delet
                array("id" => '1', 'text' => EASYPOPULATE_4_DD_DOWNLOAD_QUANTITY),
                array("id" => '2', 'text' => EASYPOPULATE_4_DD_DOWNLOAD_BREAKS));
 
-             echo "<b>Filterable Exports:</b><br />";
+             echo "<b>" . EASYPOPULATE_4_DISPLAY_FILTERABLE_EXPORTS . "</b><br />";
 
              echo zen_draw_pull_down_menu('ep_export_type', $export_type_array) . ' ';
-             echo ' ' . zen_draw_pull_down_menu('ep_category_filter', array_merge(array(0 => array("id" => '', 'text' => "Categories")), zen_get_category_tree())) . ' ';
+             echo ' ' . zen_draw_pull_down_menu('ep_category_filter', array_merge(array(0 => array("id" => '', 'text' => EASYPOPULATE_4_DD_FILTER_CATEGORIES)), zen_get_category_tree())) . ' ';
              echo ' ' . zen_draw_pull_down_menu('ep_manufacturer_filter', $manufacturers_array) . ' ';
              echo ' ' . zen_draw_pull_down_menu('ep_status_filter', $status_array) . ' ';
-             echo zen_draw_input_field('export', 'Export', ' style="padding: 0px"', false, 'submit');
+             echo zen_draw_input_field('export', EASYPOPULATE_4_DD_FILTER_EXPORT, ' style="padding: 0px"', false, 'submit');
              ?>				
           <br /><br />
         </div></form>
@@ -458,43 +461,43 @@ if (((isset($error) && !$error) || !isset($error)) && (!is_null($_REQUEST["delet
 		
 		echo zen_draw_pull_down_menu('ep_order_export_type', $order_export_type_array) . ' ';
     echo zen_cfg_pull_down_order_statuses(NULL, 'order_status');
-		echo zen_draw_input_field('exportorder', 'Export', ' style="padding: 0px"', false, 'submit');
+		echo zen_draw_input_field('exportorder', EASYPOPULATE_4_ORDERS_DROPDOWN_EXPORT, ' style="padding: 0px"', false, 'submit');
 		?>				
     <br /><br />
     </div></form>
     
     
-        <b>Product &amp; Pricing Export/Import Options:</b><br />
+        <b><?php echo EASYPOPULATE_4_DISPLAY_PRODUCTS_PRICE_EXPORT_OPTION; ?></b><br />
         <!-- Download file links -->
-    <a href="easypopulate_4.php?export=full"><b>Complete Products</b> (with Metatags)</a><br/>
-        <a href="easypopulate_4.php?export=priceqty"><b>Model/Price/Qty</b> (with Specials)</a><br />
-        <a href="easypopulate_4.php?export=pricebreaks"><b>Model/Price/Breaks</b></a><br />
-        <a href="easypopulate_4.php?export=featured"><b>Featured Products</b></a><br />
+    <a href="easypopulate_4.php?export=full"><?php echo EASYPOPULATE_4_DISPLAY_COMPLETE_PRODUCTS; ?></a><br/>
+        <a href="easypopulate_4.php?export=priceqty"><?php echo EASYPOPULATE_4_DISPLAY_PRICE_QTY; ?></a><br />
+        <a href="easypopulate_4.php?export=pricebreaks"><?php echo EASYPOPULATE_4_DISPLAY_PRICE_BREAKS; ?></a><br />
+        <a href="easypopulate_4.php?export=featured"><?php echo EASYPOPULATE_4_DISPLAY_FEATURED; ?></a><br />
 
-        <br /><b>Category Export/Import Options</b><br />
-        <a href="easypopulate_4.php?export=category"><b>Model/Category</b></a><br />
-    <a href="easypopulate_4.php?export=categorymeta"><b>Categories Only</b> (with Metatags)</a><br/>
+        <br /><b><?php echo EASYPOPULATE_4_DISPLAY_TITLE_CATEGORY; ?></b><br />
+        <a href="easypopulate_4.php?export=category"><?php echo EASYPOPULATE_4_DISPLAY_EXPORT_CATEGORY; ?></a><br />
+    <a href="easypopulate_4.php?export=categorymeta"><?php echo EASYPOPULATE_4_DISPLAY_EXPORT_CATEGORYMETA; ?></a><br/>
 
-        <br /><b>Attribute Export/Import Options</b><br />
-        <a href="easypopulate_4.php?export=attrib_basic"><b>Basic Products Attributes</b> (basic single-line)</a><br /> 
-        <a href="easypopulate_4.php?export=attrib_detailed"><b>Detailed Products Attributes</b> (detailed multi-line)</a><br />
+        <br /><?php echo EASYPOPULATE_4_DISPLAY_TITLE_ATTRIBUTE; ?><br />
+        <a href="easypopulate_4.php?export=attrib_basic"><?php echo EASYPOPULATE_4_DISPLAY_EXPORT_ATTRIBUTE_BASIC; ?></a><br /> 
+        <a href="easypopulate_4.php?export=attrib_detailed"><?php echo EASYPOPULATE_4_DISPLAY_EXPORT_ATTRIBUTE_DETAILED; ?></a><br />
         <?php
         /* Begin SBA1 addition */
         if ($ep_4_SBAEnabled != false) {
           ?>
-          <a href="easypopulate_4.php?export=SBA_detailed"><b>Detailed Stock By Attributes Data</b> (detailed multi-line)</a><br />
-          <a href="easypopulate_4.php?export=SBAStock"><b>Stock of Items with Attributes Including SBA</b></a><br />
+          <a href="easypopulate_4.php?export=SBA_detailed"><?php echo EASYPOPULATE_4_DISPLAY_EXPORT_DETAILED_SBA; ?></a><br />
+          <a href="easypopulate_4.php?export=SBAStock"><?php echo EASYPOPULATE_4_DISPLAY_EXPORT_SBA_STOCK; ?></a><br />
 
-          <a href="easypopulate_4.php?export=SBAStockProdFilter"><b>Stock of Items with Attributes Including SBA Sorted Ascending</b></a><br />
+          <a href="easypopulate_4.php?export=SBAStockProdFilter"><?php echo EASYPOPULATE_4_DISPLAY_EXPORT_SBA_STOCK_ASC; ?></a><br />
 
         <?php } /* End SBA1 Addition */ 
 		$zco_notifier->notify('EP4_LINK_SELECTION_END');
 		?>
 
-        <br>DIAGNOSTIC EXPORTS - Note: NOT FOR IMPORTING ATTRIBUTES!<br />
-        <a href="easypopulate_4.php?export=options"><b>Attribute Options Names</b></a><br />
-        <a href="easypopulate_4.php?export=values"><b>Attribute Options Values</b></a><br />
-        <a href="easypopulate_4.php?export=optionvalues"><b>Attribute Options-Names-to-Values</b></a><br />
+        <br><?php echo EASYPOPULATE_4_DISPLAY_TITLE_EXPORT_ONLY; ?><br />
+        <a href="easypopulate_4.php?export=options"><?php echo EASYPOPULATE_4_DISPLAY_EXPORT_OPTION_NAMES; ?></a><br />
+        <a href="easypopulate_4.php?export=values"><?php echo EASYPOPULATE_4_DISPLAY_EXPORT_OPTION_VALUES; ?></a><br />
+        <a href="easypopulate_4.php?export=optionvalues"><?php echo EASYPOPULATE_4_DISPLAY_EXPORT_OPTION_NAMES_TO_VALUES; ?></a><br />
 
         <?php
 // List uploaded files in multifile mode
@@ -560,7 +563,7 @@ if (((isset($error) && !$error) || !isset($error)) && (!is_null($_REQUEST["delet
           echo "\n";
           echo "<table id=\"epfiles\"    width=\"80%\" border=1 cellspacing=\"2\" cellpadding=\"2\">\n";
           if (EP4_SHOW_ALL_FILETYPES == 'Hidden') {
-            echo "<tr><th>File Name</th><th>Size</th><th>Date &amp; Time</th><th>Type</th><th>Split</th><th>Import</th><th>Delete</th><th>Download</th>\n";
+            echo "<tr><th>" . EASYPOPULATE_4_DISPLAY_EXPORT_TABLE_TITLE_FILENAME . "</th><th>" . EASYPOPULATE_4_DISPLAY_EXPORT_TABLE_TITLE_SIZE . "</th><th>" . EASYPOPULATE_4_DISPLAY_EXPORT_TABLE_TITLE_DATE_TIME . "</th><th>" . EASYPOPULATE_4_DISPLAY_EXPORT_TABLE_TITLE_TYPE . "</th><th>" . EASYPOPULATE_4_DISPLAY_EXPORT_TABLE_TITLE_SPLIT . "</th><th>" . EASYPOPULATE_4_DISPLAY_EXPORT_TABLE_TITLE_IMPORT . "</th><th>" . EASYPOPULATE_4_DISPLAY_EXPORT_TABLE_TITLE_DELETE . "</th><th>" . EASYPOPULATE_4_DISPLAY_EXPORT_TABLE_TITLE_DOWNLOAD . "</th>\n";
           }
 
           foreach ((EP4_SHOW_ALL_FILETYPES != 'false' ? $filenames_merged : $filetypes) as $key => $val) {
@@ -577,7 +580,7 @@ if (((isset($error) && !$error) || !isset($error)) && (!is_null($_REQUEST["delet
             $plural_state = "<strong>" . (sizeof($val) > 1 ? EP_DESC_PLURAL : EP_DESC_SING) . "</strong>";
             if (EP4_SHOW_ALL_FILETYPES != 'Hidden') {
               echo "<tr><td colspan=\"8\">" . sprintf($filenames_merged[$key], "<strong>" . $key . "</strong>", $plural_state) . "</td></tr>";
-              echo "<tr><th>File Name</th><th>Size</th><th>Date &amp; Time</th><th>Type</th><th>Split</th><th>Import</th><th>Delete</th><th>Download</th>\n";
+              echo "<tr><th>" . EASYPOPULATE_4_DISPLAY_EXPORT_TABLE_TITLE_FILENAME . "</th><th>" . EASYPOPULATE_4_DISPLAY_EXPORT_TABLE_TITLE_SIZE . "</th><th>" . EASYPOPULATE_4_DISPLAY_EXPORT_TABLE_TITLE_DATE_TIME . "</th><th>" . EASYPOPULATE_4_DISPLAY_EXPORT_TABLE_TITLE_TYPE . "</th><th>" . EASYPOPULATE_4_DISPLAY_EXPORT_TABLE_TITLE_SPLIT . "</th><th>" . EASYPOPULATE_4_DISPLAY_EXPORT_TABLE_TITLE_IMPORT . "</th><th>" . EASYPOPULATE_4_DISPLAY_EXPORT_TABLE_TITLE_DELETE . "</th><th>" . EASYPOPULATE_4_DISPLAY_EXPORT_TABLE_TITLE_DOWNLOAD . "</th>\n";
             }
 
             for ($i = 0; $i < sizeof($val); $i++) {
@@ -616,17 +619,17 @@ if (((isset($error) && !$error) || !isset($error)) && (!is_null($_REQUEST["delet
                     echo "<td align=center><a href=\"" . $_SERVER['SCRIPT_NAME'] . "?import=" . $files[$val[$i]] . "\">Import</a></td>\n";
                   }
                   echo "<td align=center><a href=\"" . $_SERVER['SCRIPT_NAME'] . "?delete=" . urlencode($files[$val[$i]]) . "\">Delete file</a></td>";
-                  echo "<td align=center><a href=\"" . ($request_type == 'SSL' ? (EP4_ADMIN_TEMP_DIRECTORY !== 'true' ? /* Storeside */ HTTPS_CATALOG_SERVER . DIR_WS_HTTPS_CATALOG : /*Admin Side */ HTTPS_SERVER . DIR_WS_HTTPS_ADMIN) : (EP4_ADMIN_TEMP_DIRECTORY !== 'true' ? /* Storeside */ HTTP_CATALOG_SERVER . DIR_WS_CATALOG : /*Admin Side */ HTTP_SERVER . DIR_WS_ADMIN)) . $tempdir . $files[$val[$i]] . "\" target=_blank>Download</a></td></tr>\n";
+                  echo "<td align=center><a href=\"" . ($request_type == 'SSL' ? (EP4_ADMIN_TEMP_DIRECTORY !== 'true' ? /* Storeside */ HTTPS_CATALOG_SERVER . DIR_WS_HTTPS_CATALOG : /*Admin Side */ HTTPS_SERVER . DIR_WS_HTTPS_ADMIN) : (EP4_ADMIN_TEMP_DIRECTORY !== 'true' ? /* Storeside */ HTTP_CATALOG_SERVER . DIR_WS_CATALOG : /*Admin Side */ HTTP_SERVER . DIR_WS_ADMIN)) . $tempdir . $files[$val[$i]] . "\" target=_blank>" . EASYPOPULATE_4_DISPLAY_EXPORT_FILE_DOWNLOAD . "</a></td></tr>\n";
                 } else {
                   echo "<td>&nbsp;</td>\n";
                   echo "<td>&nbsp;</td>\n";
                   echo "<td align=center><a href=\"" . $_SERVER['SCRIPT_NAME'] . "?delete=" . urlencode($files[$val[$i]]) . "\">Delete file</a></td>";
-                  echo "<td align=center><a href=\"" . ($request_type == 'SSL' ? (EP4_ADMIN_TEMP_DIRECTORY !== 'true' ? /* Storeside */ HTTPS_CATALOG_SERVER . DIR_WS_HTTPS_CATALOG : /*Admin Side */ HTTPS_SERVER . DIR_WS_HTTPS_ADMIN) : (EP4_ADMIN_TEMP_DIRECTORY !== 'true' ? /* Storeside */ HTTP_CATALOG_SERVER . DIR_WS_CATALOG : /*Admin Side */ HTTP_SERVER . DIR_WS_ADMIN)) . $tempdir . $files[$val[$i]] . "\" target=_blank>Download</a></td></tr>\n";
+                  echo "<td align=center><a href=\"" . ($request_type == 'SSL' ? (EP4_ADMIN_TEMP_DIRECTORY !== 'true' ? /* Storeside */ HTTPS_CATALOG_SERVER . DIR_WS_HTTPS_CATALOG : /*Admin Side */ HTTPS_SERVER . DIR_WS_HTTPS_ADMIN) : (EP4_ADMIN_TEMP_DIRECTORY !== 'true' ? /* Storeside */ HTTP_CATALOG_SERVER . DIR_WS_CATALOG : /*Admin Side */ HTTP_SERVER . DIR_WS_ADMIN)) . $tempdir . $files[$val[$i]] . "\" target=_blank>" . EASYPOPULATE_4_DISPLAY_EXPORT_FILE_DOWNLOAD . "</a></td></tr>\n";
                 }
               }
             } // End loop within a filetype
             if ($file_count == 0 && EP4_SHOW_ALL_FILETYPES != 'Hidden') {
-              echo "<tr><td COLSPAN=8><font color='red'><b>No Supported Data Files </b></font></td></tr>\n";
+              echo "<tr><td COLSPAN=8><font color='red'>" . EASYPOPULATE_4_DISPLAY_EXPORT_FILE_NONE_SUPPORTED . "</font></td></tr>\n";
             } // if (sizeof($files)>0)
             if (EP4_SHOW_ALL_FILETYPES == 'Hidden') {
               break;
@@ -636,19 +639,19 @@ if (((isset($error) && !$error) || !isset($error)) && (!is_null($_REQUEST["delet
             echo "</table>\n";
             if (sizeof($filetypes) == 0) {
               echo "<table id=\"epfiles\"    width=\"80%\" border=1 cellspacing=\"2\" cellpadding=\"2\">\n";
-              echo "<tr><td COLSPAN=8><font color='red'><b>No Supported Data Files</b></font></td></tr>\n";
+              echo "<tr><td COLSPAN=8><font color='red'>" . EASYPOPULATE_4_DISPLAY_EXPORT_FILE_NONE_SUPPORTED . "</font></td></tr>\n";
               echo "</table>\n";
             }
           }
         } else { // can't open directory
-          echo "<tr><td COLSPAN=8><font color='red'><b>Error Opening Upload Directory:</b></font> " . $tempdir . "</td></tr>\n";
+          echo "<tr><td COLSPAN=8><font color='red'>" . EASYPOPULATE_4_DISPLAY_EXPORT_FILE_ERROR_FOLDER_OPEN . "</font> " . $tempdir . "</td></tr>\n";
           $error = true;
         } // opendir()
         if (EP4_SHOW_ALL_FILETYPES == 'Hidden') {
           echo "</table>\n";
           if (sizeof($filetypes) == 0) {
             echo "<table id=\"epfiles\"    width=\"80%\" border=1 cellspacing=\"2\" cellpadding=\"2\">\n";
-            echo "<tr><td COLSPAN=8><font color='red'><b>No Supported Data Files</b></font></td></tr>\n";
+            echo "<tr><td COLSPAN=8><font color='red'>" . EASYPOPULATE_4_DISPLAY_EXPORT_FILE_NONE_SUPPORTED . "</font></td></tr>\n";
             echo "</table>\n";
           }
         }

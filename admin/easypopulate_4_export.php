@@ -18,7 +18,7 @@ if (isset($_GET['export'])) {
 }
 
 if ($ep_dltype == '') {
-  die("error: no export type set - press backspace to return."); // need better handler
+  die(EASYPOPULATE_4_DISPLAY_EXPORT_TYPE_ERROR); // need better handler
 }
 
 $ep_export_count = 0;
@@ -787,14 +787,19 @@ if ($ep_dltype == 'attrib_basic') { // must write last record
 
 fclose($fp); // close output file
 
-$display_output .= '<br><u><h3>Export Results</h3></u><br>';
+//$display_output .= '<br><u><h3>Export Results</h3></u><br>';
+$display_output .= EASYPOPULATE_4_DISPLAY_EXPORT_RESULTS_TITLE;
 $display_output .= sprintf(EASYPOPULATE_4_MSGSTACK_FILE_EXPORT_SUCCESS, $EXPORT_FILE, $tempdir);
-$display_output .= '<br>Records Exported: ' . $ep_export_count . '<br>';
+//$display_output .= '<br>Records Exported: ' . $ep_export_count . '<br>';
+$display_output .= sprintf(EASYPOPULATE_4_DISPLAY_EXPORT_RESULTS_NUM_RECORDS, $ep_export_count);
 if (function_exists('memory_get_usage')) {
-  $display_output .= '<br>Memory Usage: ' . memory_get_usage();
-  $display_output .= '<br>Memory Peak: ' . memory_get_peak_usage();
+//  $display_output .= '<br>Memory Usage: ' . memory_get_usage();
+//  $display_output .= '<br>Memory Peak: ' . memory_get_peak_usage();
+  $display_output .= sprintf(EASYPOPULATE_4_DISPLAY_EXPORT_RESULTS_MEM_USE, memory_get_usage());
+  $display_output .= sprintf(EASYPOPULATE_4_DISPLAY_EXPORT_RESULTS_MEM_PEAK, memory_get_peak_usage());
 }
 // benchmarking
 $time_end = microtime(true);
 $time = $time_end - $time_start;
-$display_output .= '<br>Execution Time: ' . $time . ' seconds.';
+//$display_output .= '<br>Execution Time: ' . $time . ' seconds.';
+$display_output .= sprintf(EASYPOPULATE_4_DISPLAY_EXPORT_RESULTS_EXEC_TIME, $time);

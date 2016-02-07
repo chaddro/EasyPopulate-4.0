@@ -99,7 +99,7 @@ define('EASYPOPULATE_4_DISPLAY_STATUS_PRODUCT_GOOGLE_CAT', 'Google Produkt Kateg
 define('EASYPOPULATE_4_DISPLAY_STATUS_PRODUCT_MSRP', 'Manufacturer\'s Suggested Retail Price: ');
 define('EASYPOPULATE_4_DISPLAY_STATUS_PRODUCT_MAP', 'Manufacturer\'s Advertised Price: ');
 define('EASYPOPULATE_4_DISPLAY_STATUS_PRODUCT_GP', 'Gruppenpreise pro Artikel: ');
-define('EASYPOPULATE_4_DISPLAY_STATUS_PRODUCT_EXCLUSIVE', '');
+define('EASYPOPULATE_4_DISPLAY_STATUS_PRODUCT_EXCLUSIVE', 'Exclusive Products Mod:');
 define('EASYPOPULATE_4_DISPLAY_STATUS_PRODUCT_SBA', 'Stock By Attributes: ');
 define('EASYPOPULATE_4_DISPLAY_STATUS_PRODUCT_CEON', 'CEON URI: ');
 define('EASYPOPULATE_4_DISPLAY_STATUS_PRODUCT_DPM', 'Dual Pricing: ');
@@ -120,6 +120,43 @@ define('EASYPOPULATE_4_DD_DOWNLOAD_DEFAULT', 'Download Typ');
 define('EASYPOPULATE_4_DD_DOWNLOAD_COMPLETE', 'Alle Artikel');
 define('EASYPOPULATE_4_DD_DOWNLOAD_QUANTITY', 'Artikelnummer/Preis/Anzahl');
 define('EASYPOPULATE_4_DD_DOWNLOAD_BREAKS', 'Artikelnummer/Preis/Staffelpreise');
+define('EASYPOPULATE_4_DD_FILTER_CATEGORIES', 'Kategorien');
+define('EASYPOPULATE_4_DD_FILTER_EXPORT', 'Exportieren');
 
+define('EASYPOPULATE_4_ORDERS_DROPDOWN_EXPORT', 'Exportieren');
 
-?>
+define('EASYPOPULATE_4_DISPLAY_EXPORT_FILE_SPLIT', 'Splitten');
+define('EASYPOPULATE_4_DISPLAY_EXPORT_FILE_IMPORT_SYNC', 'Importieren m/Sync');
+define('EASYPOPULATE_4_DISPLAY_EXPORT_FILE_IMPORT', 'Importieren');
+define('EASYPOPULATE_4_DISPLAY_EXPORT_FILE_DELETE', 'Datei löschen');
+define('EASYPOPULATE_4_DISPLAY_EXPORT_FILE_DOWNLOAD', 'Download');
+define('EASYPOPULATE_4_DISPLAY_EXPORT_FILE_NONE_SUPPORTED', '<b>Keine unterstützten Exportdateien vorhanden</b>');
+define('EASYPOPULATE_4_DISPLAY_EXPORT_FILE_ERROR_FOLDER_OPEN', '<b>Fehler beim Öffnen des Exportverzeichnisses:</b>');
+
+define('EASYPOPULATE_4_DISPLAY_EXPORT_TYPE_ERROR','error: Kein Exporttyp gewdhlt - Drücken Sie die Backspace Taste um zurückzugehen.');
+
+define('EASYPOPULATE_4_DISPLAY_EXPORT_TABLE_TITLE_FILENAME', 'Dateiname');
+define('EASYPOPULATE_4_DISPLAY_EXPORT_TABLE_TITLE_SIZE', 'Größe');
+define('EASYPOPULATE_4_DISPLAY_EXPORT_TABLE_TITLE_DATE_TIME', 'Datum &amp; Uhrzeit');
+define('EASYPOPULATE_4_DISPLAY_EXPORT_TABLE_TITLE_TYPE', 'Typ');
+define('EASYPOPULATE_4_DISPLAY_EXPORT_TABLE_TITLE_SPLIT', 'Splitten');
+define('EASYPOPULATE_4_DISPLAY_EXPORT_TABLE_TITLE_IMPORT', 'Importieren');
+define('EASYPOPULATE_4_DISPLAY_EXPORT_TABLE_TITLE_DELETE', 'Löschen');
+define('EASYPOPULATE_4_DISPLAY_EXPORT_TABLE_TITLE_DOWNLOAD', 'Download');
+
+define('EASYPOPULATE_4_DISPLAY_EXPORT_RESULTS_TITLE','<br><u><h3>Export Ergebnisse</h3></u><br>');
+define('EASYPOPULATE_4_DISPLAY_EXPORT_RESULTS_NUM_RECORDS','<br>Exportierte Einträge: %d<br>');
+define('EASYPOPULATE_4_DISPLAY_EXPORT_RESULTS_MEM_USE','<br>Speicherverbrauch: %d');
+define('EASYPOPULATE_4_DISPLAY_EXPORT_RESULTS_MEM_PEAK','<br>Speicherverbrauch Spitzenwert: %d');
+define('EASYPOPULATE_4_DISPLAY_EXPORT_RESULTS_EXEC_TIME','<br>Ausf|hrungszeit: %d seconds.');
+
+define('EASYPOPULATE_4_DISPLAY_IMPORT_RESULTS_TITLE','<h3>Verarbeitung des Importdatei abgeschlossen</h3>');
+define('EASYPOPULATE_4_DISPLAY_IMPORT_RESULTS_NUM_RECORDS_UPDATE','<br/>Aktualisierte EintrÃ¤ge: %d');
+define('EASYPOPULATE_4_DISPLAY_IMPORT_RESULTS_NUM_RECORDS_IMPORT','<br/>Neu importierte EintrÃ¤ge: %d');
+define('EASYPOPULATE_4_DISPLAY_IMPORT_RESULTS_NUM_ERRORS','<br/>Entdeckte Fehler: %d');
+define('EASYPOPULATE_4_DISPLAY_IMPORT_RESULTS_NUM_WARNINGS','<br/>Entdeckte Warnungen: %d');
+define('EASYPOPULATE_4_DISPLAY_IMPORT_RESULTS_MEM_USE','<br/>Speicherverbrauch: %d');
+define('EASYPOPULATE_4_DISPLAY_IMPORT_RESULTS_MEM_PEAK','<br/>Speicherverbrauch Spitzenwert: %d');
+define('EASYPOPULATE_4_DISPLAY_IMPORT_RESULTS_EXEC_TIME','<br/>AusfÃ¼hrungszeit: %d seconds');
+define('EASYPOPULATE_4_DISPLAY_IMPORT_COMPLETE_ISSUES','Dateiimport mit Problemen abgeschlossen.');
+define('EASYPOPULATE_4_DISPLAY_IMPORT_COMPLETE','Dateiimport ohne Probleme abgeschlossen.');

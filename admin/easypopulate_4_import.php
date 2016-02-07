@@ -1986,20 +1986,28 @@ $result_incategory = ($ep_uses_mysqli ? mysqli_fetch_array($result_incategory) :
       } // end of Mail While Loop
     } // conditional IF statement
 
-    $display_output .= '<h3>Finished Processing Import File</h3>';
+//    $display_output .= '<h3>Finished Processing Import File</h3>';
+    $display_output .= EASYPOPULATE_4_DISPLAY_IMPORT_RESULTS_TITLE;
 
-    $display_output .= '<br/>Updated records: ' . $ep_update_count;
-    $display_output .= '<br/>New Imported records: ' . $ep_import_count;
-    $display_output .= '<br/>Errors Detected: ' . $ep_error_count;
-    $display_output .= '<br/>Warnings Detected: ' . $ep_warning_count;
+//    $display_output .= '<br/>Updated records: ' . $ep_update_count;
+    $display_output .= sprintf(EASYPOPULATE_4_DISPLAY_IMPORT_RESULTS_NUM_RECORDS_UPDATE, $ep_update_count);
+//    $display_output .= '<br/>New Imported records: ' . $ep_import_count;
+    $display_output .= sprintf(EASYPOPULATE_4_DISPLAY_IMPORT_RESULTS_NUM_RECORDS_IMPORT, $ep_import_count);
+//    $display_output .= '<br/>Errors Detected: ' . $ep_error_count;
+    $display_output .= sprintf(EASYPOPULATE_4_DISPLAY_IMPORT_RESULTS_NUM_ERRORS, $ep_error_count);
+//    $display_output .= '<br/>Warnings Detected: ' . $ep_warning_count;
+    $display_output .= sprintf(EASYPOPULATE_4_DISPLAY_IMPORT_RESULTS_NUM_WARNINGS, $ep_warning_count);
 
-    $display_output .= '<br/>Memory Usage: ' . memory_get_usage();
-    $display_output .= '<br/>Memory Peak: ' . memory_get_peak_usage();
+//    $display_output .= '<br/>Memory Usage: ' . memory_get_usage();
+    $display_output .= sprintf(EASYPOPULATE_4_DISPLAY_IMPORT_RESULTS_MEM_USE, memory_get_usage());
+//    $display_output .= '<br/>Memory Peak: ' . memory_get_peak_usage();
+    $display_output .= sprintf(EASYPOPULATE_4_DISPLAY_IMPORT_RESULTS_MEM_PEAK, memory_get_peak_usage());
 
     // benchmarking
     $time_end = microtime(true);
     $time = $time_end - $time_start;
-    $display_output .= '<br/>Execution Time: ' . $time . ' seconds.';
+//    $display_output .= '<br/>Execution Time: ' . $time . ' seconds.';
+    $display_output .= sprintf(EASYPOPULATE_4_DISPLAY_IMPORT_RESULTS_EXEC_TIME, memory_get_peak_usage());
   }
 
   // specials status = 0 if date_expires is past.
@@ -2008,8 +2016,8 @@ $result_incategory = ($ep_uses_mysqli ? mysqli_fetch_array($result_incategory) :
     zen_expire_specials();
   }
   if (($ep_warning_count > 0) || ($ep_error_count > 0)) {
-    $messageStack->add("File Import Completed with issues.", 'warning');
+    $messageStack->add(EASYPOPULATE_4_DISPLAY_IMPORT_COMPLETE_ISSUES, 'warning');
   } else {
-    $messageStack->add("File Import Completed.", 'success');
+    $messageStack->add(EASYPOPULATE_4_DISPLAY_IMPORT_COMPLETE, 'success');
   }
 } // END FILE UPLOADS
