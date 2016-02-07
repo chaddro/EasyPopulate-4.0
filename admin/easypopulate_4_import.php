@@ -316,7 +316,8 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
 
           if ($items[$filelayout['v_products_attributes_filename']] <> '') { // download file name
             $sql = 'SELECT * FROM ' . TABLE_PRODUCTS_ATTRIBUTES_DOWNLOAD . ' 
-							WHERE (products_attributes_id = ' . $items[$filelayout['v_products_attributes_id']] . ') LIMIT 1';
+              WHERE (products_attributes_id = :products_attributes_id:) LIMIT 1';
+            $sql = $db->bindVars($sql, ':products_attributes_id:', $items[$filelayout['v_products_attributes_id']], 'integer');
             $result = ep_4_query($sql);
             if ($row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array($result))) { // update
               $sql = "UPDATE " . TABLE_PRODUCTS_ATTRIBUTES_DOWNLOAD . " SET 
@@ -477,9 +478,11 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
         //IF STANDARD STOCK, then Update the standard stock
         if ($items[$filelayout['v_SBA_tracked']] == '') {
           $sql = "UPDATE " . TABLE_PRODUCTS . " SET 
-					  products_quantity					    = " . $items[(int) $filelayout['v_products_quantity']] . "
+					  products_quantity					    = :products_quantity:
 					  WHERE (
-					  products_id = " . $items[(int) $filelayout['v_table_tracker']] . " )";
+					  products_id = :products_id: )";
+          $sql = $db->bindVars($sql, ':products_quantity:', $items[$filelayout['v_products_quantity']], 'float');
+          $sql = $db->bindVars($sql, ':products_id:', $items[$filelayout['v_table_tracker']], 'integer');
           //$sql = $db->bindVars($sql, ':products_quantity'); Need to verify the above works with float values which I think not.. 
           if ($sync) {
             $query[$items[(int) $filelayout['v_products_model']]] = $items; //mc12345678 Not sure that this line is correct... For a couple of reasons, but will have to look at later...  Biggest issue is that the model is cast as an integer when it can be a string... 
@@ -496,9 +499,11 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
           }
         } elseif ($items[(int) $filelayout['v_SBA_tracked']] == "X") {
           $sql = "UPDATE " . TABLE_PRODUCTS_WITH_ATTRIBUTES_STOCK . " SET 
-            quantity              = " . $items[(int) $filelayout['v_products_quantity']] . ($ep_4_SBAEnabled == '2' ? ", customid  = :customid: " : "") . "
+            quantity              = :products_quantity: " . ($ep_4_SBAEnabled == '2' ? ", customid  = :customid: " : "") . "
 					WHERE (
-					stock_id = " . $items[$filelayout['v_table_tracker']] . " )";
+					stock_id = :stock_id: )";
+          $sql = $db->bindVars($sql, ':products_quantity:', $items[$filelayout['v_products_quantity']], 'float');
+          $sql = $db->bindVars($sql, ':stock_id:', $items[$filelayout['v_table_tracker']], 'integer');
           $sql = $db->bindVars($sql, ':customid:', (zen_not_null($items[$filelayout['v_customid']]) ? $items[$filelayout['v_customid']] : 'NULL'), (zen_not_null($items[$filelayout['v_customid']]) ? 'string' : 'passthru'));
           if ($result = ep_4_query($sql)) {
             zen_record_admin_activity('Updated products with attributes stock ' . (int) $items[$filelayout['v_table_tracker']] . ' via EP4.', 'info');
@@ -520,9 +525,11 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
       if ($sync) {
         foreach ($query as $items) {
           $sql = "UPDATE " . TABLE_PRODUCTS . " SET 
-					products_quantity					    = " . $items[(int) $filelayout['v_products_quantity']] . "
+					products_quantity					    = :products_quantity:
 					WHERE (
-					products_id = " . $items[(int) $filelayout['v_table_tracker']] . " )";
+					products_id = :products_id: )";
+          $sql = $db->bindVars($sql, ':products_quantity:', $items[$filelayout['v_products_quantity']], 'float');
+          $sql = $db->bindVars($sql, ':products_id:', $items[$filelayout['v_table_tracker']], 'integer');
           if ($result = ep_4_query($sql)) {
             zen_record_admin_activity('Updated product ' . (int) $items[(int) $filelayout['v_table_tracker']] . ' via EP4.', 'info');
             $ep_update_count++;
@@ -1029,7 +1036,10 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
             foreach ($langcode as $lang) {
               $l_id = $lang['id'];
               $sql = "INSERT INTO " . TABLE_MANUFACTURERS_INFO . " (manufacturers_id, languages_id, manufacturers_url)
-								VALUES ('" . addslashes($v_manufacturers_id) . "'," . (int) $l_id . ",'')"; // seems we are skipping manufacturers url
+								VALUES (:manufacturers_id:, :languages_id:, :manufacturers_url:)"; // seems we are skipping manufacturers url
+              $sql = $db->bindVars($sql, ':manufacturers_id:', $v_manufacturers_id, 'integer');
+              $sql = $db->bindVars($sql, ':languages_id:', $l_id, 'integer');
+              $sql = $db->bindVars($sql, ':manufacturers_url:', '', 'string');
               $result = ep_4_query($sql);
               if ($result) {
                 zen_record_admin_activity('Inserted manufacturers info ' . (int) $v_manufacturers_id . ' via EP4.', 'info');
@@ -1207,7 +1217,8 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
         // BEGIN: record_artists
         if (isset($filelayout['v_artists_name'])) {
           if (isset($v_artists_name) && ($v_artists_name != '') && (mb_strlen($v_artists_name) <= $artists_name_max_len)) {
-            $sql = "SELECT artists_id AS artistsID FROM " . TABLE_RECORD_ARTISTS . " WHERE artists_name = '" . addslashes(ep_4_curly_quotes($v_artists_name)) . "' LIMIT 1";
+            $sql = "SELECT artists_id AS artistsID FROM " . TABLE_RECORD_ARTISTS . " WHERE artists_name = :artists_name: LIMIT 1";
+            $sql = $db->bindVars($sql, ':artists_name:', ep_4_curly_quotes($v_artists_name), 'string');
             $result = ep_4_query($sql);
             if ($row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array($result) )) {
               $v_artists_id = $row['artistsID']; // this id goes into the product_music_extra table
@@ -1224,8 +1235,11 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
               foreach ($langcode as $lang) {
                 $l_id = $lang['id'];
                 $sql = "UPDATE " . TABLE_RECORD_ARTISTS_INFO . " SET
-									artists_url = '" . addslashes($items[$filelayout['v_artists_url_' . $lid]]) . "'
-									WHERE artists_id = '" . $v_artists_id . "' AND languages_id = '" . $lid . "'";
+									artists_url = :artists_url:
+									WHERE artists_id = :artists_id: AND languages_id = :languages_id:";
+                $sql = $db->bindVars($sql, ':artists_id:', $v_artists_id, 'integer');
+                $sql = $db->bindVars($sql, ':artists_url:', $items[$filelayout['v_artists_url_' . $l_id]], 'string');
+                $sql = $db->bindVars($sql, ':languages_id:', $l_id, 'integer');
                 $result = ep_4_query($sql);
                 if ($result) {
                   zen_record_admin_activity('Updated record artist info ' . (int) $v_artists_id . ' via EP4.', 'info');
@@ -1233,7 +1247,9 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
               }
             } else { // It is set to autoincrement, do not need to fetch max id
               $sql = "INSERT INTO " . TABLE_RECORD_ARTISTS . " (artists_name, artists_image, date_added, last_modified)
-								VALUES ('" . addslashes(ep_4_curly_quotes($v_artists_name)) . "', '" . addslashes($v_artists_image) . "', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
+								VALUES (:artists_name:, :artists_image:, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
+              $sql = $db->bindVars($sql, ':artists_name:', ep_4_curly_quotes($v_artists_name), 'string');
+              $sql = $db->bindVars($sql, ':artists_image:', $v_artists_image, 'string');
               $result = ep_4_query($sql);
               if ($result) {
                 zen_record_admin_activity('Inserted record artist ' . $addslashes(ep_4_curly_quotes($v_artists_name)) . ' via EP4.', 'info');
@@ -1242,7 +1258,10 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
               foreach ($langcode as $lang) {
                 $l_id = $lang['id'];
                 $sql = "INSERT INTO " . TABLE_RECORD_ARTISTS_INFO . " (artists_id, languages_id, artists_url)
-									VALUES ('" . addslashes($v_artists_id) . "'," . (int) $l_id . ",'" . addslashes($items[$filelayout['v_artists_url_' . $lid]]) . "')"; // seems we are skipping manufacturers url
+									VALUES (:artists_id:, :languages_id:, :artists_url:)"; // seems we are skipping manufacturers url
+                $sql = $db->bindVars($sql, ':artists_id:', $v_artists_id, 'integer');
+                $sql = $db->bindVars($sql, ':languages_id:', $l_id, 'integer');
+                $sql = $db->bindVars($sql, ':artists_url:', (isset($filelayout['v_artists_url_' . $l_id]) ? $items[$filelayout['v_artists_url_' . $l_id]] : $items[$filelayout['v_artists_url_' . $lid]]), 'string');
                 $result = ep_4_query($sql);
                 if ($result) {
                   zen_record_admin_activity('Inserted record artists info ' . (int) $v_artists_id . ' via EP4.', 'info');
@@ -1264,14 +1283,17 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
         // BEGIN: record_company
         if (isset($filelayout['v_record_company_name'])) {
           if (isset($v_record_company_name) && ($v_record_company_name != '') && (mb_strlen($v_record_company_name) <= $record_company_name_max_len)) {
-            $sql = "SELECT record_company_id AS record_companyID FROM " . TABLE_RECORD_COMPANY . " WHERE record_company_name = '" . addslashes(ep_4_curly_quotes($v_record_company_name)) . "' LIMIT 1";
+            $sql = "SELECT record_company_id AS record_companyID FROM " . TABLE_RECORD_COMPANY . " WHERE record_company_name = :record_company_name: LIMIT 1";
+            $sql = $db->bindVars($sql, ':record_company_name:', ep_4_curly_quotes($v_record_company_name), 'string');
             $result = ep_4_query($sql);
             if ($row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array($result) )) {
               $v_record_company_id = $row['record_companyID']; // this id goes into the product_music_extra table
               $sql = "UPDATE " . TABLE_RECORD_COMPANY . " SET 
-								record_company_image = '" . addslashes($v_record_company_image) . "',
+								record_company_image = :record_company_image:,
 								last_modified = CURRENT_TIMESTAMP
-								WHERE record_company_id = '" . $v_record_company_id . "'";
+								WHERE record_company_id = :record_company_id:";
+              $sql = $db->bindVars($sql, ':record_company_image:', $v_record_company_image, 'string');
+              $sql = $db->bindVars($sql, ':record_company_id:', $v_record_company_id, 'integer');
               $result = ep_4_query($sql);
               if ($result) {
                 zen_record_admin_activity('Updated record company ' . (int) $v_record_company_id . ' via EP4.', 'info');
@@ -1279,8 +1301,11 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
               foreach ($langcode as $lang) {
                 $l_id = $lang['id'];
                 $sql = "UPDATE " . TABLE_RECORD_COMPANY_INFO . " SET
-									record_company_url = '" . addslashes($items[$filelayout['v_record_company_url_' . $lid]]) . "'
-									WHERE record_company_id = '" . $v_record_company_id . "' AND languages_id = '" . $lid . "'";
+									record_company_url = :record_company_url:
+									WHERE record_company_id = :record_company_id: AND languages_id = :languages_id:";
+                $sql = $db->bindVars($sql, ':record_company_url:', $items[$filelayout['v_record_company_url_' . $l_id]], 'string');
+                $sql = $db->bindVars($sql, ':record_company_id:', $v_record_company_id, 'integer');
+                $sql = $db->bindVars($sql, ':languages_id:', $l_id, 'integer');
                 $result = ep_4_query($sql);
                 if ($result) {
                   zen_record_admin_activity('Updated record company info ' . (int) $v_record_company_id . ' via EP4.', 'info');
@@ -1288,7 +1313,9 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
               }
             } else { // It is set to autoincrement, do not need to fetch max id
               $sql = "INSERT INTO " . TABLE_RECORD_COMPANY . " (record_company_name, record_company_image, date_added, last_modified)
-								VALUES ('" . addslashes(ep_4_curly_quotes($v_record_company_name)) . "', '" . addslashes($v_record_company_image) . "', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
+								VALUES (:record_company_name:, :record_company_image:, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
+              $sql = $db->bindVars($sql, ':record_company_name:', ep_4_curly_quotes($v_record_company_name), 'string');
+              $sql = $db->bindVars($sql, ':record_company_image:', $v_record_company_image, 'string');
               $result = ep_4_query($sql);
               if ($result) {
                 zen_record_admin_activity('Inserted record company ' . addslashes(ep_4_curly_quotes($v_record_company_name)) . ' via EP4.', 'info');
@@ -1297,7 +1324,10 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
               foreach ($langcode as $lang) {
                 $l_id = $lang['id'];
                 $sql = "INSERT INTO " . TABLE_RECORD_COMPANY_INFO . " (record_company_id, languages_id, record_company_url)
-									VALUES ('" . addslashes($v_record_company_id) . "'," . (int) $l_id . ",'" . addslashes($items[$filelayout['v_record_company_url_' . $lid]]) . "')"; // seems we are skipping manufacturers url
+									VALUES (:record_company_id:, :languages_id:, :record_company_url:)"; // seems we are skipping manufacturers url
+                $sql = $db->bindVars($sql, ':record_company_id:', $v_record_company_id, 'integer');
+                $sql = $db->bindVars($sql, ':languages_id:', $l_id, 'integer');
+                $sql = $db->bindVars($sql, ':record_company_url:',  (isset($filelayout['v_record_company_url_' . $l_id]) ? $items[$filelayout['v_record_company_url_' . $l_id]] : $items[$filelayout['v_record_company_url_' . $lid]]), 'string');
                 $result = ep_4_query($sql);
                 if ($result) {
                   zen_record_admin_activity('Inserted record company info ' . (int) $v_record_company_id . ' via EP4.', 'info');
@@ -1319,13 +1349,15 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
         // BEGIN: music_genre
         if (isset($filelayout['v_music_genre_name'])) {
           if (isset($v_music_genre_name) && ($v_music_genre_name != '') && (mb_strlen($v_music_genre_name) <= $music_genre_name_max_len)) {
-            $sql = "SELECT music_genre_id AS music_genreID FROM " . TABLE_MUSIC_GENRE . " WHERE music_genre_name = '" . addslashes($v_music_genre_name) . "' LIMIT 1";
+            $sql = "SELECT music_genre_id AS music_genreID FROM " . TABLE_MUSIC_GENRE . " WHERE music_genre_name = :music_genre_name: LIMIT 1";
+            $sql = $db->bindVars($sql, ':music_genre_name:', $v_music_genre_name, 'string');
             $result = ep_4_query($sql);
             if ($row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array($result) )) {
               $v_music_genre_id = $row['music_genreID']; // this id goes into the product_music_extra table
             } else { // It is set to autoincrement, do not need to fetch max id
               $sql = "INSERT INTO " . TABLE_MUSIC_GENRE . " (music_genre_name, date_added, last_modified)
-								VALUES ('" . addslashes($v_music_genre_name) . "', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
+								VALUES (:music_genre_name:, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
+              $sql = $db->bindVars($sql, ':music_genre_name:', $v_music_genre_name, 'string');
               $result = ep_4_query($sql);
               if ($result) {
                 zen_record_admin_activity('Inserted music genre ' . addslashes($v_music_genre_name) . ' via EP4.', 'info');
@@ -1404,63 +1436,97 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
               $query .= "products_price_uom = :products_price_uom:, ";
             }
             if ($ep_supported_mods['upc'] == true) { // UPC Code mod
-              $query .= "products_upc = '" . addslashes($v_products_upc) . "', ";
+              $query .= "products_upc = :products_upc:, ";
             }
             if ($ep_supported_mods['gpc'] == true) { // Google Product Category for Google Merhcant Center - chadd 10-1-2011
-              $query .= "products_gpc = '" . addslashes($v_products_gpc) . "',";
+              $query .= "products_gpc = :products_gpc:, ";
             }
             if ($ep_supported_mods['msrp'] == true) { // Manufacturer's Suggested Retail Price
-              $query .= "products_msrp = '" . $v_products_msrp . "',";
+              $query .= "products_msrp = :products_msrp:, ";
             }
             if ($ep_supported_mods['map'] == true) { // Manufacturer's Advertised Price
-              $query .= "map_enabled = '" . $v_map_enabled . "',";
-              $query .= "map_price = '" . $v_map_price . "',";
+              $query .= "map_enabled = :map_enabled:, ";
+              $query .= "map_price = :map_price:, ";
             }
             if ($ep_supported_mods['gppi'] == true) { // Group Pricing Per Item
-              $query .= "products_group_a_price = '" . $v_products_group_a_price . "',";
-              $query .= "products_group_b_price = '" . $v_products_group_b_price . "',";
-              $query .= "products_group_c_price = '" . $v_products_group_c_price . "',";
-              $query .= "products_group_d_price = '" . $v_products_group_d_price . "',";
+              $query .= "products_group_a_price = :products_group_a_price:, ";
+              $query .= "products_group_b_price = :products_group_b_price:, ";
+              $query .= "products_group_c_price = :products_group_c_price:, ";
+              $query .= "products_group_d_price = :products_group_d_price:, ";
             }
             if ($ep_supported_mods['excl'] == true) { // Exclusive Product custom mod
-              $query .= "products_exclusive = '" . addslashes($v_products_exclusive) . "',";
+              $query .= "products_exclusive = :products_exclusive:, ";
             }
             if (count($custom_fields) > 0) {
               foreach ($custom_fields as $field) {
                 if ($field != 'products_id' || ( $field == 'products_id' && EP4_DB_FILTER_KEY === 'blank_new' && zen_not_null($$chosen_key))) {
                   $value = 'v_' . $field;
-                  $query .= "$field = '" . addslashes($$value) . "',";
+                  $query .= ":field: = :value:, ";
+                  $query = $db->bindVars($query, ':field:', $field, 'noquotestring');
+                  $query = $db->bindVars($query, ':value:', ${$value}, 'string');
                 }
               }
             }
-            $query .= "products_image			= '" . addslashes($v_products_image) . "',
-							products_weight					= '" . $v_products_weight . "',
-							products_discount_type          = '" . $v_products_discount_type . "',
-							products_discount_type_from     = '" . $v_products_discount_type_from . "',
-							product_is_call                 = '" . $v_product_is_call . "',
-							products_sort_order             = '" . $v_products_sort_order . "',
-							products_quantity_order_min     = '" . $v_products_quantity_order_min . "',
-							products_quantity_order_units   = '" . $v_products_quantity_order_units . "',
-							products_priced_by_attribute	= '" . $v_products_priced_by_attribute . "',
-							product_is_always_free_shipping	= '" . $v_product_is_always_free_shipping . "',
-							products_tax_class_id			= '" . $v_tax_class_id . "',
-							products_date_available			= $v_date_avail, 
-							products_date_added				= $v_date_added,
+            $query .= "products_image			= :products_image:,
+							products_weight					= :products_weight:,
+							products_discount_type          = :products_discount_type:,
+							products_discount_type_from     = :products_discount_type_from:,
+							product_is_call                 = :product_is_call:,
+							products_sort_order             = :products_sort_order:,
+							products_quantity_order_min     = :products_quantity_order_min:,
+							products_quantity_order_units   = :products_quantity_order_units:,
+							products_priced_by_attribute	= :products_priced_by_attribute:,
+							product_is_always_free_shipping	= :product_is_always_free_shipping:,
+							products_tax_class_id			= :tax_class_id:,
+							products_date_available			= :date_avail:, 
+							products_date_added				= :date_added:,
 							products_last_modified			= CURRENT_TIMESTAMP,
-							products_quantity				= '" . $v_products_quantity . "',
-							master_categories_id			= '" . $v_categories_id . "',
-							manufacturers_id				= '" . $v_manufacturers_id . "',
-							products_status					= '" . $v_db_status . "',
-							metatags_title_status			= '" . $v_metatags_title_status . "',
-							metatags_products_name_status	= '" . $v_metatags_products_name_status . "',
-							metatags_model_status			= '" . $v_metatags_model_status . "',
-							metatags_price_status			= '" . $v_metatags_price_status . "',
-							metatags_title_tagline_status	= '" . $v_metatags_title_tagline_status . "'";
+							products_quantity				= :products_quantity:,
+							master_categories_id			= :categories_id:,
+							manufacturers_id				= :manufacturers_id:,
+							products_status					= :products_status:,
+							metatags_title_status			= :metatags_title_status:,
+							metatags_products_name_status	= :metatags_products_name_status:,
+							metatags_model_status			= :metatags_model_status:,
+							metatags_price_status			= :metatags_price_status:,
+							metatags_title_tagline_status	= :metatags_title_tagline_status:";
             $query = $db->bindVars($query, ':products_model:', $v_products_model , 'string');
             $query = $db->bindVars($query, ':products_type:', $v_products_type , 'integer');
             $query = $db->bindVars($query, ':products_price:', $v_products_price , 'currency');
             $query = $db->bindVars($query, ':products_price_uom:', $v_products_price_uom , 'currency');
-            $query = $db->bindVars($query, ':products_id:', $V_products_id, 'integer');
+            $query = $db->bindVars($query, ':products_id:', $v_products_id, 'integer');
+            $query = $db->bindVars($query, ':products_upc:', $v_products_upc, 'string');
+            $query = $db->bindVars($query, ':products_gpc:', $v_products_gpc, 'string');
+            $query = $db->bindVars($query, ':products_msrp:', $v_products_msrp, 'string');
+            $query = $db->bindVars($query, ':map_enabled:', $v_map_enabled, 'string');
+            $query = $db->bindVars($query, ':map_price:', $v_map_price, 'string');
+            $query = $db->bindVars($query, ':products_group_a_price:', $v_products_group_a_price, 'string');
+            $query = $db->bindVars($query, ':products_group_b_price:', $v_products_group_b_price, 'string');
+            $query = $db->bindVars($query, ':products_group_c_price:', $v_products_group_c_price, 'string');
+            $query = $db->bindVars($query, ':products_group_d_price:', $v_products_group_d_price, 'string');
+            $query = $db->bindVars($query, ':products_exclusive:', $v_products_exclusive, 'string');
+            $query = $db->bindVars($query, ':products_image:', $v_products_image, 'string');
+            $query = $db->bindVars($query, ':products_weight:', $v_products_weight, 'string');
+            $query = $db->bindVars($query, ':products_discount_type:', $v_products_discount_type, 'string');
+            $query = $db->bindVars($query, ':products_discount_type_from:', $v_products_discount_type_from, 'string');
+            $query = $db->bindVars($query, ':product_is_call:', $v_product_is_call, 'string');
+            $query = $db->bindVars($query, ':products_sort_order:', $v_products_sort_order, 'string');
+            $query = $db->bindVars($query, ':products_quantity_order_min:', $v_products_quantity_order_min, 'float');
+            $query = $db->bindVars($query, ':products_quantity_order_units:', $v_products_quantity_order_units, 'float');
+            $query = $db->bindVars($query, ':products_priced_by_attribute:', $v_products_priced_by_attribute, 'string');
+            $query = $db->bindVars($query, ':product_is_always_free_shipping:', $v_product_is_always_free_shipping, 'string');
+            $query = $db->bindVars($query, ':tax_class_id:', $v_tax_class_id, 'integer');
+            $query = $db->bindVars($query, ':date_avail:', $v_date_avail, 'string');
+            $query = $db->bindVars($query, ':date_added:', $v_date_added, 'string');
+            $query = $db->bindVars($query, ':products_quantity:', $v_products_quantity, 'float');
+            $query = $db->bindVars($query, ':categories_id:', $v_categories_id, 'integer');
+            $query = $db->bindVars($query, ':manufacturers_id:', $v_manufacturers_id, 'integer');
+            $query = $db->bindVars($query, ':products_status:', $v_db_status, 'string');
+            $query = $db->bindVars($query, ':metatags_title_status:', $v_metatags_title_status, 'string');
+            $query = $db->bindVars($query, ':metatags_products_name_status:', $v_metatags_products_name_status, 'string');
+            $query = $db->bindVars($query, ':metatags_model_status:', $v_metatags_model_status, 'string');
+            $query = $db->bindVars($query, ':metatags_price_status:', $v_metatags_price_status, 'string');
+            $query = $db->bindVars($query, ':metatags_title_tagline_status:', $v_metatags_title_tagline_status, 'string');
 
             $result = ep_4_query($query);
             if ($result == true) {
@@ -1514,61 +1580,98 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
             $row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array($result));
             // CHADD - why is master_categories_id not being set on update??? //mc12345678 Because on update, the category was already set, on the first upload it was set to be the master_category_id, but now the product is merely updated to add the category(ies) to it, not to update the master_category_id which should be done on a separate transaction.
             $query = "UPDATE " . TABLE_PRODUCTS . " SET
-							products_price = '" . $v_products_price . "',";
+							products_price = :products_price:, ";
             if ($ep_supported_mods['uom'] == true) { // price UOM mod
-              $query .= "products_price_uom = '" . $v_products_price_uom . "',";
+              $query .= "products_price_uom = :products_price_uom:, ";
             }
             if ($ep_supported_mods['upc'] == true) { // UPC Code mod
-              $query .= "products_upc = '" . addslashes($v_products_upc) . "',";
+              $query .= "products_upc = :products_upc:, ";
             }
             if ($ep_supported_mods['gpc'] == true) { // Google Product Category for Google Merhcant Center - chadd 10-1-2011
-              $query .= "products_gpc = '" . addslashes($v_products_gpc) . "',";
+              $query .= "products_gpc = :products_gpc:, ";
             }
             if ($ep_supported_mods['msrp'] == true) { // Manufacturer's Suggested Retail Price
-              $query .= "products_msrp = '" . $v_products_msrp . "',";
+              $query .= "products_msrp = :products_msrp:, ";
             }
             if ($ep_supported_mods['map'] == true) { // Manufacturer's Advertised Price
-              $query .= "map_enabled = '" . $v_map_enabled . "',";
-              $query .= "map_price = '" . $v_map_price . "',";
+              $query .= "map_enabled = :map_enabled:, ";
+              $query .= "map_price = :map_price:, ";
             }
             if ($ep_supported_mods['gppi'] == true) { // Group Pricing Per Item
-              $query .= "products_group_a_price = '" . $v_products_group_a_price . "',";
-              $query .= "products_group_b_price = '" . $v_products_group_b_price . "',";
-              $query .= "products_group_c_price = '" . $v_products_group_c_price . "',";
-              $query .= "products_group_d_price = '" . $v_products_group_d_price . "',";
+              $query .= "products_group_a_price = :products_group_a_price:, ";
+              $query .= "products_group_b_price = :products_group_b_price:, ";
+              $query .= "products_group_c_price = :products_group_c_price:, ";
+              $query .= "products_group_d_price = :products_group_d_price:, ";
             }
             if ($ep_supported_mods['excl'] == true) { // Exclusive Products custom mod
-              $query .= "products_exclusive = '" . addslashes($v_products_exclusive) . "',";
+              $query .= "products_exclusive = :products_exclusive:, ";
             }
             if (count($custom_fields) > 0) {
               foreach ($custom_fields as $field) {
                 $value = 'v_' . $field;
-                $query .= "$field = '" . addslashes($$value) . "',";
+                $query .= ":field: = :value:, ";
+                $query = $db->bindVars($query, ':field:', $field, 'noquotestring');
+                $query = $db->bindVars($query, ':value:', ${$value}, ( ${$value} == (int)${$value} ? 'integer' : 'string'));
               }
             }
-            $query .= "products_image			= '" . addslashes($v_products_image) . "',
-							products_weight					= '" . $v_products_weight . "',
-							products_discount_type			= '" . $v_products_discount_type . "',
-							products_discount_type_from		= '" . $v_products_discount_type_from . "',
-							product_is_call					= '" . $v_product_is_call . "',
-							products_sort_order				= '" . $v_products_sort_order . "',
-							products_quantity_order_min		= '" . $v_products_quantity_order_min . "',
-							products_quantity_order_units	= '" . $v_products_quantity_order_units . "',
-							products_priced_by_attribute	= '" . $v_products_priced_by_attribute . "',
-							product_is_always_free_shipping	= '" . $v_product_is_always_free_shipping . "',
-							products_tax_class_id			= '" . $v_tax_class_id . "',
-							products_date_available			= $v_date_avail,
-							products_date_added				= $v_date_added,
+            $query .= "products_image			= :products_image:,
+							products_weight					= :products_weight:,
+							products_discount_type          = :products_discount_type:,
+							products_discount_type_from     = :products_discount_type_from:,
+							product_is_call                 = :product_is_call:,
+							products_sort_order             = :products_sort_order:,
+							products_quantity_order_min     = :products_quantity_order_min:,
+							products_quantity_order_units   = :products_quantity_order_units:,
+							products_priced_by_attribute	= :products_priced_by_attribute:,
+							product_is_always_free_shipping	= :product_is_always_free_shipping:,
+							products_tax_class_id			= :tax_class_id:,
+							products_date_available			= :date_avail:, 
+							products_date_added				= :date_added:,
 							products_last_modified			= CURRENT_TIMESTAMP,
-							products_quantity				= '" . $v_products_quantity . "',
-							manufacturers_id				= '" . $v_manufacturers_id . "',
-							products_status					= '" . $v_db_status . "',
-							metatags_title_status			= '" . $v_metatags_title_status . "',
-							metatags_products_name_status	= '" . $v_metatags_products_name_status . "',
-							metatags_model_status			= '" . $v_metatags_model_status . "',
-							metatags_price_status			= '" . $v_metatags_price_status . "',
-							metatags_title_tagline_status	= '" . $v_metatags_title_tagline_status . "'" .
-                    " WHERE (products_id = '" . $v_products_id . "')";
+							products_quantity				= :products_quantity:,
+							manufacturers_id				= :manufacturers_id:,
+							products_status					= :products_status:,
+							metatags_title_status			= :metatags_title_status:,
+							metatags_products_name_status	= :metatags_products_name_status:,
+							metatags_model_status			= :metatags_model_status:,
+							metatags_price_status			= :metatags_price_status:,
+							metatags_title_tagline_status	= :metatags_title_tagline_status:
+                     WHERE (products_id = :products_id:)";
+            $query = $db->bindVars($query, ':products_price:', $v_products_price , 'currency');
+            $query = $db->bindVars($query, ':products_price_uom:', $v_products_price_uom , 'currency');
+            $query = $db->bindVars($query, ':products_upc:', $v_products_upc, 'string');
+            $query = $db->bindVars($query, ':products_gpc:', $v_products_gpc, 'string');
+            $query = $db->bindVars($query, ':products_msrp:', $v_products_msrp, 'string');
+            $query = $db->bindVars($query, ':map_enabled:', $v_map_enabled, 'string');
+            $query = $db->bindVars($query, ':map_price:', $v_map_price, 'string');
+            $query = $db->bindVars($query, ':products_group_a_price:', $v_products_group_a_price, 'string');
+            $query = $db->bindVars($query, ':products_group_b_price:', $v_products_group_b_price, 'string');
+            $query = $db->bindVars($query, ':products_group_c_price:', $v_products_group_c_price, 'string');
+            $query = $db->bindVars($query, ':products_group_d_price:', $v_products_group_d_price, 'string');
+            $query = $db->bindVars($query, ':products_exclusive:', $v_products_exclusive, 'string');
+            $query = $db->bindVars($query, ':products_image:', $v_products_image, 'string');
+            $query = $db->bindVars($query, ':products_weight:', $v_products_weight, 'string');
+            $query = $db->bindVars($query, ':products_discount_type:', $v_products_discount_type, 'string');
+            $query = $db->bindVars($query, ':products_discount_type_from:', $v_products_discount_type_from, 'string');
+            $query = $db->bindVars($query, ':product_is_call:', $v_product_is_call, 'string');
+            $query = $db->bindVars($query, ':products_sort_order:', $v_products_sort_order, 'string');
+            $query = $db->bindVars($query, ':products_quantity_order_min:', $v_products_quantity_order_min, 'float');
+            $query = $db->bindVars($query, ':products_quantity_order_units:', $v_products_quantity_order_units, 'float');
+            $query = $db->bindVars($query, ':products_priced_by_attribute:', $v_products_priced_by_attribute, 'string');
+            $query = $db->bindVars($query, ':product_is_always_free_shipping:', $v_product_is_always_free_shipping, 'string');
+            $query = $db->bindVars($query, ':tax_class_id:', $v_tax_class_id, 'integer');
+            $query = $db->bindVars($query, ':date_avail:', $v_date_avail, 'string');
+            $query = $db->bindVars($query, ':date_added:', $v_date_added, 'string');
+            $query = $db->bindVars($query, ':products_quantity:', $v_products_quantity, 'float');
+            $query = $db->bindVars($query, ':categories_id:', $v_categories_id, 'integer');
+            $query = $db->bindVars($query, ':manufacturers_id:', $v_manufacturers_id, 'integer');
+            $query = $db->bindVars($query, ':products_status:', $v_db_status, 'string');
+            $query = $db->bindVars($query, ':metatags_title_status:', $v_metatags_title_status, 'string');
+            $query = $db->bindVars($query, ':metatags_products_name_status:', $v_metatags_products_name_status, 'string');
+            $query = $db->bindVars($query, ':metatags_model_status:', $v_metatags_model_status, 'string');
+            $query = $db->bindVars($query, ':metatags_price_status:', $v_metatags_price_status, 'string');
+            $query = $db->bindVars($query, ':metatags_title_tagline_status:', $v_metatags_title_tagline_status, 'string');
+            $query = $db->bindVars($query, ':products_id:', $v_products_id, 'integer');
 
             $result = ep_4_query($query);
             if ($result == true) {
@@ -1589,10 +1692,14 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
                 $sql_music_extra = ep_4_query("SELECT * FROM " . TABLE_PRODUCT_MUSIC_EXTRA . " WHERE (products_id = '" . $v_products_id . "') LIMIT 1");
                 if (($ep_uses_mysqli ? mysqli_num_rows($sql_music_extra) : mysql_num_rows($sql_music_extra)) == 1) { // update
                   $query = "UPDATE " . TABLE_PRODUCT_MUSIC_EXTRA . " SET
-										artists_id     		= '" . $v_artists_id . "',
-										record_company_id	= '" . $v_record_company_id . "',
-										music_genre_id		= '" . $v_music_genre_id . "' 
-										WHERE products_id   = '" . $v_products_id . "'";
+									artists_id     		= :artists_id:,
+										record_company_id	= :record_company_id:,
+										music_genre_id		= :music_genre_id:
+										WHERE products_id   = :products_id:";
+                  $query = $db->bindVars($query, ':artists_id:', $v_artists_id, 'integer');
+                  $query = $db->bindVars($query, ':record_company_id:', $v_record_company_id, 'integer');
+                  $query = $db->bindVars($query, ':music_genre_id:', $v_music_genre_id, 'integer');
+                  $query = $db->bindVars($query, ':products_id:', $v_products_id, 'integer');
                   $result = ep_4_query($query);
                   if ($result) {
                     zen_record_admin_activity('Updated product music extra ' . (int) $v_artists_id . ' via EP4.', 'info');
@@ -1610,23 +1717,35 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
           if (isset($v_metatags_title)) {
             foreach ($v_metatags_title as $key => $metaData) {
               $sql = "SELECT products_id FROM " . TABLE_META_TAGS_PRODUCTS_DESCRIPTION . " WHERE 
-								(products_id = '$v_products_id' AND language_id = '$key') LIMIT 1 ";
+								(products_id = :products_id: AND language_id = :key:) LIMIT 1 ";
+              $sql = $db->bindVars($sql, ':products_id:', $v_products_id, 'integer');
+              $sql = $db->bindVars($sql, ':key:', $key, 'integer');
               $result = ep_4_query($sql);
               if ($row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array($result))) {
                 // UPDATE
                 $sql = "UPDATE " . TABLE_META_TAGS_PRODUCTS_DESCRIPTION . " SET 
-									metatags_title = '" . addslashes($v_metatags_title[$key]) . "',
-									metatags_keywords = '" . addslashes($v_metatags_keywords[$key]) . "',
-									metatags_description = '" . addslashes($v_metatags_description[$key]) . "'
-									WHERE (products_id = '" . $v_products_id . "' AND language_id = '" . $key . "')";
+									metatags_title = :metatags_title:,
+									metatags_keywords = :metatags_keywords:,
+									metatags_description = :metatags_description:
+									WHERE (products_id = :products_id: AND language_id = :key:)";
+                $sql = $db->bindVars($sql, ':metatags_title:', ep_4_curly_quotes($v_metatags_title[$key]), 'string');
+                $sql = $db->bindVars($sql, ':metatags_keywords:', ep_4_curly_quotes($v_metatags_keywords[$key]), 'string');
+                $sql = $db->bindVars($sql, ':metatags_description:', ep_4_curly_quotes($v_metatags_description[$key]), 'string');
+                $sql = $db->bindVars($sql, ':products_id:', $v_products_id, 'integer');
+                $sql = $db->bindVars($sql, ':key:', $key, 'integer');
               } else {
                 // NEW
                 $sql = "INSERT INTO " . TABLE_META_TAGS_PRODUCTS_DESCRIPTION . " SET 
-									metatags_title = '" . addslashes($v_metatags_title[$key]) . "',
-									metatags_keywords = '" . addslashes($v_metatags_keywords[$key]) . "',
-									metatags_description = '" . addslashes($v_metatags_description[$key]) . "',
-									products_id = '" . $v_products_id . "',
-									language_id = '" . $key . "'";
+									metatags_title = :metatags_title:,
+									metatags_keywords = :metatags_keywords:,
+									metatags_description = :metatags_description:,
+									products_id = :products_id:,
+									language_id = :key:";
+                $sql = $db->bindVars($sql, ':metatags_title:', ep_4_curly_quotes($v_metatags_title[$key]), 'string');
+                $sql = $db->bindVars($sql, ':metatags_keywords:', ep_4_curly_quotes($v_metatags_keywords[$key]), 'string');
+                $sql = $db->bindVars($sql, ':metatags_description:', ep_4_curly_quotes($v_metatags_description[$key]), 'string');
+                $sql = $db->bindVars($sql, ':products_id:', $v_products_id, 'integer');
+                $sql = $db->bindVars($sql, ':key:', $key, 'integer');
               }
               $result = ep_4_query($sql);
               if ($result) {
@@ -1734,8 +1853,10 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
           if (isset($v_products_name)) {
             foreach ($v_products_name as $key => $name) {
               $sql = "SELECT * FROM " . TABLE_PRODUCTS_DESCRIPTION . " WHERE
-                        products_id = " . $v_products_id . " AND
-                        language_id = " . $key;
+                        products_id = :products_id: AND
+                        language_id = :language_id:";
+              $sql = $db->bindVars($sql, ':products_id:', $v_products_id, 'integer');
+              $sql = $db->bindVars($sql, ':language_id:', $key, 'integer');
               $result = ep_4_query($sql);
 
               if (($ep_uses_mysqli ? mysqli_num_rows($result) : mysql_num_rows($result)) == 0) {
@@ -1749,27 +1870,39 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
                 }
                 $sql .= " products_url )
                             VALUES (
-                            '" . $v_products_id . "',
-                            " . $key . ",
-                            '" . addslashes($name) . "', " .
-                        ((isset($filelayout['v_products_description_' . $key]) || ( isset($filelayout['v_products_description_' . $key]) && $product_is_new) ) ? "'" . addslashes($v_products_description[$key]) . "'," : "");
+                            :products_id:,
+                            :language_id:,
+                            :products_name:, " .
+                        ((isset($filelayout['v_products_description_' . $key]) || ( isset($filelayout['v_products_description_' . $key]) && $product_is_new) ) ? " :products_description:," : "");
                 if ($ep_supported_mods['psd'] == true) {
-                  $sql .= "'" . addslashes($v_products_short_desc[$key]) . "',";
+                  $sql .= " :products_short_desc:,";
                 }
-                $sql .= "'" . addslashes($v_products_url[$key]) . "')";
+                $sql .= " :products_url:)";
+                $sql = $db->bindVars($sql, ':products_id:', $v_products_id, 'integer');
+                $sql = $db->bindVars($sql, ':language_id:', $key, 'integer');
+                $sql = $db->bindVars($sql, ':products_name:', $name, 'string');
+                $sql = $db->bindVars($sql, ':products_description:', $v_products_description[$key], 'string');
+                $sql = $db->bindVars($sql, ':products_short_desc:', $v_products_short_desc[$key], 'string');
+                $sql = $db->bindVars($sql, ':products_url:', $v_products_url[$key], 'string');
                 $result = ep_4_query($sql);
                 if ($result) {
                   zen_record_admin_activity('New product ' . (int) $v_products_id . ' description added via EP4.', 'info');
                 }
               } else { // already in the description, update it
                 $sql = "UPDATE " . TABLE_PRODUCTS_DESCRIPTION . " SET
-       products_name        ='" . addslashes($name) . "', " .
-                        ((isset($filelayout['v_products_description_' . $key]) || ( isset($filelayout['v_products_description_' . $key]) && $product_is_new) ) ? "products_description ='" . addslashes($v_products_description[$key]) . "'," : "");
+       products_name        = :products_name:, " .
+                        ((isset($filelayout['v_products_description_' . $key]) || ( isset($filelayout['v_products_description_' . $key]) && $product_is_new) ) ? "products_description = :products_description:," : "");
                 if ($ep_supported_mods['psd'] == true) {
-                  $sql .= " products_short_desc = '" . addslashes($v_products_short_desc[$key]) . "',";
+                  $sql .= " products_short_desc = :products_short_desc:,";
                 }
-                $sql .= " products_url='" . addslashes($v_products_url[$key]) . "'
-       WHERE products_id = '" . $v_products_id . "' AND language_id = '" . $key . "'";
+                $sql .= " products_url= :products_url:
+       WHERE products_id = :products_id: AND language_id = :language_id:";
+                $sql = $db->bindVars($sql, ':products_name:', $name, 'string');
+                $sql = $db->bindVars($sql, ':products_description:', $v_products_description[$key], 'string');
+                $sql = $db->bindVars($sql, ':products_short_desc:', $v_products_short_desc[$key], 'string');
+                $sql = $db->bindVars($sql, ':products_url:', $v_products_url[$key], 'string');
+                $sql = $db->bindVars($sql, ':products_id:', $v_products_id, 'integer');
+                $sql = $db->bindVars($sql, ':language_id:', $key, 'integer');
                 $result = ep_4_query($sql);
                 if ($result) {
                   zen_record_admin_activity('Updated product ' . (int) $v_products_id . ' description via EP4.', 'info');
@@ -1933,12 +2066,16 @@ $result_incategory = ($ep_uses_mysqli ? mysqli_fetch_array($result_incategory) :
 							expires_date,
 							status)
 							VALUES (
-							'" . (int) $v_products_id . "',
-							'" . $v_specials_price . "',
+							:products_id:,
+							:specials_price:,
 							now(),
-							'" . $v_specials_date_avail . "',
-							'" . $v_specials_expires_date . "',
+							:specials_date_avail:,
+							:specials_expires_date:,
 							'1')";
+              $sql = $db->bindVars($sql, ':products_id:', $v_products_id, 'integer');
+              $sql = $db->bindVars($sql, ':specials_price:', $v_specials_price, 'float');
+              $sql = $db->bindVars($sql, ':specials_date_avail:', $v_specials_date_avail, 'string');
+              $sql = $db->bindVars($sql, ':specials_expires_date:', $v_specials_expires_date, 'string');
               $result = ep_4_query($sql);
               if ($result) {
                 zen_record_admin_activity('Inserted special ' . (int) $v_products_id . ' via EP4.', 'info');
@@ -1952,12 +2089,16 @@ $result_incategory = ($ep_uses_mysqli ? mysqli_fetch_array($result_incategory) :
               }
               // just make an update
               $sql = "UPDATE " . TABLE_SPECIALS . " SET
-							specials_new_products_price	= '" . $v_specials_price . "',
+							specials_new_products_price	= :specials_price:,
 							specials_last_modified		= now(),
-							specials_date_available		= '" . $v_specials_date_avail . "',
-							expires_date				= '" . $v_specials_expires_date . "',
+							specials_date_available		= :specials_date_avail:,
+							expires_date				= :specials_expires_date:,
 							status						= '1'
-							WHERE products_id			= '" . (int) $v_products_id . "'";
+							WHERE products_id			= :products_id:";
+              $sql = $db->bindVars($sql, ':specials_price:', $v_specials_price, 'float');
+              $sql = $db->bindVars($sql, ':specials_date_avail:', $v_specials_date_avail, 'string');
+              $sql = $db->bindVars($sql, ':specials_expires_date:', $v_specials_expires_date, 'string');
+              $sql = $db->bindVars($sql, ':products_id:', $v_products_id, 'integer');
               $result = ep_4_query($sql);
               if ($result) {
                 zen_record_admin_activity('Updated special ' . (int) $v_products_id . ' via EP4.', 'info');
