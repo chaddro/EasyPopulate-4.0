@@ -248,7 +248,7 @@ while ($row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array
       $l_id = $row['v_language_id'];
       $active_row['v_products_options_name_' . $l_id] = $row['v_products_options_name'];
       $active_row['v_products_options_values_name_' . $l_id] = $row['v_products_options_values_name'];
-    } // end products_id action
+    } // end of special case 'attrib_basic'
   } else { // standard export processing // end of special case 'attrib_basic'
 		if ($ep_dltype == 'orders_1' || $ep_dltype == 'orders_2' || $ep_dltype == 'orders_3' || $ep_dltype == 'orders_4') {
       if ((!isset($tracker['v_orders_id']) && !zen_not_null($tracker['v_orders_id'])) || $row['v_orders_id'] != $tracker['v_orders_id']) {
@@ -442,7 +442,7 @@ while ($row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array
       $lid = $lang['id'];
       $row['v_categories_name_' . $lid] = rtrim($row['v_categories_name_' . $lid], $category_delimiter);
     } // foreach
-  } // if() delimited categories path
+  } // if($ep_dltype == 'full' || $ep_dltype == 'category') delimited categories path
 
   //This will do all of the special work to provide the remaining row data:
   //  	'v_SBA_tracked';
@@ -726,7 +726,7 @@ while ($row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array
     } else {
       $row['v_music_genre_name'] = '';
     }
-  }
+  } // if (v_artists_name && v_products_type)
 
 
   // MANUFACTURERS EXPORT - THIS NEEDS MULTI-LINGUAL SUPPORT LIKE EVERYTHING ELSE!
