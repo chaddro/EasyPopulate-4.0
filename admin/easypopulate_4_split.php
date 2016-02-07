@@ -10,7 +10,7 @@ if ( isset($_POST['split']) ) {
 } else {
 	die("invalid program entry");
 }
-$file_location = DIR_FS_CATALOG . $tempdir . $file_name;
+$file_location = (EP4_ADMIN_TEMP_DIRECTORY !== 'true' ? /* Storeside */ DIR_FS_CATALOG : /* Admin side */ DIR_FS_ADMIN) . $tempdir . $file_name;
 // if no error, retreive header row
 if (!file_exists($file_location)) {
 	echo "ERROR: File Does Not Exist: ".$file_location."<br>";
@@ -36,7 +36,7 @@ while ( ($file_data = fgets($handle)) !== false ) { // read 1 line of data and e
 		// str_pad($split_counter, 2, "0", STR_PAD_LEFT)
 		$split_filename = substr($file_name, 0, strlen($file_name)-4)."_".str_pad($split_counter, 2, "0", STR_PAD_LEFT).".csv";
 		// $split_filename = substr($file_name, 0, strlen($file_name)-4)."_".$split_counter.".csv";
-		$split_location = DIR_FS_CATALOG . $tempdir . $split_filename;
+		$split_location = (EP4_ADMIN_TEMP_DIRECTORY !== 'true' ? /* Storeside */ DIR_FS_CATALOG : /* Admin side */ DIR_FS_ADMIN) . $tempdir . $split_filename;
 		$split_handle = fopen($split_location, "w") or die("can't create split file");
 		// write header
 		fwrite($split_handle, $file_header);
