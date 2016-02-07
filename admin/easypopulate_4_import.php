@@ -22,6 +22,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
   $ep_error_count = 0; // errors detected during import
   $ep_warning_count = 0; // warning detected during import
 
+  $zco_notifier->notify('EP4_IMPORT_START');
   // When updating products info, these values are used for existing data
   // This allows a reduced number of columns to be used on updates 
   // otherwise these would have to be exported/imported every time
@@ -636,6 +637,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
     } // if
 
     if (( strtolower(substr($file['name'], 0, 15)) <> "categorymeta-ep") && ( strtolower(substr($file['name'], 0, 7)) <> "attrib-") && ($ep_4_SBAEnabled != false ? ( strtolower(substr($file['name'], 0, 4)) <> "sba-") : true )) { //  temporary solution here... 12-06-2010
+      $zco_notifier->notify('EP4_IMPORT_GENERAL_FILE_ALL');
 	
       // Main IMPORT loop For Product Related Data. v_products_id is the main key
       while ($items = fgetcsv($handle, 0, $csv_delimiter, $csv_enclosure)) { // read 1 line of data
@@ -680,6 +682,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
         if ($ep_supported_mods['excl'] == true) { // Exclusive Product Custom Mod
           $sql .= 'p.products_exclusive as v_products_exclusive,';
         }
+        $zco_notifier->notify('EP4_IMPORT_PRODUCT_DEFAULT_SELECT_FIELDS');
         if (count($custom_fields) > 0) {
           foreach ($custom_fields as $field) {
             $sql .= 'p.' . $field . ' as v_' . $field . ',';
@@ -709,8 +712,9 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
 					FROM ' .
                 TABLE_PRODUCTS_TO_CATEGORIES . ' as ptoc,' .
                 TABLE_CATEGORIES . ' as subc,' .
-                TABLE_PRODUCTS . " as p 
-			WHERE
+                TABLE_PRODUCTS . " as p ";
+        $zco_notifier->notify('EP4_IMPORT_PRODUCT_DEFAULT_SELECT_TABLES');
+        $sql .= "WHERE
 					p.products_id      = ptoc.products_id AND
 					ptoc.categories_id = subc.categories_id AND ";
         switch (EP4_DB_FILTER_KEY){
@@ -1135,8 +1139,10 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
             $row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array($result));
             // if $row is not null, we found entry, so retrive info
             if ($row != '') { // category exists
+              $parent_category_id = $theparent_id;
               foreach ($row as $item) {
                 $thiscategoryid = $item; // array of data
+                $current_category_id = $thiscategoryid;
               }
               foreach ($langcode as $key => $lang2) {
                 $v_categories_name_check = 'v_categories_name_' . $lang2['id'];
@@ -1173,6 +1179,8 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
 								)";
               $sql = $db->bindVars($sql, ':categories_id:', $max_category_id, 'integer');
               $sql = $db->bindVars($sql, ':parent_id:', $theparent_id, 'integer');
+              $current_category_id = $max_category_id;
+              $parent_category_id = $theparent_id;
               $result = ep_4_query($sql);
               if ($result) {
                 zen_record_admin_activity('Inserted category ' . (int) $max_category_id . ' via EP4.', 'info');
@@ -1214,9 +1222,9 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
             $v_categories_id = $thiscategoryid;
           } // ( $category_index=0; $category_index<$catego.....
         } // (isset(${$v_categories_name_var}))
-        // END: CATEGORIES2 ===============================================================================================	
-		
 
+        $zco_notifier->notify('EP4_IMPORT_AFTER_CATEGORY');
+        // END: CATEGORIES2 ===============================================================================================	
         // HERE ==========================>
         // BEGIN: record_artists
         if (isset($filelayout['v_artists_name'])) {
@@ -2100,6 +2108,7 @@ $result_incategory = ($ep_uses_mysqli ? mysqli_fetch_array($result_incategory) :
               $sql = $db->bindVars($sql, ':specials_price:', $v_specials_price, 'float');
               $sql = $db->bindVars($sql, ':specials_date_avail:', $v_specials_date_avail, 'string');
               $sql = $db->bindVars($sql, ':specials_expires_date:', $v_specials_expires_date, 'string');
+
               $result = ep_4_query($sql);
               if ($result) {
                 zen_record_admin_activity('Inserted special ' . (int) $v_products_id . ' via EP4.', 'info');

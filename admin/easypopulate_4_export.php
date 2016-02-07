@@ -89,13 +89,16 @@ if ($ep_dltype == 'SBAStockProdFilter') {
 
 $filelayout = array();
 $filelayout_sql = '';
-$filelayout = ep_4_set_filelayout($ep_dltype, $filelayout_sql, $sql_filter, $langcode, $ep_supported_mods, $custom_fields);
+require(DIR_FS_ADMIN . DIR_WS_MODULES . 'easypopulate_4_filelayout.php');
+//$filelayout = ep_4_set_filelayout($ep_dltype, $filelayout_sql, $sql_filter, $langcode, $ep_supported_mods, $custom_fields);
 
 if (($ep_dltype == 'full' || $ep_dltype == 'categorymeta') && EASYPOPULATE_4_CONFIG_EXPORT_URI != '0') {
   //require_once(DIR_FS_CATALOG . DIR_WS_FUNCTIONS . 'functions_categories.php');
   $filelayout[] = 'v_html_uri';
 }
+
 $zco_notifier->notify('EP4_EXPORT_FILE_ARRAY_START');
+
 $filelayout = array_flip($filelayout);
 // END: File Download Layouts
 
@@ -192,6 +195,7 @@ $print1 = 0;
 $result = ep_4_query($filelayout_sql);
 
 $zco_notifier->notify('EP4_EXPORT_WHILE_START');
+
 while ($row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array($result))) {
 
   if ($ep_dltype == 'attrib_basic') { // special case 'attrib_basic'
@@ -306,6 +310,7 @@ while ($row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array
         }
       } // end isset($filelayout['v_products_attributes_filename'])
     } // end elseif (SBA_detailed)
+
   // Products Image
   if (isset($filelayout['v_products_image'])) {
     $products_image = (($row['v_products_image'] == PRODUCTS_IMAGE_NO_IMAGE) ? '' : $row['v_products_image']);
@@ -314,6 +319,7 @@ while ($row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array
   if ($ep_dltype == 'full' || $ep_dltype == 'SBAStock') {
 
     $zco_notifier->notify('EP4_EXPORT_LOOP_FULL_OR_SBASTOCK');
+
 			// names and descriptions require that we loop thru all installed languages
     foreach ($langcode as $key2 => $lang2) {
       $lid2 = $lang2['id'];
@@ -329,23 +335,21 @@ while ($row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array
         $row['v_products_short_desc_' . $lid2] = $row2['products_short_desc'];
       }
       $row['v_products_url_' . $lid2] = $row2['products_url'];
-	  $zco_notifier->notify('EP4_EXPORT_LOOP_FULL_OR_SBASTOCK_LOOP');
-    } // End modification for CEON URI Rewriter mc12345678
-
-    foreach ($langcode as $key => $lang) {
-      $lid = $lang['id'];
       // metaData start
+      // for each language, get the description and set the vals
       $sqlMeta = 'SELECT * FROM ' . TABLE_META_TAGS_PRODUCTS_DESCRIPTION . ' WHERE products_id = :products_id: AND language_id = :language_id: LIMIT 1 ';
       $sqlMeta = $db->bindVars($sqlMeta, ':products_id:', $row['v_products_id'], 'integer');
-      $sqlMeta = $db->bindVars($sqlMeta, ':language_id:', $lid, 'integer');
+      $sqlMeta = $db->bindVars($sqlMeta, ':language_id:', $lid2, 'integer');
       $resultMeta = ep_4_query($sqlMeta);
       $rowMeta = ($ep_uses_mysqli ? mysqli_fetch_array($resultMeta) : mysql_fetch_array($resultMeta));
-      $row['v_metatags_title_' . $lid] = $rowMeta['metatags_title'];
-      $row['v_metatags_keywords_' . $lid] = $rowMeta['metatags_keywords'];
-      $row['v_metatags_description_' . $lid] = $rowMeta['metatags_description'];
+      $row['v_metatags_title_' . $lid2] = $rowMeta['metatags_title'];
+      $row['v_metatags_keywords_' . $lid2] = $rowMeta['metatags_keywords'];
+      $row['v_metatags_description_' . $lid2] = $rowMeta['metatags_description'];
       // metaData end
-      // for each language, get the description and set the vals
+      $zco_notifier->notify('EP4_EXPORT_LOOP_FULL_OR_SBASTOCK_LOOP');
     } // foreach
+
+    $zco_notifier->notify('EP4_EXPORT_LOOP_FULL_OR_SBASTOCK_END');
   } // if($ep_dltype == 'full')
 
   // BEGIN: Specials
@@ -365,6 +369,8 @@ while ($row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array
       $row['v_specials_expires_date'] = '';
     }
   } // END: Specials
+
+  $zco_notifier->notify('EP4_EXPORT_SPECIALS_AFTER');
 
   // Multi-Lingual Categories, Categories Meta, Categories Descriptions
   if ($ep_dltype == 'categorymeta') {
@@ -414,6 +420,9 @@ while ($row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array
       //function zen_href_link($page = '', $parameters = '', $connection = 'NONSSL', $add_session_id = true, $search_engine_safe = true, $static = false, $use_dir_ws_catalog = true) 
     }
     // $fullcategory = array(); // this will have the entire category path separated by $category_delimiter
+
+  $zco_notifier->notify('EP4_EXPORT_FULL_OR_CAT_FULL_AFTER');
+
     // if parent_id is not null ('0'), then follow it up.  Perhaps this could be replaced by Zen's zen_not_null() function?
     while (!empty($thecategory_id)) {
       // mult-lingual categories start - for each language, get category description and name
