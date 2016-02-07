@@ -5,8 +5,8 @@ if (!defined('IS_ADMIN_FLAG')) {
   die('Illegal Access');
 }
 
-if ( isset($_GET['split']) ) { 
-	$file_name = $_GET['split'];
+if ( isset($_POST['split']) ) { 
+	$file_name = $_POST['split'];
 } else {
 	die("invalid program entry");
 }

@@ -243,10 +243,10 @@ if (ep_4_CEONURIExists() == true) {
 if ( (!is_null($_POST['export']) && isset($_POST['export'])) OR (!is_null($_GET['export']) && isset($_GET['export'])) || (!is_null($_POST['exportorder']) && isset($_POST['exportorder'])) ) {
   include_once('easypopulate_4_export.php'); // this file contains all data export code
 }
-if (!is_null($_GET['import']) && isset($_GET['import'])) {
+if (!is_null($_POST['import']) && isset($_POST['import'])) {
   include_once('easypopulate_4_import.php'); // this file contains all data import code
 }
-if (!is_null($_GET['split']) && isset($_GET['split'])) {
+if (!is_null($_POST['split']) && isset($_POST['split'])) {
   include_once('easypopulate_4_split.php'); // this file has split code
 }
 
@@ -267,12 +267,12 @@ if (isset($_FILES['uploadfile'])) {
 }
 
 // Handle file deletion (delete only in the current directory for security reasons)
-if (((isset($error) && !$error) || !isset($error)) && (!is_null($_REQUEST["delete"]) && isset($_REQUEST["delete"])) && !is_null($_SERVER["SCRIPT_FILENAME"]) && $_REQUEST["delete"] != basename($_SERVER["SCRIPT_FILENAME"])) {
-  if (preg_match("/(\.(sql|gz|csv|txt|log))$/i", $_REQUEST["delete"]) && @unlink($upload_dir . basename($_REQUEST["delete"]))) {
-    // $messageStack->add(sprintf($_REQUEST["delete"]." was deleted successfully"), 'success');
+if (((isset($error) && !$error) || !isset($error)) && (!is_null($_POST["delete"]) && isset($_POST["delete"])) && !is_null($_SERVER["SCRIPT_FILENAME"]) && $_POST["delete"] != basename($_SERVER["SCRIPT_FILENAME"])) {
+  if (preg_match("/(\.(sql|gz|csv|txt|log))$/i", $_POST["delete"]) && @unlink($upload_dir . basename($_POST["delete"]))) {
+    // $messageStack->add(sprintf($_POST["delete"]." was deleted successfully"), 'success');
     zen_redirect(zen_href_link(FILENAME_EASYPOPULATE_4));
   } else {
-    $messageStack->add(sprintf("Cannot delete file: " . $_REQUEST["delete"]), 'caution');
+    $messageStack->add(sprintf("Cannot delete file: " . $_POST["delete"]), 'caution');
     // zen_redirect(zen_href_link(FILENAME_EASYPOPULATE_4));
   }
 }
@@ -612,18 +612,25 @@ if (((isset($error) && !$error) || !isset($error)) && (!is_null($_REQUEST["delet
                 // file management
                 if ($ext == 'csv') {
                   // $_SERVER["PHP_SELF"] vs $_SERVER['SCRIPT_NAME']
-                  echo "<td align=center><a href=\"" . $_SERVER['SCRIPT_NAME'] . "?split=" . $files[$val[$i]] . "\">Split</a></td>\n";
+//                  echo "<td align=center><a href=\"" . $_SERVER['SCRIPT_NAME'] . "?split=" . $files[$val[$i]] . "\">" . EASYPOPULATE_4_DISPLAY_EXPORT_FILE_SPLIT . "</a></td>\n";
+                  echo "<td align=center>" . zen_draw_form('split_form', basename($_SERVER['SCRIPT_NAME']), /*$parameters = */'', 'post', /*$params =*/ '', $request_type == 'SSL') . zen_draw_hidden_field('split', urlencode($files[$val[$i]]), /*$parameters = */'') . zen_draw_input_field('split_button', EASYPOPULATE_4_DISPLAY_EXPORT_FILE_SPLIT, /*$parameters = */'', /*$required = */false, /*$type = */'submit') . "</form></td>\n"; //. "<a href=\"" . $_SERVER['SCRIPT_NAME'] . "?split=" . $files[$val[$i]] . "\">" . EASYPOPULATE_4_DISPLAY_EXPORT_FILE_SPLIT . "</a></td>\n";
                   if (strtolower(substr($files[$val[$i]], 0, 12)) == "sba-stock-ep") {
-                    echo "<td align=center><a href=\"" . $_SERVER['SCRIPT_NAME'] . "?import=" . $files[$val[$i]] . "\">Import</a><br /><a href=\"" . $_SERVER['SCRIPT_NAME'] . "?import=" . $files[$val[$i]] . "&amp;sync=1\">Import w/Sync</a></td>\n";
+//                    echo "<td align=center><a href=\"" . $_SERVER['SCRIPT_NAME'] . "?import=" . $files[$val[$i]] . "\">" . EASYPOPULATE_4_DISPLAY_EXPORT_FILE_IMPORT . "</a><br /><a href=\"" . $_SERVER['SCRIPT_NAME'] . "?import=" . $files[$val[$i]] . "&amp;sync=1\"><?php echo EASYPOPULATE_4_DISPLAY_EXPORT_FILE_IMPORT_SYNC; </a></td>\n";
+                    echo "<td align=center>" . zen_draw_form('import_form', basename($_SERVER['SCRIPT_NAME']), /*$parameters = */'', 'post', /*$params =*/ '', $request_type == 'SSL') . zen_draw_hidden_field('import', urlencode($files[$val[$i]]), /*$parameters = */'') . zen_draw_input_field('import_button', EASYPOPULATE_4_DISPLAY_EXPORT_FILE_IMPORT, /*$parameters = */'', /*$required = */false, /*$type = */'submit') . "</form><br />" . zen_draw_form('import_form', basename($_SERVER['SCRIPT_NAME']), /*$parameters = */'', 'post', /*$params =*/ '', $request_type == 'SSL') . zen_draw_hidden_field('import', urlencode($files[$val[$i]]), /*$parameters = */'') . zen_draw_hidden_field('sync', '1', /*$parameters = */'') . zen_draw_input_field('import_button', EASYPOPULATE_4_DISPLAY_EXPORT_FILE_IMPORT_SYNC, /*$parameters = */'', /*$required = */false, /*$type = */'submit') . "</form></td>\n"; //"<a href=\"" . $_SERVER['SCRIPT_NAME'] . "?import=" . $files[$val[$i]] . "\">" . EASYPOPULATE_4_DISPLAY_EXPORT_FILE_IMPORT . "</a><br /><a href=\"" . $_SERVER['SCRIPT_NAME'] . "?import=" . $files[$val[$i]] . "&amp;sync=1\"><?php echo EASYPOPULATE_4_DISPLAY_EXPORT_FILE_IMPORT_SYNC; //</a></td>\n";
                   } else {
-                    echo "<td align=center><a href=\"" . $_SERVER['SCRIPT_NAME'] . "?import=" . $files[$val[$i]] . "\">Import</a></td>\n";
+//                    echo "<td align=center><a href=\"" . $_SERVER['SCRIPT_NAME'] . "?import=" . $files[$val[$i]] . "\">" . EASYPOPULATE_4_DISPLAY_EXPORT_FILE_IMPORT . "</a></td>\n";
+                    echo "<td align=center>" . zen_draw_form('import_form', basename($_SERVER['SCRIPT_NAME']), /*$parameters = */'', 'post', /*$params =*/ '', $request_type == 'SSL') . zen_draw_hidden_field('import', urlencode($files[$val[$i]]), /*$parameters = */'') . zen_draw_input_field('import_button', EASYPOPULATE_4_DISPLAY_EXPORT_FILE_IMPORT, /*$parameters = */'', /*$required = */false, /*$type = */'submit') . "</form></td>\n"; // <a href=\"" . $_SERVER['SCRIPT_NAME'] . "?import=" . $files[$val[$i]] . "\">" . EASYPOPULATE_4_DISPLAY_EXPORT_FILE_IMPORT . "</a></td>\n";
                   }
-                  echo "<td align=center><a href=\"" . $_SERVER['SCRIPT_NAME'] . "?delete=" . urlencode($files[$val[$i]]) . "\">Delete file</a></td>";
+//        echo zen_draw_form('custom', 'easypopulate_4.php', '', 'post', 'id="custom"');
+
+                  echo "<td align=center>" . zen_draw_form('delete_form', basename($_SERVER['SCRIPT_NAME']), /*$parameters = */'', 'post', /*$params =*/ '', $request_type == 'SSL') . zen_draw_hidden_field('delete', urlencode($files[$val[$i]]), /*$parameters = */'') . zen_draw_input_field('delete_button', EASYPOPULATE_4_DISPLAY_EXPORT_FILE_DELETE, /*$parameters = */'', /*$required = */false, /*$type = */'submit') . "</form></td>";
+/*                  echo "<td align=center><a href=\"" . $_SERVER['SCRIPT_NAME'] . "?delete=" . urlencode($files[$val[$i]]) . "\">" . EASYPOPULATE_4_DISPLAY_EXPORT_FILE_DELETE . "</a></td>";*/
                   echo "<td align=center><a href=\"" . ($request_type == 'SSL' ? (EP4_ADMIN_TEMP_DIRECTORY !== 'true' ? /* Storeside */ HTTPS_CATALOG_SERVER . DIR_WS_HTTPS_CATALOG : /*Admin Side */ HTTPS_SERVER . DIR_WS_HTTPS_ADMIN) : (EP4_ADMIN_TEMP_DIRECTORY !== 'true' ? /* Storeside */ HTTP_CATALOG_SERVER . DIR_WS_CATALOG : /*Admin Side */ HTTP_SERVER . DIR_WS_ADMIN)) . $tempdir . $files[$val[$i]] . "\" target=_blank>" . EASYPOPULATE_4_DISPLAY_EXPORT_FILE_DOWNLOAD . "</a></td></tr>\n";
                 } else {
                   echo "<td>&nbsp;</td>\n";
                   echo "<td>&nbsp;</td>\n";
-                  echo "<td align=center><a href=\"" . $_SERVER['SCRIPT_NAME'] . "?delete=" . urlencode($files[$val[$i]]) . "\">Delete file</a></td>";
+//                  echo "<td align=center><a href=\"" . $_SERVER['SCRIPT_NAME'] . "?delete=" . urlencode($files[$val[$i]]) . "\">" . EASYPOPULATE_4_DISPLAY_EXPORT_FILE_DELETE . "</a></td>";
+                  echo "<td align=center>" . zen_draw_form('delete_form', basename($_SERVER['SCRIPT_NAME']), /*$parameters = */'', 'post', /*$params =*/ '', $request_type == 'SSL') . zen_draw_hidden_field('delete', urlencode($files[$val[$i]]), /*$parameters = */'') . zen_draw_input_field('delete_button', EASYPOPULATE_4_DISPLAY_EXPORT_FILE_DELETE, /*$parameters = */'', /*$required = */false, /*$type = */'submit') . "</form></td>";
                   echo "<td align=center><a href=\"" . ($request_type == 'SSL' ? (EP4_ADMIN_TEMP_DIRECTORY !== 'true' ? /* Storeside */ HTTPS_CATALOG_SERVER . DIR_WS_HTTPS_CATALOG : /*Admin Side */ HTTPS_SERVER . DIR_WS_HTTPS_ADMIN) : (EP4_ADMIN_TEMP_DIRECTORY !== 'true' ? /* Storeside */ HTTP_CATALOG_SERVER . DIR_WS_CATALOG : /*Admin Side */ HTTP_SERVER . DIR_WS_ADMIN)) . $tempdir . $files[$val[$i]] . "\" target=_blank>" . EASYPOPULATE_4_DISPLAY_EXPORT_FILE_DOWNLOAD . "</a></td></tr>\n";
                 }
               }

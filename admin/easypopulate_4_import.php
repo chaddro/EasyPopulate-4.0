@@ -10,11 +10,11 @@ if (!defined(EP4_REPLACE_BLANK_IMAGE)) {
 }
 
 // BEGIN: Data Import Module
-if (!is_null($_GET['import']) && isset($_GET['import'])) {
+if (!is_null($_POST['import']) && isset($_POST['import'])) {
   $time_start = microtime(true); // benchmarking
   $display_output .= EASYPOPULATE_4_DISPLAY_HEADING;
 
-  $file = array('name' => $_GET['import']);
+  $file = array('name' => $_POST['import']);
   $display_output .= sprintf(EASYPOPULATE_4_DISPLAY_LOCAL_FILE_SPEC, $file['name']);
 
   $ep_update_count = 0; // product records updated 
@@ -459,14 +459,13 @@ if (!is_null($_GET['import']) && isset($_GET['import'])) {
     // $stock class:
     // require(DIR_WS_CLASSES . 'products_with_attributes_stock.php');
     // $stock = new products_with_attributes_stock;
-    // 		if(is_numeric((int)$_GET['products_id'])){
-
-    //			$stock->update_parent_products_stock((int)$_GET['products_id']);
+    // 		if(is_numeric((int)$_POST['products_id'])){
+    //			$stock->update_parent_products_stock((int)$_POST['products_id']);
     //		$messageStack->add_session('Parent Product Quantity Updated', 'success');
 
     if (strtolower(substr($file['name'], 0, 12)) == "sba-stock-ep" && $ep_4_SBAEnabled != false) {
       $sync = false;
-      if (!is_null($_GET['sync']) && isset($_GET['sync']) && $_GET['sync'] == '1') {
+      if (!is_null($_POST['sync']) && isset($_POST['sync']) && $_POST['sync'] == '1') {
         $query = array();
         $sync = true;
 
