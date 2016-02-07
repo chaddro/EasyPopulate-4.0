@@ -1031,7 +1031,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
             $sql = $db->bindVars($sql, ':manufacturers_name:', ep_4_curly_quotes($v_manufacturers_name), 'string');
             $result = ep_4_query($sql);
             if ($result) {
-              zen_record_admin_activity('Inserted manufacturer ' . addslashes($v_manufactureres_name) . ' via EP4.', 'info');
+              zen_record_admin_activity('Inserted manufacturer ' . addslashes($v_manufacturers_name) . ' via EP4.', 'info');
             }
             $v_manufacturers_id = ($ep_uses_mysqli ? mysqli_insert_id($db->link) : mysql_insert_id()); // id is auto_increment, so can use this function
 				
