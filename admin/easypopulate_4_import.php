@@ -579,8 +579,8 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
 							WHERE 
 							(categories_id = :categories_id: AND language_id = :language_id:)";
 
-            $sql = $db->bindVars($sql, ':categories_name:', $items[$filelayout['v_categories_name_' . $lid]], 'string');
-            $sql = $db->bindVars($sql, ':categories_description:', $items[$filelayout['v_categories_description_' . $lid]], 'string');
+            $sql = $db->bindVars($sql, ':categories_name:', ep_4_curly_quotes($items[$filelayout['v_categories_name_' . $lid]]), 'string');
+            $sql = $db->bindVars($sql, ':categories_description:', ep_4_curly_quotes($items[$filelayout['v_categories_description_' . $lid]]), 'string');
             $sql = $db->bindVars($sql, ':categories_id:', $items[$filelayout['v_categories_id']], 'integer');
             $sql = $db->bindVars($sql, ':language_id:', $lid, 'integer');
             $result = ep_4_query($sql);
@@ -615,9 +615,9 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
 								categories_id		 = :categories_id:,
 								language_id 		 = :language_id:";
             }
-            $sql = $db->bindVars($sql, ':metatags_title:', $items[$filelayout['v_metatags_title_' . $lid]], 'string');
-            $sql = $db->bindVars($sql, ':metatags_keywords:', $items[$filelayout['v_metatags_keywords_' . $lid]], 'string');
-            $sql = $db->bindVars($sql, ':metatags_description:', $items[$filelayout['v_metatags_description_' . $lid]], 'string');
+            $sql = $db->bindVars($sql, ':metatags_title:', ep_4_curly_quotes($items[$filelayout['v_metatags_title_' . $lid]]), 'string');
+            $sql = $db->bindVars($sql, ':metatags_keywords:', ep_4_curly_quotes($items[$filelayout['v_metatags_keywords_' . $lid]]), 'string');
+            $sql = $db->bindVars($sql, ':metatags_description:', ep_4_curly_quotes($items[$filelayout['v_metatags_description_' . $lid]]), 'string');
             $sql = $db->bindVars($sql, ':categories_id:', $items[$filelayout['v_categories_id']], 'integer');
             $sql = $db->bindVars($sql, ':language_id:', $lid, 'integer');
             if (($row && (isset($filelayout['v_metatags_title_' . $lid]) || isset($filelayout['v_metatags_keywords_' . $lid]) || isset($filelayout['v_metatags_description_' . $lid]))) || !$row) {
@@ -1028,7 +1028,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
           } else { // It is set to autoincrement, do not need to fetch max id
             $sql = "INSERT INTO " . TABLE_MANUFACTURERS . " (manufacturers_name, date_added, last_modified)
 							VALUES (:manufacturers_name:, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
-            $sql = $db->bindVars($sql, ':manufacturers_name:', $v_manufacturers_name, 'string');
+            $sql = $db->bindVars($sql, ':manufacturers_name:', ep_4_curly_quotes($v_manufacturers_name), 'string');
             $result = ep_4_query($sql);
             if ($result) {
               zen_record_admin_activity('Inserted manufacturer ' . addslashes($v_manufactureres_name) . ' via EP4.', 'info');
