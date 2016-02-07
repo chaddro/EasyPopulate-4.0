@@ -1,6 +1,10 @@
 <?php
 // $Id: easypopulate_4_attrib.php, v4.0.23 07-13-2014 mc12345678 $
 
+if (!defined('IS_ADMIN_FLAG')) {
+  die('Illegal Access');
+}
+
 
 // Database default values
 $products_options_id  = 1; // this needs to auto increment for NEW products options

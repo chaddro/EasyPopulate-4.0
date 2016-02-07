@@ -1,6 +1,10 @@
 <?php
 // $Id: easypopulate_4_functions.php, v4.0.31 08-01-2015 mc12345678 $
 
+  if (!defined('IS_ADMIN_FLAG')) {
+    die('Illegal Access');
+  } 
+
 function ep_4_curly_quotes($curly_text) {
 	$ep_curly_quotes = (int)EASYPOPULATE_4_CONFIG_CURLY_QUOTES;
 	$ep_char_92 = (int)EASYPOPULATE_4_CONFIG_CHAR_92;

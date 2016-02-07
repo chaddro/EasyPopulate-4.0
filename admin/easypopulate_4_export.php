@@ -1,6 +1,10 @@
 <?php
 // $Id: easypopulate_4_export.php, v4.0.31 08-01-2015 mc12345678 $
 
+if (!defined('IS_ADMIN_FLAG')) {
+  die('Illegal Access');
+}
+
 // get download type
 $ep_dltype = (isset($_POST['export'])) ? $_POST['export'] : (isset($_POST['exportorder']) ? $_POST['exportorder'] : $ep_dltype);
 $display_output = '';

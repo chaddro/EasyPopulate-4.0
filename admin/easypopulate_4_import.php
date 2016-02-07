@@ -1,6 +1,10 @@
 <?php
 // $Id: easypopulate_4_import.php, v4.0.31 08-01-2015 mc12345678 $
 
+if (!defined('IS_ADMIN_FLAG')) {
+  die('Illegal Access');
+}
+
 if (!defined(EP4_REPLACE_BLANK_IMAGE)) {
   define('EP4_REPLACE_BLANK_IMAGE', 'false'); // Values to be 'true' and 'false' true, if on import the image path evaluates to '' then if true, stores the value of PRODUCTS_IMAGE_NO_IMAGE as the image, otherwise will leave it as blank.;
 }

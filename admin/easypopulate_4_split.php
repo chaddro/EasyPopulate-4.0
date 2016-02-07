@@ -1,6 +1,10 @@
 <?php
 // $Id: easypopulate_4_split.php, v4.0.21 06-01-2012 chadderuski $
 
+if (!defined('IS_ADMIN_FLAG')) {
+  die('Illegal Access');
+}
+
 if ( isset($_GET['split']) ) { 
 	$file_name = $_GET['split'];
 } else {
