@@ -75,7 +75,7 @@ $ep_debug_logging_all = false; // do not comment out.. make false instead
 /* Test area end */
 
 // Current EP Version - Modded by mc12345678 after Chadd had done so much
-$curver              = '4.0.31 - Beta 08-01-2015';
+$curver              = '4.0.32 - Beta 12-30-2015';
 $display_output = ''; // results of import displayed after script run
 $ep_dltype = NULL;
 $ep_stack_sql_error = false; // function returns true on any 1 error, and notifies user of an error
