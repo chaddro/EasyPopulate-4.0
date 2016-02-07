@@ -240,7 +240,7 @@ if (ep_4_CEONURIExists() == true) {
     $languages = zen_get_languages();
   }
 }
-if ( (!is_null($_POST['export']) && isset($_POST['export'])) OR (!is_null($_GET['export']) && isset($_GET['export'])) || (!is_null($_POST['exportorder']) && isset($_POST['exportorder'])) ) {
+if ( (!is_null($_POST['export']) && isset($_POST['export'])) || (!is_null($_GET['export']) && isset($_GET['export'])) || (!is_null($_POST['exportorder']) && isset($_POST['exportorder'])) ) {
   include_once('easypopulate_4_export.php'); // this file contains all data export code
 }
 if (!is_null($_POST['import']) && isset($_POST['import'])) {
@@ -644,8 +644,9 @@ if (((isset($error) && !$error) || !isset($error)) && (!is_null($_POST["delete"]
           } // End foreach filetype 
           if (EP4_SHOW_ALL_FILETYPES != 'Hidden') {
             echo "</table>\n";
-            if (sizeof($filetypes) == 0) {
+            if (sizeof($filetypes) == 0 && EP4_SHOW_ALL_FILETYPES == 'false') {
               echo "<table id=\"epfiles\"    width=\"80%\" border=1 cellspacing=\"2\" cellpadding=\"2\">\n";
+              echo "<tr><th>" . EASYPOPULATE_4_DISPLAY_EXPORT_TABLE_TITLE_FILENAME . "</th><th>" . EASYPOPULATE_4_DISPLAY_EXPORT_TABLE_TITLE_SIZE . "</th><th>" . EASYPOPULATE_4_DISPLAY_EXPORT_TABLE_TITLE_DATE_TIME . "</th><th>" . EASYPOPULATE_4_DISPLAY_EXPORT_TABLE_TITLE_TYPE . "</th><th>" . EASYPOPULATE_4_DISPLAY_EXPORT_TABLE_TITLE_SPLIT . "</th><th>" . EASYPOPULATE_4_DISPLAY_EXPORT_TABLE_TITLE_IMPORT . "</th><th>" . EASYPOPULATE_4_DISPLAY_EXPORT_TABLE_TITLE_DELETE . "</th><th>" . EASYPOPULATE_4_DISPLAY_EXPORT_TABLE_TITLE_DOWNLOAD . "</th>\n";
               echo "<tr><td COLSPAN=8><font color='red'>" . EASYPOPULATE_4_DISPLAY_EXPORT_FILE_NONE_SUPPORTED . "</font></td></tr>\n";
               echo "</table>\n";
             }
