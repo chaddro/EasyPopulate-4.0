@@ -936,7 +936,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
               $v_products_description[$l_id] = "";
               // if short descriptions exist
               if ($ep_supported_mods['psd'] == true) {
-                $v_products_short_desc[$_id] = "";
+                $v_products_short_desc[$l_id] = "";
               }
             }
           }
