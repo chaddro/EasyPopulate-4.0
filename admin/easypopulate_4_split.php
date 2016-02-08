@@ -50,5 +50,4 @@ while ( ($file_data = fgets($handle)) !== false ) { // read 1 line of data and e
 }
 fclose($split_handle); // close final split file
 fclose($handle);
-$messageStack->add("File Spliting Completed.", 'success');	
-?>
+$messageStack->add("File Splitting Completed.", 'success');
