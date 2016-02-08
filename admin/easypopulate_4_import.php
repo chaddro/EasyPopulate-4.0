@@ -1147,7 +1147,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
               }
               foreach ($langcode as $key => $lang2) {
                 $v_categories_name_check = 'v_categories_name_' . $lang2['id'];
-                if (isset(${$v_categories_name_check)) { // update
+                if (isset(${$v_categories_name_check})) { // update
                   $cat_lang_id = $lang2['id'];
                   $sql = "UPDATE " . TABLE_CATEGORIES_DESCRIPTION . " SET 
 											categories_name = :categories_name:
@@ -1215,15 +1215,14 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
                   zen_record_admin_activity('Inserted category description ' . (int) $max_category_id . ' via EP4.', 'info');
                 }
               }
-              $thiscategoryid = $max_category_id;
-            }
-            // the current catid is the next level's parent
-            $theparent_id = $thiscategoryid;
-            // keep setting this, we need the lowest level category ID later
-            $v_categories_id = $thiscategoryid;
-          } // ( $category_index=0; $category_index<$catego.....
-        } // (isset(${$v_categories_name_var}))
-
+          $thiscategoryid = $max_category_id;
+        }
+        // the current catid is the next level's parent
+        $theparent_id = $thiscategoryid;
+        // keep setting this, we need the lowest level category ID later
+        $v_categories_id = $thiscategoryid; 
+      } // ( $category_index=0; $category_index<$catego.....
+    } // (isset($$v_categories_name_var))
         $zco_notifier->notify('EP4_IMPORT_AFTER_CATEGORY');
         // END: CATEGORIES2 ===============================================================================================	
         // HERE ==========================>
