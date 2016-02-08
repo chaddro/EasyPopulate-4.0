@@ -572,9 +572,10 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
             $lid = $lang['id'];
             // $items[$filelayout['v_categories_name_'.$lid]];
             // $items[$filelayout['v_categories_description_'.$lid]];
-            $sql = "UPDATE " . TABLE_CATEGORIES_DESCRIPTION . " SET 
-							categories_name        = :categories_name:,
-							categories_description = :categories_description:
+          if (isset($filelayout['v_categories_name_' . $lid]) || isset($filelayout['v_categories_description_' . $lid])) {
+            $sql = "UPDATE " . TABLE_CATEGORIES_DESCRIPTION . " SET " . 
+  							(isset($filelayout['v_categories_name_' . $lid]) ? " categories_name        = :categories_name:, " : "") .
+	  				    (isset($filelayout['v_categories_description_' . $lid]) ? " categories_description = :categories_description: " : "") . "
 							WHERE 
 							(categories_id = :categories_id: AND language_id = :language_id:)";
 
@@ -586,7 +587,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
             if ($result) {
               zen_record_admin_activity('Updated category description ' . (int) $items[$filelayout['v_categories_id']] . ' via EP4.', 'info');
             }
-
+          }        
             // $items[$filelayout['v_metatags_title_'.$lid]];
             // $items[$filelayout['v_metatags_keywords_'.$lid]];
             // $items[$filelayout['v_metatags_description_'.$lid]];
@@ -598,12 +599,14 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
             $result = ep_4_query($sql);
             if ($row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array($result))) {
               // UPDATE
-              $sql = "UPDATE " . TABLE_METATAGS_CATEGORIES_DESCRIPTION . " SET 
-							metatags_title		 = :metatags_title:,
-							metatags_keywords	 = :metatags_keywords:,
-							metatags_description = :metatags_description:
+            if (isset($filelayout['v_metatags_title_' . $lid]) || isset($filelayout['v_metatags_keywords_' . $lid]) || isset($filelayout['v_metatags_description_' . $lid])) {
+              $sql = "UPDATE " . TABLE_METATAGS_CATEGORIES_DESCRIPTION . " SET " .
+  							(isset($filelayout['v_metatags_title_' . $lid]) ? " metatags_title		 = :metatags_title:, " : "") . 
+	  						(isset($filelayout['v_metatags_keywords_' . $lid]) ? " metatags_keywords	 = :metatags_keywords:, " : "") . 
+	  						(isset($filelayout['v_categories_description_' . $lid]) ? " metatags_description = :metatags_description: " : "") . "
 							WHERE 
 							(categories_id = :categories_id: AND language_id = :language_id:)";
+            }
             } else {
               // NEW - this should not happen
               $sql = "INSERT INTO " . TABLE_METATAGS_CATEGORIES_DESCRIPTION . " SET 
@@ -618,7 +621,9 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
             $sql = $db->bindVars($sql, ':metatags_description:', $items[$filelayout['v_metatags_description_' . $lid]], 'string');
             $sql = $db->bindVars($sql, ':categories_id:', $items[$filelayout['v_categories_id']], 'integer');
             $sql = $db->bindVars($sql, ':language_id:', $lid, 'integer');
+            if (($row && (isset($filelayout['v_metatags_title_' . $lid]) || isset($filelayout['v_metatags_keywords_' . $lid]) || isset($filelayout['v_metatags_description_' . $lid]))) || !$row) {
             $result = ep_4_query($sql);
+            }
             if ($result) {
               zen_record_admin_activity('Inserted/Updated category metatag information ' . (int) $items[(int) $filelayout['v_categories_id']] . ' via EP4.', 'info');
             }
@@ -1234,6 +1239,14 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
               }
               foreach ($langcode as $lang) {
                 $l_id = $lang['id'];
+                // if the column is not in the import file, then don't modify
+                //  or update that particular language's value.  This way 
+                //  only the columns desired to be updated are modified, not
+                //  all columns and thus require on any update to have all
+                //  columns present even those not being updated.
+                if (!isset($filelayout['v_artists_url_' . $l_id]) { 
+                  continue;
+                }
                 $sql = "UPDATE " . TABLE_RECORD_ARTISTS_INFO . " SET
 									artists_url = :artists_url:
 									WHERE artists_id = :artists_id: AND languages_id = :languages_id:";
@@ -1257,6 +1270,15 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
               $v_artists_id = ($ep_uses_mysqli ? mysqli_insert_id($db->link) : mysql_insert_id()); // id is auto_increment, so can use this function
               foreach ($langcode as $lang) {
                 $l_id = $lang['id'];
+                // If the artists_url column for this language was not in the file,
+                //  then do not modify the setting... But, also make sure
+                //  using the correct "check" mc12345678 2015-12-30
+                //  $filelayout chosen as it is to return an array represeting
+                //  the position in the file that is translated to the data
+                //  at that position.  For an insert (ie. new record), if 
+                //  all of the data is not provided, then will populate with
+                //  the data of the "first" language (which should be included)
+                //  if the particular artists_url is provided then that is used.
                 $sql = "INSERT INTO " . TABLE_RECORD_ARTISTS_INFO . " (artists_id, languages_id, artists_url)
 									VALUES (:artists_id:, :languages_id:, :artists_url:)"; // seems we are skipping manufacturers url
                 $sql = $db->bindVars($sql, ':artists_id:', $v_artists_id, 'integer');
@@ -1300,6 +1322,9 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
               }
               foreach ($langcode as $lang) {
                 $l_id = $lang['id'];
+                if (!isset($filelayout['v_record_company_url_' . $l_id])) {
+                  continue;
+                }
                 $sql = "UPDATE " . TABLE_RECORD_COMPANY_INFO . " SET
 									record_company_url = :record_company_url:
 									WHERE record_company_id = :record_company_id: AND languages_id = :languages_id:";
