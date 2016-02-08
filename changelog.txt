@@ -217,3 +217,46 @@
 					Modified the output links to account for files being
 					stored in different locations on the server based on
 					catalog/admin selections.
+4.0.32	02-08-2016		Updated for PHP 7.0 compatibility.
+				Corrected use of verifying that constant is in use and needs to be defined.
+				Completed incorporation of the German Language version of EP4 which allows for
+					EP4 to now be translated to other languages.  Assistance always welcome!
+				Converted from storing web page data via $_GET to $_POST operations.  Retrieval of files
+					is still by $_GET when selecting the download link(s) as well as links to generate
+					new files to modify unless the dropdowns at the top of the screen are used. This
+					also was a change away from using $_REQUEST to $_POST offering stricter
+					control of data transport.
+				Added checks in files that are "required" to validate that the file is being run from within
+					ZC by verification of a constant being defined.
+				Incorporated numerous notifiers to support expandability. (A BookX addon is in development by a 
+					third party and	will be looked at for easy incorporation to minimize the effort of it 
+					and other plugins being incorporated.)
+				Transitioned import queries to using bindVars to minimize errors that introduced by adding to the
+					code and to better handle the data being imported.  This is also in support of packaging
+					EP4 as a downloadable plugin on the zen cart site.
+				Revised the Product Description table modification process for updates allowing any of the fields
+					or a combination of any of the fields to not be included in the update file, though the
+					base fields necessary would be the products_id (internally identified if not directly
+					provided), and the language_id which is identified off of the languages installed to ZC.
+					This also made improvements to the use of the short product description that was added
+					by chadd.
+				Added ep4_curly_quotes operations to several of the import fields.
+				Updated the sql install to clarify the areas affected by some of the settings.
+				Modified how categories were updated somewhat similar to how products/products Description 
+					were affected; however, it does appear that additional work is necessary with that section
+					unfortunately as absence of the categories_description with the categories_name in place
+					will cause a SQL error because of an extra comma before the WHERE statement. :/
+				Similar process for category metatags was incorporated and has the same issue as categories and needs
+					to incorporate the processing added to product description updating to prevent a SQL error
+					if metatags_description is not included in the import.
+				Corrected an existing issue with short description for products that did not properly account for 
+					a language identifier.
+				Moved additional file for ZC 1.5.x into the main file path instead of being an additional file/folder
+					with which to contend.  Software remains functional on pre-1.5.x with appropriate action taken
+					to install that version's needed file(s).
+				Generated a module file to support the filelayout instead of having it within an additional function
+					file as a function.  This was to support adequate incorporation of notifiers without making
+					the functions file a class of its own and other work arounds.
+				
+				
+				
