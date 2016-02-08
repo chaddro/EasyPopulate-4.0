@@ -1251,7 +1251,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
                 //  only the columns desired to be updated are modified, not
                 //  all columns and thus require on any update to have all
                 //  columns present even those not being updated.
-                if (!isset($filelayout['v_artists_url_' . $l_id]) { 
+                if (!isset($filelayout['v_artists_url_' . $l_id])) { 
                   continue;
                 }
                 $sql = "UPDATE " . TABLE_RECORD_ARTISTS_INFO . " SET
