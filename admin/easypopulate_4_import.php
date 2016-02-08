@@ -2211,7 +2211,7 @@ $result_incategory = ($ep_uses_mysqli ? mysqli_fetch_array($result_incategory) :
     $time_end = microtime(true);
     $time = $time_end - $time_start;
 //    $display_output .= '<br/>Execution Time: ' . $time . ' seconds.';
-    $display_output .= sprintf(EASYPOPULATE_4_DISPLAY_IMPORT_RESULTS_EXEC_TIME, memory_get_peak_usage());
+    $display_output .= sprintf(EASYPOPULATE_4_DISPLAY_IMPORT_RESULTS_EXEC_TIME, $time);
   }
 
   // specials status = 0 if date_expires is past.
