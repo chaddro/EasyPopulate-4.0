@@ -1,5 +1,5 @@
 <?php
-// $Id: easypopulate_4_import.php, v4.0.31 08-01-2015 mc12345678 $
+// $Id: easypopulate_4_import.php, v4.0.32 11-10-2015 mc12345678 $
 
 if (!defined('IS_ADMIN_FLAG')) {
   die('Illegal Access');
@@ -22,6 +22,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
   $ep_error_count = 0; // errors detected during import
   $ep_warning_count = 0; // warning detected during import
 
+  $zco_notifier->notify('EP4_IMPORT_START');
   // When updating products info, these values are used for existing data
   // This allows a reduced number of columns to be used on updates 
   // otherwise these would have to be exported/imported every time
@@ -518,7 +519,6 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
             $display_output .= sprintf('<br /><font color="red"><b>SKIPPED! - SBA Tracked Quantity ' . ($ep_4_SBAEnabled == '2' ? 'and CustomID ' : '') . 'on Model: </b>%s - Not Found!</font>', $items[(int) $filelayout['v_products_model']]);
             $ep_error_count++;
           } // if 
-
         } //end if Standard / SBA stock
       } // end while
 
@@ -538,7 +538,6 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
             $display_output .= sprintf('<br /><font color="red"><b>SKIPPED! - Product Quantity on Model: </b>%s - Not Found!</font>', $items[(int) $filelayout['v_products_model']]);
             $ep_error_count++;
           } //end if Standard
-
         } //end foreach
       } // end if sync
 //		$display_output .= '<br/> This: ' . print_r($query) . 'test<br/>';
@@ -548,6 +547,9 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
     // This Category MetaTags import routine only deals with existing Categories. It does not create or modify the tree.
     // This code is ONLY used to Edit Categories image, description, and metatags data!
     // Categories are updated via the categories_id NOT the Name!! Very important distinction here!
+    // mc12345678 below routine: categorymeta-ep could possibly clear assignments of 
+    //   data if the field(s) are not included in the download file.  This
+    //   needs to be modified to allow a reduced set of columns to be imported.
     if (strtolower(substr($file['name'], 0, 15)) == "categorymeta-ep") {
       while ($items = fgetcsv($handle, 0, $csv_delimiter, $csv_enclosure)) { // read 1 line of data
         // $items[$filelayout['v_categories_id']];
@@ -579,8 +581,8 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
 							WHERE 
 							(categories_id = :categories_id: AND language_id = :language_id:)";
 
-            $sql = $db->bindVars($sql, ':categories_name:', $items[$filelayout['v_categories_name_' . $lid]], 'string');
-            $sql = $db->bindVars($sql, ':categories_description:', $items[$filelayout['v_categories_description_' . $lid]], 'string');
+            $sql = $db->bindVars($sql, ':categories_name:', ep_4_curly_quotes($items[$filelayout['v_categories_name_' . $lid]]), 'string');
+            $sql = $db->bindVars($sql, ':categories_description:', ep_4_curly_quotes($items[$filelayout['v_categories_description_' . $lid]]), 'string');
             $sql = $db->bindVars($sql, ':categories_id:', $items[$filelayout['v_categories_id']], 'integer');
             $sql = $db->bindVars($sql, ':language_id:', $lid, 'integer');
             $result = ep_4_query($sql);
@@ -616,9 +618,9 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
 								categories_id		 = :categories_id:,
 								language_id 		 = :language_id:";
             }
-            $sql = $db->bindVars($sql, ':metatags_title:', $items[$filelayout['v_metatags_title_' . $lid]], 'string');
-            $sql = $db->bindVars($sql, ':metatags_keywords:', $items[$filelayout['v_metatags_keywords_' . $lid]], 'string');
-            $sql = $db->bindVars($sql, ':metatags_description:', $items[$filelayout['v_metatags_description_' . $lid]], 'string');
+            $sql = $db->bindVars($sql, ':metatags_title:', ep_4_curly_quotes($items[$filelayout['v_metatags_title_' . $lid]]), 'string');
+            $sql = $db->bindVars($sql, ':metatags_keywords:', ep_4_curly_quotes($items[$filelayout['v_metatags_keywords_' . $lid]]), 'string');
+            $sql = $db->bindVars($sql, ':metatags_description:', ep_4_curly_quotes($items[$filelayout['v_metatags_description_' . $lid]]), 'string');
             $sql = $db->bindVars($sql, ':categories_id:', $items[$filelayout['v_categories_id']], 'integer');
             $sql = $db->bindVars($sql, ':language_id:', $lid, 'integer');
             if (($row && (isset($filelayout['v_metatags_title_' . $lid]) || isset($filelayout['v_metatags_keywords_' . $lid]) || isset($filelayout['v_metatags_description_' . $lid]))) || !$row) {
@@ -637,6 +639,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
     } // if
 
     if (( strtolower(substr($file['name'], 0, 15)) <> "categorymeta-ep") && ( strtolower(substr($file['name'], 0, 7)) <> "attrib-") && ($ep_4_SBAEnabled != false ? ( strtolower(substr($file['name'], 0, 4)) <> "sba-") : true )) { //  temporary solution here... 12-06-2010
+      $zco_notifier->notify('EP4_IMPORT_GENERAL_FILE_ALL');
 	
       // Main IMPORT loop For Product Related Data. v_products_id is the main key
       while ($items = fgetcsv($handle, 0, $csv_delimiter, $csv_enclosure)) { // read 1 line of data
@@ -681,12 +684,13 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
         if ($ep_supported_mods['excl'] == true) { // Exclusive Product Custom Mod
           $sql .= 'p.products_exclusive as v_products_exclusive,';
         }
+        $zco_notifier->notify('EP4_IMPORT_PRODUCT_DEFAULT_SELECT_FIELDS');
         if (count($custom_fields) > 0) {
           foreach ($custom_fields as $field) {
             $sql .= 'p.' . $field . ' as v_' . $field . ',';
           }
         }
-        $sql .= 'p.products_weight			as v_products_weight,
+        $sql .= 'p.products_weight      as v_products_weight,
 					p.products_discount_type		as v_products_discount_type,
 					p.products_discount_type_from   as v_products_discount_type_from,
 					p.product_is_call				as v_product_is_call,
@@ -710,8 +714,9 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
 					FROM ' .
                 TABLE_PRODUCTS_TO_CATEGORIES . ' as ptoc,' .
                 TABLE_CATEGORIES . ' as subc,' .
-                TABLE_PRODUCTS . " as p 
-			WHERE
+                TABLE_PRODUCTS . " as p ";
+        $zco_notifier->notify('EP4_IMPORT_PRODUCT_DEFAULT_SELECT_TABLES');
+        $sql .= "WHERE
 					p.products_id      = ptoc.products_id AND
 					ptoc.categories_id = subc.categories_id AND ";
         switch (EP4_DB_FILTER_KEY){
@@ -840,6 +845,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
             $chosen_key = 'v_products_model';
             break;
         }
+        
         if ($items[$filelayout['v_status']] == 9 && zen_not_null($items[$filelayout[$chosen_key]])) {
           // cannot delete product that is not found
           $display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_DELETE_NOT_FOUND, $items[$filelayout[$chosen_key]]);
@@ -881,7 +887,6 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
             continue; // error, loop to next record
             }
            */
-			
         } // End data checking
 
         // Assign new values, i.e. $v_products_model = new import value over writing existing data pulled above
@@ -937,7 +942,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
               $v_products_description[$l_id] = "";
               // if short descriptions exist
               if ($ep_supported_mods['psd'] == true) {
-                $v_products_short_desc[$_id] = "";
+                $v_products_short_desc[$l_id] = "";
               }
             }
           }
@@ -1029,10 +1034,10 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
           } else { // It is set to autoincrement, do not need to fetch max id
             $sql = "INSERT INTO " . TABLE_MANUFACTURERS . " (manufacturers_name, date_added, last_modified)
 							VALUES (:manufacturers_name:, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
-            $sql = $db->bindVars($sql, ':manufacturers_name:', $v_manufacturers_name, 'string');
+            $sql = $db->bindVars($sql, ':manufacturers_name:', ep_4_curly_quotes($v_manufacturers_name), 'string');
             $result = ep_4_query($sql);
             if ($result) {
-              zen_record_admin_activity('Inserted manufacturer ' . addslashes($v_manufactureres_name) . ' via EP4.', 'info');
+              zen_record_admin_activity('Inserted manufacturer ' . addslashes($v_manufacturers_name) . ' via EP4.', 'info');
             }
             $v_manufacturers_id = ($ep_uses_mysqli ? mysqli_insert_id($db->link) : mysql_insert_id()); // id is auto_increment, so can use this function
 				
@@ -1108,7 +1113,6 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
               }
             } // foreach
           }
-			
         }
         // start with first defined language... (does not have to be 1)
         $lid = $langcode[1]['id'];
@@ -1136,8 +1140,10 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
             $row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array($result));
             // if $row is not null, we found entry, so retrive info
             if ($row != '') { // category exists
+              $parent_category_id = $theparent_id;
               foreach ($row as $item) {
                 $thiscategoryid = $item; // array of data
+                $current_category_id = $thiscategoryid;
               }
               foreach ($langcode as $key => $lang2) {
                 $v_categories_name_check = 'v_categories_name_' . $lang2['id'];
@@ -1174,6 +1180,8 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
 								)";
               $sql = $db->bindVars($sql, ':categories_id:', $max_category_id, 'integer');
               $sql = $db->bindVars($sql, ':parent_id:', $theparent_id, 'integer');
+              $current_category_id = $max_category_id;
+              $parent_category_id = $theparent_id;
               $result = ep_4_query($sql);
               if ($result) {
                 zen_record_admin_activity('Inserted category ' . (int) $max_category_id . ' via EP4.', 'info');
@@ -1215,9 +1223,9 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
             $v_categories_id = $thiscategoryid;
           } // ( $category_index=0; $category_index<$catego.....
         } // (isset(${$v_categories_name_var}))
-        // END: CATEGORIES2 ===============================================================================================	
-		
 
+        $zco_notifier->notify('EP4_IMPORT_AFTER_CATEGORY');
+        // END: CATEGORIES2 ===============================================================================================	
         // HERE ==========================>
         // BEGIN: record_artists
         if (isset($filelayout['v_artists_name'])) {
@@ -1935,10 +1943,9 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
               }
             }
           } // END: Products Descriptions End
-
-//==================================================================================================================================
-      // Assign product to category if linked
-      // chadd - need to dig into further
+          //==================================================================================================================================
+          // Assign product to category if linked
+          // chadd - need to dig into further
           if (isset($v_categories_id)) { // find out if this product is listed in the category given
         $result_incategory = ep_4_query('SELECT 
           '.TABLE_PRODUCTS_TO_CATEGORIES.'.products_id,
@@ -2056,7 +2063,7 @@ $result_incategory = ($ep_uses_mysqli ? mysqli_fetch_array($result_incategory) :
               }
             }
           }
-//==================================================================================================================================
+          //==================================================================================================================================
 
           /* Specials - if a null value in specials price, do not add or update. If price = 0, let's delete it */
           if (isset($v_specials_price) && zen_not_null($v_specials_price)) {
@@ -2101,6 +2108,7 @@ $result_incategory = ($ep_uses_mysqli ? mysqli_fetch_array($result_incategory) :
               $sql = $db->bindVars($sql, ':specials_price:', $v_specials_price, 'float');
               $sql = $db->bindVars($sql, ':specials_date_avail:', $v_specials_date_avail, 'string');
               $sql = $db->bindVars($sql, ':specials_expires_date:', $v_specials_expires_date, 'string');
+
               $result = ep_4_query($sql);
               if ($result) {
                 zen_record_admin_activity('Inserted special ' . (int) $v_products_id . ' via EP4.', 'info');
@@ -2137,7 +2145,6 @@ $result_incategory = ($ep_uses_mysqli ? mysqli_fetch_array($result_incategory) :
           // better yet, why not ONLY call if pricing was updated
           // ALL these affect pricing: products_tax_class_id, products_price, products_priced_by_attribute, product_is_free, product_is_call
           zen_update_products_price_sorter($v_products_id);
-			
         } else {
           // this record is missing the product_model
           $display_output .= EASYPOPULATE_4_DISPLAY_RESULT_NO_MODEL;

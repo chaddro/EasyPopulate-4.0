@@ -1,5 +1,5 @@
 <?php
-// $Id: easypopulate_4_export.php, v4.0.31 08-01-2015 mc12345678 $
+// $Id: easypopulate_4_export.php, v4.0.32 12-28-2015 mc12345678 $
 
 if (!defined('IS_ADMIN_FLAG')) {
   die('Illegal Access');
@@ -89,13 +89,16 @@ if ($ep_dltype == 'SBAStockProdFilter') {
 
 $filelayout = array();
 $filelayout_sql = '';
-$filelayout = ep_4_set_filelayout($ep_dltype, $filelayout_sql, $sql_filter, $langcode, $ep_supported_mods, $custom_fields);
+require(DIR_FS_ADMIN . DIR_WS_MODULES . 'easypopulate_4_filelayout.php');
+//$filelayout = ep_4_set_filelayout($ep_dltype, $filelayout_sql, $sql_filter, $langcode, $ep_supported_mods, $custom_fields);
 
 if (($ep_dltype == 'full' || $ep_dltype == 'categorymeta') && EASYPOPULATE_4_CONFIG_EXPORT_URI != '0') {
   //require_once(DIR_FS_CATALOG . DIR_WS_FUNCTIONS . 'functions_categories.php');
   $filelayout[] = 'v_html_uri';
 }
+
 $zco_notifier->notify('EP4_EXPORT_FILE_ARRAY_START');
+
 $filelayout = array_flip($filelayout);
 // END: File Download Layouts
 
@@ -192,6 +195,7 @@ $print1 = 0;
 $result = ep_4_query($filelayout_sql);
 
 $zco_notifier->notify('EP4_EXPORT_WHILE_START');
+
 while ($row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array($result))) {
 
   if ($ep_dltype == 'attrib_basic') { // special case 'attrib_basic'
@@ -248,7 +252,7 @@ while ($row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array
       $l_id = $row['v_language_id'];
       $active_row['v_products_options_name_' . $l_id] = $row['v_products_options_name'];
       $active_row['v_products_options_values_name_' . $l_id] = $row['v_products_options_values_name'];
-    } // end products_id action
+    } // end of special case 'attrib_basic'
   } else { // standard export processing // end of special case 'attrib_basic'
 		if ($ep_dltype == 'orders_1' || $ep_dltype == 'orders_2' || $ep_dltype == 'orders_3' || $ep_dltype == 'orders_4') {
       if ((!isset($tracker['v_orders_id']) && !zen_not_null($tracker['v_orders_id'])) || $row['v_orders_id'] != $tracker['v_orders_id']) {
@@ -306,6 +310,7 @@ while ($row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array
         }
       } // end isset($filelayout['v_products_attributes_filename'])
     } // end elseif (SBA_detailed)
+
   // Products Image
   if (isset($filelayout['v_products_image'])) {
     $products_image = (($row['v_products_image'] == PRODUCTS_IMAGE_NO_IMAGE) ? '' : $row['v_products_image']);
@@ -314,6 +319,7 @@ while ($row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array
   if ($ep_dltype == 'full' || $ep_dltype == 'SBAStock') {
 
     $zco_notifier->notify('EP4_EXPORT_LOOP_FULL_OR_SBASTOCK');
+
 			// names and descriptions require that we loop thru all installed languages
     foreach ($langcode as $key2 => $lang2) {
       $lid2 = $lang2['id'];
@@ -329,23 +335,21 @@ while ($row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array
         $row['v_products_short_desc_' . $lid2] = $row2['products_short_desc'];
       }
       $row['v_products_url_' . $lid2] = $row2['products_url'];
-	  $zco_notifier->notify('EP4_EXPORT_LOOP_FULL_OR_SBASTOCK_LOOP');
-    } // End modification for CEON URI Rewriter mc12345678
-
-    foreach ($langcode as $key => $lang) {
-      $lid = $lang['id'];
       // metaData start
+      // for each language, get the description and set the vals
       $sqlMeta = 'SELECT * FROM ' . TABLE_META_TAGS_PRODUCTS_DESCRIPTION . ' WHERE products_id = :products_id: AND language_id = :language_id: LIMIT 1 ';
       $sqlMeta = $db->bindVars($sqlMeta, ':products_id:', $row['v_products_id'], 'integer');
-      $sqlMeta = $db->bindVars($sqlMeta, ':language_id:', $lid, 'integer');
+      $sqlMeta = $db->bindVars($sqlMeta, ':language_id:', $lid2, 'integer');
       $resultMeta = ep_4_query($sqlMeta);
       $rowMeta = ($ep_uses_mysqli ? mysqli_fetch_array($resultMeta) : mysql_fetch_array($resultMeta));
-      $row['v_metatags_title_' . $lid] = $rowMeta['metatags_title'];
-      $row['v_metatags_keywords_' . $lid] = $rowMeta['metatags_keywords'];
-      $row['v_metatags_description_' . $lid] = $rowMeta['metatags_description'];
+      $row['v_metatags_title_' . $lid2] = $rowMeta['metatags_title'];
+      $row['v_metatags_keywords_' . $lid2] = $rowMeta['metatags_keywords'];
+      $row['v_metatags_description_' . $lid2] = $rowMeta['metatags_description'];
       // metaData end
-      // for each language, get the description and set the vals
+      $zco_notifier->notify('EP4_EXPORT_LOOP_FULL_OR_SBASTOCK_LOOP');
     } // foreach
+
+    $zco_notifier->notify('EP4_EXPORT_LOOP_FULL_OR_SBASTOCK_END');
   } // if($ep_dltype == 'full')
 
   // BEGIN: Specials
@@ -365,6 +369,8 @@ while ($row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array
       $row['v_specials_expires_date'] = '';
     }
   } // END: Specials
+
+  $zco_notifier->notify('EP4_EXPORT_SPECIALS_AFTER');
 
   // Multi-Lingual Categories, Categories Meta, Categories Descriptions
   if ($ep_dltype == 'categorymeta') {
@@ -392,7 +398,7 @@ while ($row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array
     } // foreach
 
     if (EASYPOPULATE_4_CONFIG_EXPORT_URI != '0') {
-      $row['v_html_uri'] = zen_catalog_href_link(FILENAME_DEFAULT, 'cPath=' . zen_get_path($row['v_categories_id']), 'NONSSL');
+      $row['v_html_uri'] = zen_catalog_href_link(FILENAME_DEFAULT, zen_get_path($row['v_categories_id']), 'NONSSL');
     }
   } // if ($ep_dltype categorymeta...
 		
@@ -414,6 +420,9 @@ while ($row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array
       //function zen_href_link($page = '', $parameters = '', $connection = 'NONSSL', $add_session_id = true, $search_engine_safe = true, $static = false, $use_dir_ws_catalog = true) 
     }
     // $fullcategory = array(); // this will have the entire category path separated by $category_delimiter
+
+  $zco_notifier->notify('EP4_EXPORT_FULL_OR_CAT_FULL_AFTER');
+
     // if parent_id is not null ('0'), then follow it up.  Perhaps this could be replaced by Zen's zen_not_null() function?
     while (!empty($thecategory_id)) {
       // mult-lingual categories start - for each language, get category description and name
@@ -442,7 +451,7 @@ while ($row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array
       $lid = $lang['id'];
       $row['v_categories_name_' . $lid] = rtrim($row['v_categories_name_' . $lid], $category_delimiter);
     } // foreach
-  } // if() delimited categories path
+  } // if($ep_dltype == 'full' || $ep_dltype == 'category') delimited categories path
 
   //This will do all of the special work to provide the remaining row data:
   //  	'v_SBA_tracked';
@@ -473,7 +482,7 @@ while ($row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array
 				' . /* o.products_options_type             as v_products_options_type,
               a.options_values_id                 as v_options_values_id,
               v.products_options_values_id        as v_products_options_values_id, */'
-				v.products_options_values_name      as v_products_options_values_name ' . /*
+              v.products_options_values_name      as v_products_options_values_name ' . /*
               a.options_values_price              as v_options_values_price,
               a.price_prefix                      as v_price_prefix,
               a.products_options_sort_order       as v_products_options_sort_order,
@@ -726,7 +735,7 @@ while ($row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array
     } else {
       $row['v_music_genre_name'] = '';
     }
-  }
+  } // if (v_artists_name && v_products_type)
 
 
   // MANUFACTURERS EXPORT - THIS NEEDS MULTI-LINGUAL SUPPORT LIKE EVERYTHING ELSE!
@@ -734,7 +743,7 @@ while ($row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array
   if (isset($filelayout['v_manufacturers_name'])) {
     if (($row['v_manufacturers_id'] != '0') && ($row['v_manufacturers_id'] != '')) { // '0' is correct, but '' NULL is possible
       $sql2 = 'SELECT manufacturers_name FROM ' . TABLE_MANUFACTURERS . ' WHERE manufacturers_id = :manufacturers_id:';
-      $sql2 = $db->bindVars($sql2, ':manufacturers_id:', $row['v_manufactureres_id'], 'integer');
+      $sql2 = $db->bindVars($sql2, ':manufacturers_id:', $row['v_manufacturers_id'], 'integer');
       $result2 = ep_4_query($sql2);
       $row2 = ($ep_uses_mysqli ? mysqli_fetch_array($result2) : mysql_fetch_array($result2));
       $row['v_manufacturers_name'] = $row2['manufacturers_name'];
@@ -777,7 +786,7 @@ while ($row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array
 //Start SBA1 addresses writing to the file
 
 if ($ep_dltype == 'attrib_basic') { // must write last record
-	// Clean the texts that could break CSV file formatting
+  // Clean the texts that could break CSV file formatting
   $datarow = ep_4_rmv_chars($filelayout, $active_row, $csv_delimiter);
   
   fwrite($fp, $dataRow); // write 1 line of csv data (this can be slow...)
