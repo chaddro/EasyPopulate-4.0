@@ -132,7 +132,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
             $chosen_key = 'v_products_model';
             break;
         }
-        $$chosen_key = NULL;
+        ${$chosen_key} = NULL;
   
         $sql .= " LIMIT 1";
 
@@ -640,7 +640,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
         // an exising product's info is being put into a subsquently new product.
         // So, first clear old values...
         foreach ($default_these as $thisvar) {
-          $$thisvar = '';
+          ${$thisvar} = '';
         }
 
         // now do a query to get the record's current contents
@@ -810,10 +810,10 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
             $row['v_products_price'] = round($row['v_products_price'] + ($row['v_products_price'] * $row_tax_multiplier / 100), 2);
           }
 
-          // $$thisvar creates a variable named $thisvar and sets the value to $row value ($v_products_price = $row['v_products_price'];), 
+          // ${$thisvar} creates a variable named $thisvar and sets the value to $row value ($v_products_price = $row['v_products_price'];), 
           // which is the existing value for these fields in the database before importing the updated information
           foreach ($default_these as $thisvar) {
-            $$thisvar = $row[$thisvar];
+            ${$thisvar} = $row[$thisvar];
           }
         } // while ( $row = mysql_fetch_array($result) )
         //============================================================================
@@ -884,7 +884,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
         // Variables not set here are either set in the loop above for existing product records
         // $key is column heading name, $value is column number for the heading..
         foreach ($filelayout as $key => $value) {
-          $$key = $items[$value];
+          ${$key} = $items[$value];
         }
 
         // chadd - 12-13-2010 - this should allow you to update descriptions only for any given language of the import file!
@@ -1079,7 +1079,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
             if ($categories_count[$lang['id']] > 0) { // only check $categories_name_max_len if $categories_count[$lang['id']] > 0
               for ($category_index = 0; $category_index < $categories_count[$lang['id']]; $category_index++) {
                 if (mb_strlen($categories_names_array[$lang['id']][$category_index]) > $categories_name_max_len) {
-                  $display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_CATEGORY_NAME_LONG, $$chosen_key, $categories_names_array[$lang['id']][$category_index], $categories_name_max_len);
+                  $display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_CATEGORY_NAME_LONG, ${$chosen_key}, $categories_names_array[$lang['id']][$category_index], $categories_name_max_len);
                   $ep_error_count++;
                   continue 3; // skip to next record
                 }
@@ -1092,7 +1092,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
             $categories_count_value = $categories_count[$langcode[1]['id']];
             foreach ($langcode as $key => $lang) {
               $v_categories_name_check = 'v_categories_name_' . $lang['id'];
-              if (isset($$v_categories_name_check)) {
+              if (isset(${$v_categories_name_check})) {
                 if (($categories_count_value != $categories_count[$lang['id']]) && ($categories_count[$lang['id']] != 0)) {
                   //$display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_CATEGORY_NAME_LONG, 
                   //$v_products_model, $categories_names_array[$lang['id']][$category_index], $categories_name_max_len);
@@ -1107,8 +1107,8 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
         }
         // start with first defined language... (does not have to be 1)
         $lid = $langcode[1]['id'];
-        $v_categories_name_var = 'v_categories_name_' . $lid; // $$v_categories_name_var >> $v_categories_name_1, $v_categories_name_2, etc.
-        if (isset($$v_categories_name_var)) { // does column header exist?
+        $v_categories_name_var = 'v_categories_name_' . $lid; // ${$v_categories_name_var} >> $v_categories_name_1, $v_categories_name_2, etc.
+        if (isset(${$v_categories_name_var})) { // does column header exist?
           // start from the highest possible category and work our way down from the parent
           $v_categories_id = 0;
           $theparent_id = 0; // 0 is top level parent
@@ -1136,7 +1136,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
               }
               foreach ($langcode as $key => $lang2) {
                 $v_categories_name_check = 'v_categories_name_' . $lang2['id'];
-                if (isset($$v_categories_name_check)) { // update
+                if (isset(${$v_categories_name_check})) { // update
                   $cat_lang_id = $lang2['id'];
                   $sql = "UPDATE " . TABLE_CATEGORIES_DESCRIPTION . " SET 
 											categories_name = :categories_name:
@@ -1180,7 +1180,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
               // categories_name = '".addslashes($categories_names_array[$lid][$category_index])."'";
               foreach ($langcode as $key => $lang2) {
                 $v_categories_name_check = 'v_categories_name_' . $lang2['id'];
-                if (isset($$v_categories_name_check)) { // update	
+                if (isset(${$v_categories_name_check})) { // update	
                   $cat_lang_id = $lang2['id'];
                   $sql = "INSERT INTO " . TABLE_CATEGORIES_DESCRIPTION . " SET 
 										categories_id   = :categories_id:,
@@ -1209,7 +1209,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
             // keep setting this, we need the lowest level category ID later
             $v_categories_id = $thiscategoryid;
           } // ( $category_index=0; $category_index<$catego.....
-        } // (isset($$v_categories_name_var))
+        } // (isset(${$v_categories_name_var}))
         // END: CATEGORIES2 ===============================================================================================	
 		
 
@@ -1390,7 +1390,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
         }
         	
         // insert new, or update existing, product
-        if ($$chosen_key != "" || ($chosen_key == 'v_products_id' && EP4_DB_FILTER_KEY === 'blank_new' && !zen_not_null($$chosen_key))) { // products_model exists!
+        if (${$chosen_key} != "" || ($chosen_key == 'v_products_id' && defined('EP4_DB_FILTER_KEY') && EP4_DB_FILTER_KEY === 'blank_new' && !zen_not_null(${$chosen_key}))) { // products_model exists!
           // First we check to see if this is a product in the current db.
           $sql = "SELECT products_id FROM " . TABLE_PRODUCTS;
           switch ($chosen_key) {
@@ -1416,7 +1416,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
             if (!is_numeric($max_product_id)) {
               $max_product_id = 1;
             }
-            if ($chosen_key == 'v_products_model' || ($chosen_key == 'v_products_id' && EP4_DB_FILTER_KEY === 'blank_new' && $$chosen_key == "")) {
+            if ($chosen_key == 'v_products_model' || ($chosen_key == 'v_products_id' && defined('EP4_DB_FILTER_KEY') && EP4_DB_FILTER_KEY === 'blank_new' && ${$chosen_key} == "")) {
               $v_products_id = $max_product_id;
             }
             if ($v_artists_name <> '') {
@@ -1429,7 +1429,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
 							products_model					= :products_model:,
 							products_type     		        = :products_type:,
 							products_price					= :products_price:, ";
-            if ($chosen_key == 'v_products_id' && !in_array(substr($chosen_key, 2), $custom_fields) && zen_not_null($$chosen_key)) {
+            if ($chosen_key == 'v_products_id' && !in_array(substr($chosen_key, 2), $custom_fields) && zen_not_null(${$chosen_key})) {
               $query .= "products_id  = :products_id:, ";
             }
             if ($ep_supported_mods['uom'] == true) { // price UOM mod
@@ -1459,7 +1459,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
             }
             if (count($custom_fields) > 0) {
               foreach ($custom_fields as $field) {
-                if ($field != 'products_id' || ( $field == 'products_id' && EP4_DB_FILTER_KEY === 'blank_new' && zen_not_null($$chosen_key))) {
+                if ($field != 'products_id' || ( $field == 'products_id' && defined('EP4_DB_FILTER_KEY') && EP4_DB_FILTER_KEY === 'blank_new' && zen_not_null(${$chosen_key}))) {
                   $value = 'v_' . $field;
                   $query .= ":field: = :value:, ";
                   $query = $db->bindVars($query, ':field:', $field, 'noquotestring');
@@ -1534,7 +1534,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
               zen_record_admin_activity('New product ' . (int) $v_products_id . ' added via EP4.', 'info');
 
               if ($ep_feedback == true) {
-                $display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_NEW_PRODUCT, $$chosen_key);
+                $display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_NEW_PRODUCT, ${$chosen_key});
               }
               $ep_import_count++;
               // PRODUCT_MUSIC_EXTRA
@@ -1558,7 +1558,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
                 }
               }
             } else {
-              $display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_NEW_PRODUCT_FAIL, $$chosen_key);
+              $display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_NEW_PRODUCT_FAIL, ${$chosen_key});
               $ep_error_count++;
               continue; // new categories however have been created by now... Adding into product table needs to be 1st action?
             }
@@ -1679,7 +1679,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
 
               // needs to go into a log file chadd 11-14-2011
               if ($ep_feedback == true) {
-                $display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_UPDATE_PRODUCT, $$chosen_key);
+                $display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_UPDATE_PRODUCT, ${$chosen_key});
                 foreach ($items as $col => $summary) {
                   if ($col == $filelayout[$chosen_key]){
                     continue;
@@ -1708,7 +1708,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
               }
               $ep_update_count++;
             } else {
-              $display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_UPDATE_PRODUCT_FAIL, $$chosen_key);
+              $display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_UPDATE_PRODUCT_FAIL, ${$chosen_key});
               $ep_error_count++;
             }
           } // EOF Update product
@@ -1768,7 +1768,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
           if (strtolower(substr($file['name'], 0, 14)) == "pricebreaks-ep") {
 
             if ($v_products_discount_type != '0') { // if v_products_discount_type == 0 then there are no quantity breaks
-              if ($$chosen_key != "") { // we check to see if this is a product in the current db, must have product model number
+              if (${$chosen_key} != "") { // we check to see if this is a product in the current db, must have product model number
                 $sql = "SELECT products_id FROM " . TABLE_PRODUCTS;
                 switch ($chosen_key) {
                   case 'v_products_model':
@@ -1797,9 +1797,9 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
                   // $v_discount_id_var    = 'v_discount_id_'.$xxx ; // this column is now redundant
                   $v_discount_qty_var = 'v_discount_qty_' . $xxx;
                   $v_discount_price_var = 'v_discount_price_' . $xxx;
-                  while (isset($$v_discount_qty_var)) {
+                  while (isset(${$v_discount_qty_var})) {
                     // INSERT price break
-                    if ($$v_discount_price_var != "") { // check for empty price
+                    if (${$v_discount_price_var} != "") { // check for empty price
                       $sql = "INSERT INTO " . TABLE_PRODUCTS_DISCOUNT_QUANTITY . " SET
 										products_id    = :products_id:,
 										discount_id    = :discount_id:,
@@ -1807,8 +1807,8 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
 										discount_price = :discount_price_var:";
                       $sql = $db->bindVars($sql, ':products_id:', $v_products_id, 'integer');
                       $sql = $db->bindVars($sql, ':discount_id:', $xxx, 'integer');
-                      $sql = $db->bindVars($sql, ':discount_qty_var:', $$v_discount_qty_var, 'float');
-                      $sql = $db->bindVars($sql, ':discount_price_var:', $$v_discount_price_var, 'currency');
+                      $sql = $db->bindVars($sql, ':discount_qty_var:', ${$v_discount_qty_var}, 'float');
+                      $sql = $db->bindVars($sql, ':discount_price_var:', ${$v_discount_price_var}, 'currency');
                       $result = ep_4_query($sql);
                       if ($result) {
                         zen_record_admin_activity('Inserted products discount quantity ' . (int) $v_products_id . ' via EP4.', 'info');
@@ -1817,11 +1817,11 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
                     $xxx++;
                     $v_discount_qty_var = 'v_discount_qty_' . $xxx;
                     $v_discount_price_var = 'v_discount_price_' . $xxx;
-                  } // while (isset($$v_discount_id_var)
+                  } // while (isset(${$v_discount_id_var})
                 } // end: if (row count <> 0) found entry
               } // if ($v_products_model)
             } else { // products_discount_type == 0, so remove any old quantity_discounts
-              if ($$chosen_key != "") { // we check to see if this is a product in the current db, must have product model number
+              if (${$chosen_key} != "") { // we check to see if this is a product in the current db, must have product model number
                 $sql = "SELECT products_id FROM " . TABLE_PRODUCTS;
                 switch ($chosen_key) {
                   case 'v_products_model':
@@ -2036,7 +2036,7 @@ $result_incategory = ($ep_uses_mysqli ? mysqli_fetch_array($result_incategory) :
           /* Specials - if a null value in specials price, do not add or update. If price = 0, let's delete it */
           if (isset($v_specials_price) && zen_not_null($v_specials_price)) {
             if ($v_specials_price >= $v_products_price) {
-              $specials_print .= sprintf(EASYPOPULATE_4_SPECIALS_PRICE_FAIL, $$chosen_key, substr(strip_tags($v_products_name[$epdlanguage_id]), 0, 10));
+              $specials_print .= sprintf(EASYPOPULATE_4_SPECIALS_PRICE_FAIL, ${$chosen_key}, substr(strip_tags($v_products_name[$epdlanguage_id]), 0, 10));
               // available function: zen_set_specials_status($specials_id, $status)
               // could alternatively make status inactive, and still upload..
               continue;
@@ -2054,7 +2054,7 @@ $result_incategory = ($ep_uses_mysqli ? mysqli_fetch_array($result_incategory) :
 
             if (($ep_uses_mysqli ? mysqli_num_rows($special) : mysql_num_rows($special)) == 0) { // not in db
               if ($v_specials_price == '0') { // delete requested, but is not a special
-                $specials_print .= sprintf(EASYPOPULATE_4_SPECIALS_DELETE_FAIL, $$chosen_key, substr(strip_tags($v_products_name[$epdlanguage_id]), 0, 10));
+                $specials_print .= sprintf(EASYPOPULATE_4_SPECIALS_DELETE_FAIL, ${$chosen_key}, substr(strip_tags($v_products_name[$epdlanguage_id]), 0, 10));
                 continue;
               }
               // insert new into specials
@@ -2080,11 +2080,11 @@ $result_incategory = ($ep_uses_mysqli ? mysqli_fetch_array($result_incategory) :
               if ($result) {
                 zen_record_admin_activity('Inserted special ' . (int) $v_products_id . ' via EP4.', 'info');
               }
-              $specials_print .= sprintf(EASYPOPULATE_4_SPECIALS_NEW, $$chosen_key, substr(strip_tags($v_products_name[$epdlanguage_id]), 0, 10), $v_products_price, $v_specials_price);
+              $specials_print .= sprintf(EASYPOPULATE_4_SPECIALS_NEW, ${$chosen_key}, substr(strip_tags($v_products_name[$epdlanguage_id]), 0, 10), $v_products_price, $v_specials_price);
             } else { // existing product
               if ($v_specials_price == '0') { // delete of existing requested
                 $db->Execute("DELETE FROM " . TABLE_SPECIALS . " WHERE products_id = '" . (int) $v_products_id . "'");
-                $specials_print .= sprintf(EASYPOPULATE_4_SPECIALS_DELETE, $$chosen_key);
+                $specials_print .= sprintf(EASYPOPULATE_4_SPECIALS_DELETE, ${$chosen_key});
                 continue;
               }
               // just make an update
@@ -2103,7 +2103,7 @@ $result_incategory = ($ep_uses_mysqli ? mysqli_fetch_array($result_incategory) :
               if ($result) {
                 zen_record_admin_activity('Updated special ' . (int) $v_products_id . ' via EP4.', 'info');
               }
-              $specials_print .= sprintf(EASYPOPULATE_4_SPECIALS_UPDATE, $$chosen_key, substr(strip_tags($v_products_name[$epdlanguage_id]), 0, 10), $v_products_price, $v_specials_price);
+              $specials_print .= sprintf(EASYPOPULATE_4_SPECIALS_UPDATE, ${$chosen_key}, substr(strip_tags($v_products_name[$epdlanguage_id]), 0, 10), $v_products_price, $v_specials_price);
             } // we still have our special here
           } // end specials for this product
 			
