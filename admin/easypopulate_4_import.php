@@ -1894,6 +1894,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
                         language_id = :language_id:";
               $sql = $db->bindVars($sql, ':products_id:', $v_products_id, 'integer');
         $sql = $db->bindVars($sql, ':language_id:', $lang_id, 'integer');
+
               $result = ep_4_query($sql);
 
               if (($ep_uses_mysqli ? mysqli_num_rows($result) : mysql_num_rows($result)) == 0) {
@@ -1966,12 +1967,13 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
           $sql = $db->bindVars($sql, ':v_products_id:', $v_products_id, 'integer');
           $sql = $db->bindVars($sql, ':language_id:', $lang_id, 'integer');
           $zco_notifier->notify('EP4_IMPORT_FILE_PRODUCTS_DESCRIPTION_FIELDS_BIND_END');
+                
                 $result = ep_4_query($sql);
                 if ($result) {
                   zen_record_admin_activity('Updated product ' . (int) $v_products_id . ' description via EP4.', 'info');
                 }
-              }
-            }
+              } // END: already in description, update it
+            } // END: foreach on languages
           } // END: Products Descriptions End
           //==================================================================================================================================
           // Assign product to category if linked
