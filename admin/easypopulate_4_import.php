@@ -605,7 +605,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
               $sql = "UPDATE " . TABLE_METATAGS_CATEGORIES_DESCRIPTION . " SET " .
   							(isset($filelayout['v_metatags_title_' . $lid]) ? " metatags_title		 = :metatags_title:, " : "") . 
 	  						(isset($filelayout['v_metatags_keywords_' . $lid]) ? " metatags_keywords	 = :metatags_keywords:, " : "") . 
-	  						(isset($filelayout['v_categories_description_' . $lid]) ? " metatags_description = :metatags_description: " : "") . "
+	  						(isset($filelayout['v_metatags_description_' . $lid]) ? " metatags_description = :metatags_description: " : "") . "
 							WHERE 
 							(categories_id = :categories_id: AND language_id = :language_id:)";
             }
