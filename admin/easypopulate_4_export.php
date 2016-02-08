@@ -482,7 +482,7 @@ while ($row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array
 				' . /* o.products_options_type             as v_products_options_type,
               a.options_values_id                 as v_options_values_id,
               v.products_options_values_id        as v_products_options_values_id, */'
-				v.products_options_values_name      as v_products_options_values_name ' . /*
+              v.products_options_values_name      as v_products_options_values_name ' . /*
               a.options_values_price              as v_options_values_price,
               a.price_prefix                      as v_price_prefix,
               a.products_options_sort_order       as v_products_options_sort_order,
@@ -786,7 +786,7 @@ while ($row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array
 //Start SBA1 addresses writing to the file
 
 if ($ep_dltype == 'attrib_basic') { // must write last record
-	// Clean the texts that could break CSV file formatting
+  // Clean the texts that could break CSV file formatting
   $datarow = ep_4_rmv_chars($filelayout, $active_row, $csv_delimiter);
   
   fwrite($fp, $dataRow); // write 1 line of csv data (this can be slow...)

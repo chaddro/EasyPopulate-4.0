@@ -519,7 +519,6 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
             $display_output .= sprintf('<br /><font color="red"><b>SKIPPED! - SBA Tracked Quantity ' . ($ep_4_SBAEnabled == '2' ? 'and CustomID ' : '') . 'on Model: </b>%s - Not Found!</font>', $items[(int) $filelayout['v_products_model']]);
             $ep_error_count++;
           } // if 
-
         } //end if Standard / SBA stock
       } // end while
 
@@ -539,7 +538,6 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
             $display_output .= sprintf('<br /><font color="red"><b>SKIPPED! - Product Quantity on Model: </b>%s - Not Found!</font>', $items[(int) $filelayout['v_products_model']]);
             $ep_error_count++;
           } //end if Standard
-
         } //end foreach
       } // end if sync
 //		$display_output .= '<br/> This: ' . print_r($query) . 'test<br/>';
@@ -549,6 +547,9 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
     // This Category MetaTags import routine only deals with existing Categories. It does not create or modify the tree.
     // This code is ONLY used to Edit Categories image, description, and metatags data!
     // Categories are updated via the categories_id NOT the Name!! Very important distinction here!
+    // mc12345678 below routine: categorymeta-ep could possibly clear assignments of 
+    //   data if the field(s) are not included in the download file.  This
+    //   needs to be modified to allow a reduced set of columns to be imported.
     if (strtolower(substr($file['name'], 0, 15)) == "categorymeta-ep") {
       while ($items = fgetcsv($handle, 0, $csv_delimiter, $csv_enclosure)) { // read 1 line of data
         // $items[$filelayout['v_categories_id']];
@@ -688,7 +689,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
             $sql .= 'p.' . $field . ' as v_' . $field . ',';
           }
         }
-        $sql .= 'p.products_weight			as v_products_weight,
+        $sql .= 'p.products_weight      as v_products_weight,
 					p.products_discount_type		as v_products_discount_type,
 					p.products_discount_type_from   as v_products_discount_type_from,
 					p.product_is_call				as v_product_is_call,
@@ -843,6 +844,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
             $chosen_key = 'v_products_model';
             break;
         }
+        
         if ($items[$filelayout['v_status']] == 9 && zen_not_null($items[$filelayout[$chosen_key]])) {
           // cannot delete product that is not found
           $display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_DELETE_NOT_FOUND, $items[$filelayout[$chosen_key]]);
@@ -884,7 +886,6 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
             continue; // error, loop to next record
             }
            */
-			
         } // End data checking
 
         // Assign new values, i.e. $v_products_model = new import value over writing existing data pulled above
@@ -1111,7 +1112,6 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
               }
             } // foreach
           }
-			
         }
         // start with first defined language... (does not have to be 1)
         $lid = $langcode[1]['id'];
@@ -1942,10 +1942,9 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
               }
             }
           } // END: Products Descriptions End
-
-//==================================================================================================================================
-      // Assign product to category if linked
-      // chadd - need to dig into further
+          //==================================================================================================================================
+          // Assign product to category if linked
+          // chadd - need to dig into further
           if (isset($v_categories_id)) { // find out if this product is listed in the category given
         $result_incategory = ep_4_query('SELECT 
           '.TABLE_PRODUCTS_TO_CATEGORIES.'.products_id,
@@ -2063,7 +2062,7 @@ $result_incategory = ($ep_uses_mysqli ? mysqli_fetch_array($result_incategory) :
               }
             }
           }
-//==================================================================================================================================
+          //==================================================================================================================================
 
           /* Specials - if a null value in specials price, do not add or update. If price = 0, let's delete it */
           if (isset($v_specials_price) && zen_not_null($v_specials_price)) {
@@ -2145,7 +2144,6 @@ $result_incategory = ($ep_uses_mysqli ? mysqli_fetch_array($result_incategory) :
           // better yet, why not ONLY call if pricing was updated
           // ALL these affect pricing: products_tax_class_id, products_price, products_priced_by_attribute, product_is_free, product_is_call
           zen_update_products_price_sorter($v_products_id);
-			
         } else {
           // this record is missing the product_model
           $display_output .= EASYPOPULATE_4_DISPLAY_RESULT_NO_MODEL;
