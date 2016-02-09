@@ -575,9 +575,17 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
             // $items[$filelayout['v_categories_name_'.$lid]];
             // $items[$filelayout['v_categories_description_'.$lid]];
           if (isset($filelayout['v_categories_name_' . $lid]) || isset($filelayout['v_categories_description_' . $lid])) {
-            $sql = "UPDATE " . TABLE_CATEGORIES_DESCRIPTION . " SET " . 
-  							(isset($filelayout['v_categories_name_' . $lid]) ? " categories_name        = :categories_name:, " : "") .
-	  				    (isset($filelayout['v_categories_description_' . $lid]) ? " categories_description = :categories_description: " : "") . "
+            $sql = "UPDATE " . TABLE_CATEGORIES_DESCRIPTION . " SET ";
+              $update_count = false;
+              if (isset($filelayout['v_categories_name_' . $lid])) {
+                $sql .= "categories_name        = :categories_name:";
+                $update_count = true;
+              }
+              if (isset($filelayout['v_categories_description_' . $lid])) {
+                $sql .= ($update_count ? ", " : "") . "categories_description = :categories_description: ";
+                $update_count = true;
+              }
+              $sql .= "
 							WHERE 
 							(categories_id = :categories_id: AND language_id = :language_id:)";
 
@@ -602,10 +610,21 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
             if ($row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array($result))) {
               // UPDATE
             if (isset($filelayout['v_metatags_title_' . $lid]) || isset($filelayout['v_metatags_keywords_' . $lid]) || isset($filelayout['v_metatags_description_' . $lid])) {
-              $sql = "UPDATE " . TABLE_METATAGS_CATEGORIES_DESCRIPTION . " SET " .
-  							(isset($filelayout['v_metatags_title_' . $lid]) ? " metatags_title		 = :metatags_title:, " : "") . 
-	  						(isset($filelayout['v_metatags_keywords_' . $lid]) ? " metatags_keywords	 = :metatags_keywords:, " : "") . 
-	  						(isset($filelayout['v_metatags_description_' . $lid]) ? " metatags_description = :metatags_description: " : "") . "
+              $sql = "UPDATE " . TABLE_METATAGS_CATEGORIES_DESCRIPTION . " SET ";
+                $update_count = false;
+                if (isset($filelayout['v_metatags_title_' . $lid])) {
+                  $sql .= "metatags_title		 = :metatags_title: ";
+                  $update_count = true;
+                }
+                if (isset($filelayout['v_metatags_keywords_' . $lid])) {
+                  $sql .= ($update_count ? ", " : "") . "metatags_keywords	 = :metatags_keywords:";
+                  $update_count = true;
+                }
+                if (isset($filelayout['v_metatags_description_' . $lid])) {
+                  $sql .= ($update_count ? ", " : "") . "metatags_description = :metatags_description:";
+                  $update_count = true;
+                }
+              $sql .= "
 							WHERE 
 							(categories_id = :categories_id: AND language_id = :language_id:)";
             }
@@ -1938,7 +1957,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
           $sql = "UPDATE " . TABLE_PRODUCTS_DESCRIPTION . " SET ";
           $update_count = false;
           if (isset($filelayout['v_products_name_' . $lang_id])) {
-            $sql .= " products_name      = :products_name";
+            $sql .= " products_name      = :products_name:";
             $update_count = true;
           }
           if (isset($filelayout['v_products_description_' . $lang_id]) || ( isset($filelayout['v_products_description_' . $lang_id]) && $product_is_new)) {
