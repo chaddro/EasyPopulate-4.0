@@ -469,35 +469,35 @@ if (((isset($error) && !$error) || !isset($error)) && (!is_null($_POST["delete"]
     
         <b><?php echo EASYPOPULATE_4_DISPLAY_PRODUCTS_PRICE_EXPORT_OPTION; ?></b><br />
         <!-- Download file links -->
-        <a href="<?php echo zen_href_link(FILENAME_EASYPOPULATE_4, 'export=full'); ?>"><?php echo EASYPOPULATE_4_DISPLAY_COMPLETE_PRODUCTS; ?></a><br/>
-        <a href="<?php echo zen_href_link(FILENAME_EASYPOPULATE_4, 'export=priceqty'); ?>"><?php echo EASYPOPULATE_4_DISPLAY_PRICE_QTY; ?></a><br />
-        <a href="<?php echo zen_href_link(FILENAME_EASYPOPULATE_4, 'export=pricebreaks'); ?>"><?php echo EASYPOPULATE_4_DISPLAY_PRICE_BREAKS; ?></a><br />
-        <a href="<?php echo zen_href_link(FILENAME_EASYPOPULATE_4, 'export=featured'); ?>"><?php echo EASYPOPULATE_4_DISPLAY_FEATURED; ?></a><br />
+        <a href="<?php echo zen_href_link(FILENAME_EASYPOPULATE_4, 'export=full', $request_type); ?>"><?php echo EASYPOPULATE_4_DISPLAY_COMPLETE_PRODUCTS; ?></a><br/>
+        <a href="<?php echo zen_href_link(FILENAME_EASYPOPULATE_4, 'export=priceqty', $request_type); ?>"><?php echo EASYPOPULATE_4_DISPLAY_PRICE_QTY; ?></a><br />
+        <a href="<?php echo zen_href_link(FILENAME_EASYPOPULATE_4, 'export=pricebreaks', $request_type); ?>"><?php echo EASYPOPULATE_4_DISPLAY_PRICE_BREAKS; ?></a><br />
+        <a href="<?php echo zen_href_link(FILENAME_EASYPOPULATE_4, 'export=featured', $request_type); ?>"><?php echo EASYPOPULATE_4_DISPLAY_FEATURED; ?></a><br />
 
         <br /><b><?php echo EASYPOPULATE_4_DISPLAY_TITLE_CATEGORY; ?></b><br />
-        <a href="<?php echo zen_href_link(FILENAME_EASYPOPULATE_4, 'export=category'); ?>"><?php echo EASYPOPULATE_4_DISPLAY_EXPORT_CATEGORY; ?></a><br />
-        <a href="<?php echo zen_href_link(FILENAME_EASYPOPULATE_4, 'export=categorymeta'); ?>"><?php echo EASYPOPULATE_4_DISPLAY_EXPORT_CATEGORYMETA; ?></a><br/>
+        <a href="<?php echo zen_href_link(FILENAME_EASYPOPULATE_4, 'export=category', $request_type); ?>"><?php echo EASYPOPULATE_4_DISPLAY_EXPORT_CATEGORY; ?></a><br />
+        <a href="<?php echo zen_href_link(FILENAME_EASYPOPULATE_4, 'export=categorymeta', $request_type); ?>"><?php echo EASYPOPULATE_4_DISPLAY_EXPORT_CATEGORYMETA; ?></a><br/>
 
         <br /><?php echo EASYPOPULATE_4_DISPLAY_TITLE_ATTRIBUTE; ?><br />
-        <a href="<?php echo zen_href_link(FILENAME_EASYPOPULATE_4, 'export=attrib_basic'); ?>"><?php echo EASYPOPULATE_4_DISPLAY_EXPORT_ATTRIBUTE_BASIC; ?></a><br /> 
-        <a href="<?php echo zen_href_link(FILENAME_EASYPOPULATE_4, 'export=attrib_detailed'); ?>"><?php echo EASYPOPULATE_4_DISPLAY_EXPORT_ATTRIBUTE_DETAILED; ?></a><br />
+        <a href="<?php echo zen_href_link(FILENAME_EASYPOPULATE_4, 'export=attrib_basic', $request_type); ?>"><?php echo EASYPOPULATE_4_DISPLAY_EXPORT_ATTRIBUTE_BASIC; ?></a><br /> 
+        <a href="<?php echo zen_href_link(FILENAME_EASYPOPULATE_4, 'export=attrib_detailed', $request_type); ?>"><?php echo EASYPOPULATE_4_DISPLAY_EXPORT_ATTRIBUTE_DETAILED; ?></a><br />
         <?php
         /* Begin SBA1 addition */
         if ($ep_4_SBAEnabled != false) {
           ?>
-          <a href="<?php echo zen_href_link(FILENAME_EASYPOPULATE_4, 'xport=SBA_detailed'); ?>"><?php echo EASYPOPULATE_4_DISPLAY_EXPORT_DETAILED_SBA; ?></a><br />
-          <a href="<?php echo zen_href_link(FILENAME_EASYPOPULATE_4, 'export=SBAStock'); ?>"><?php echo EASYPOPULATE_4_DISPLAY_EXPORT_SBA_STOCK; ?></a><br />
+          <a href="<?php echo zen_href_link(FILENAME_EASYPOPULATE_4, 'export=SBA_detailed', $request_type); ?>"><?php echo EASYPOPULATE_4_DISPLAY_EXPORT_DETAILED_SBA; ?></a><br />
+          <a href="<?php echo zen_href_link(FILENAME_EASYPOPULATE_4, 'export=SBAStock', $request_type); ?>"><?php echo EASYPOPULATE_4_DISPLAY_EXPORT_SBA_STOCK; ?></a><br />
 
-          <a href="<?php echo zen_href_link(FILENAME_EASYPOPULATE_4, 'export=SBAStockProdFilter'); ?>"><?php echo EASYPOPULATE_4_DISPLAY_EXPORT_SBA_STOCK_ASC; ?></a><br />
+          <a href="<?php echo zen_href_link(FILENAME_EASYPOPULATE_4, 'export=SBAStockProdFilter, $request_type'); ?>"><?php echo EASYPOPULATE_4_DISPLAY_EXPORT_SBA_STOCK_ASC; ?></a><br />
 
         <?php } /* End SBA1 Addition */ 
 		$zco_notifier->notify('EP4_LINK_SELECTION_END');
 		?>
 
         <br><?php echo EASYPOPULATE_4_DISPLAY_TITLE_EXPORT_ONLY; ?><br />
-        <a href="<?php echo zen_href_link(FILENAME_EASYPOPULATE_4, 'export=options'); ?>"><?php echo EASYPOPULATE_4_DISPLAY_EXPORT_OPTION_NAMES; ?></a><br />
-        <a href="<?php echo zen_href_link(FILENAME_EASYPOPULATE_4, 'export=values'); ?>"><?php echo EASYPOPULATE_4_DISPLAY_EXPORT_OPTION_VALUES; ?></a><br />
-        <a href="<?php echo zen_href_link(FILENAME_EASYPOPULATE_4, 'export=optionvalues'); ?>"><?php echo EASYPOPULATE_4_DISPLAY_EXPORT_OPTION_NAMES_TO_VALUES; ?></a><br />
+        <a href="<?php echo zen_href_link(FILENAME_EASYPOPULATE_4, 'export=options', $request_type); ?>"><?php echo EASYPOPULATE_4_DISPLAY_EXPORT_OPTION_NAMES; ?></a><br />
+        <a href="<?php echo zen_href_link(FILENAME_EASYPOPULATE_4, 'export=values', $request_type); ?>"><?php echo EASYPOPULATE_4_DISPLAY_EXPORT_OPTION_VALUES; ?></a><br />
+        <a href="<?php echo zen_href_link(FILENAME_EASYPOPULATE_4, 'export=optionvalues', $request_type); ?>"><?php echo EASYPOPULATE_4_DISPLAY_EXPORT_OPTION_NAMES_TO_VALUES; ?></a><br />
 
         <?php
 // List uploaded files in multifile mode
