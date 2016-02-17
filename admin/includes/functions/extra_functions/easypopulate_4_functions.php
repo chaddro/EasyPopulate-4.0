@@ -67,6 +67,16 @@ function ep_4_SBA1Exists () {
 	// The current thought is to have one of these Exists files for each version of SBA to consider; however, they also all could fall under one SBA_Exists check provided some return is made and a comparison done on the other end about what was returned.  
 	//Check to see if any version of Stock with attributes is installed (If so, and properly programmed, there should be a define for the table associated with the stock.  There may be more than one, and if so, they should all be verified for the particular SBA.
 	if (defined('TABLE_PRODUCTS_WITH_ATTRIBUTES_STOCK')) {
+		$tablePresent = ep_4_query('SELECT * 
+					FROM information_schema.tables
+					WHERE table_schema = ' . DB_DATABASE . '
+					AND table_name = ' . TABLE_PRODUCTS_WITH_ATTRIBUTES_STOCK . '
+					LIMIT 1;');
+		// Check if database table is present in the database before attempting to access it.  If not present, then no need to
+		//  continue processing.
+		if (($ep_uses_mysqli ? mysqli_num_rows($tablePresent) : mysql_num_rows($tablePresent)) == 0) {
+			return false;
+		}
 		//Now that have identified that the table (applicable to mc12345678's store, has been identified as in existence, now need to look at the setup of the table (Number of columns and if each column identified below is in the table, or conversely if the table's column matches the list below.
 		//Columns in table: stock_id, products_id, stock_attributes, quantity, and sort.
 //		echo 'In<br />';
