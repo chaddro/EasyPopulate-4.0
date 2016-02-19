@@ -1957,7 +1957,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
           $sql = "UPDATE " . TABLE_PRODUCTS_DESCRIPTION . " SET ";
           $update_count = false;
           if (isset($filelayout['v_products_name_' . $lang_id])) {
-            $sql .= " products_name      = :products_name:";
+            $sql .= " products_name      = :v_products_name:";
             $update_count = true;
           }
           if (isset($filelayout['v_products_description_' . $lang_id]) || ( isset($filelayout['v_products_description_' . $lang_id]) && $product_is_new)) {
