@@ -15,3 +15,5 @@ nbproject/
 .*.~
 *.~txt
 *.~js
+*.zip
+.idea/
