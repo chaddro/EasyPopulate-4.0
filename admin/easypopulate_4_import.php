@@ -1483,8 +1483,8 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
             } else {
               $v_products_type = 1; // 1 = standard product
             }
-        
-        $zco_notifier->notify('EP4_IMPORT_FILE_NEW_PRODUCT_PRODUCT_TYPE');
+
+            $zco_notifier->notify('EP4_IMPORT_FILE_NEW_PRODUCT_PRODUCT_TYPE');
 
 // mc12345678, new item need to address products_id assignment as it is provided
             $query = "INSERT INTO " . TABLE_PRODUCTS . " SET

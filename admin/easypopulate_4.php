@@ -196,6 +196,9 @@ if (($collation == 'utf8') && ((substr($project, 0, 5) == "1.3.8") || (substr($p
   $artists_name_max_len = $artists_name_max_len / 3;
   $record_company_name_max_len = $record_company_name_max_len / 3;
   $music_genre_name_max_len = $music_genre_name_max_len / 3;
+
+  $zco_notifier->notify('EP4_COLLATION_UTF8_ZC13X');
+
 }
 
 // test for Ajeh
@@ -287,6 +290,7 @@ if (((isset($error) && !$error) || !isset($error)) && (!is_null($_POST["delete"]
     <link rel="stylesheet" type="text/css" href="includes/cssjsmenuhover.css" media="all" id="hoverJS">
     <script language="javascript" type="text/javascript" src="includes/menu.js"></script>
     <script language="javascript" type="text/javascript" src="includes/general.js"></script>
+    <?php $zco_notifier->notify('EP4_EASYPOPULATE_4_LINK'); ?>
     <!-- <script language="javascript" src="includes/ep4ajax.js"></script> -->
     <script type="text/javascript">
 <!--
@@ -361,6 +365,8 @@ if (((isset($error) && !$error) || !isset($error)) && (!is_null($_POST["delete"]
            echo EASYPOPULATE_4_DISPLAY_STATUS_PRODUCT_CEON . (($ep4CEONURIDoesExist == true) ? '<font color="green">TRUE</font>' : "FALSE") . '<br />';
            echo EASYPOPULATE_4_DISPLAY_STATUS_PRODUCT_DPM . (($ep_supported_mods['dual']) ? '<font color="green">TRUE</font>' : "FALSE") . '<br />';
 
+           $zco_notifier->notify('EP4_DISPLAY_STATUS');
+
            echo "<br /><b><u>" . EASYPOPULATE_4_DISPLAY_USER_DEF_FIELDS . "</u></b><br />";
            $i = 0;
            foreach ($custom_field_names as $field) {
@@ -382,6 +388,7 @@ if (((isset($error) && !$error) || !isset($error)) && (!is_null($_POST["delete"]
            echo 'products_model:' . $products_model_max_len . '<br />';
            echo 'products_name:' . $products_name_max_len . '<br />';
 
+           $zco_notifier->notify('EP4_MAX_LEN');
            /*  // some error checking
              echo '<br /><br />Problem Data: '. mysql_num_rows($ajeh_result);
              echo '<br />Memory Usage: '.memory_get_usage();
