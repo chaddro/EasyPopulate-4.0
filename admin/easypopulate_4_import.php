@@ -1512,9 +1512,11 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
               foreach ($custom_fields as $field) {
                 if ($field != 'products_id' || ( $field == 'products_id' && defined('EP4_DB_FILTER_KEY') && EP4_DB_FILTER_KEY === 'blank_new' && zen_not_null(${$chosen_key}))) {
                   $value = 'v_' . $field;
-                  $query .= ":field: = :value:, ";
-                  $query = $db->bindVars($query, ':field:', $field, 'noquotestring');
-                  $query = $db->bindVars($query, ':value:', ${$value}, 'string');
+                  if ($filelayout[$value]) {
+                    $query .= ":field: = :value:, ";
+                    $query = $db->bindVars($query, ':field:', $field, 'noquotestring');
+                    $query = $db->bindVars($query, ':value:', ${$value}, ('string'));
+                  }
                 }
               }
             }
@@ -1660,9 +1662,11 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
             if (count($custom_fields) > 0) {
               foreach ($custom_fields as $field) {
                 $value = 'v_' . $field;
-                $query .= ":field: = :value:, ";
-                $query = $db->bindVars($query, ':field:', $field, 'noquotestring');
-                $query = $db->bindVars($query, ':value:', ${$value}, ( ${$value} == (int)${$value} ? 'integer' : 'string'));
+                if ($filelayout[$value]) {
+                  $query .= ":field: = :value:, ";
+                  $query = $db->bindVars($query, ':field:', $field, 'noquotestring');
+                  $query = $db->bindVars($query, ':value:', ${$value}, 'string');
+                }
               }
             }
             $query .= "products_image			= :products_image:,
