@@ -1,5 +1,5 @@
 <?php
-// $Id: easypopulate_4.php, v4.0.32 12-30-2015 mc12345678 $
+// $Id: easypopulate_4.php, v4.0.33 02-29-2016 mc12345678 $
 
 // CSV VARIABLES - need to make this configurable in the ADMIN
 // $csv_delimiter = "\t"; // "\t" = tab AND "," = COMMA
@@ -75,7 +75,7 @@ $ep_debug_logging_all = false; // do not comment out.. make false instead
 /* Test area end */
 
 // Current EP Version - Modded by mc12345678 after Chadd had done so much
-$curver              = '4.0.32 - Beta 12-30-2015';
+$curver              = '4.0.33 - Beta 02-29-2016';
 $display_output = ''; // results of import displayed after script run
 $ep_dltype = NULL;
 $ep_stack_sql_error = false; // function returns true on any 1 error, and notifies user of an error
