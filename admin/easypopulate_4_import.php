@@ -1004,10 +1004,10 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
         // date variables - chadd ... these should really be products_date_available and products_date_added for clarity
         // date_avail is only set to show when out of stock items will be available, else it is NULL
         // 11-19-2010 fixed this bug where NULL wasn't being correctly set
-        $v_date_avail = ($v_date_avail) ? "'" . date("Y-m-d H:i:s", strtotime($v_date_avail)) . "'" : "NULL";
+        $v_date_avail = ($v_date_avail == true && $v_date_avail > "0001-01-01") ? date("Y-m-d H:i:s", strtotime($v_date_avail)) : "NULL";
 
         // if products has been added before, do not change, else use current time stamp
-        $v_date_added = ($v_date_added) ? "'" . date("Y-m-d H:i:s", strtotime($v_date_added)) . "'" : "CURRENT_TIMESTAMP";
+        $v_date_added = ($v_date_added == true & $v_date_added > "0001-01-01") ? date("Y-m-d H:i:s", strtotime($v_date_added)) : "CURRENT_TIMESTAMP";
 
         // default the stock if they spec'd it or if it's blank
         // $v_db_status = '1'; // default to active
@@ -1567,8 +1567,8 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
             $query = $db->bindVars($query, ':products_priced_by_attribute:', $v_products_priced_by_attribute, 'string');
             $query = $db->bindVars($query, ':product_is_always_free_shipping:', $v_product_is_always_free_shipping, 'string');
             $query = $db->bindVars($query, ':tax_class_id:', $v_tax_class_id, 'integer');
-            $query = $db->bindVars($query, ':date_avail:', $v_date_avail, 'string');
-            $query = $db->bindVars($query, ':date_added:', $v_date_added, 'string');
+            $query = $db->bindVars($query, ':date_avail:', $v_date_avail, ($v_date_avail == "NULL" ? 'noquotestring' : 'string'));
+            $query = $db->bindVars($query, ':date_added:', $v_date_added, ($v_date_added == "CURRENT_TIMESTAMP" ? 'noquotestring' : 'string'));
             $query = $db->bindVars($query, ':products_quantity:', $v_products_quantity, 'float');
             $query = $db->bindVars($query, ':categories_id:', $v_categories_id, 'integer');
             $query = $db->bindVars($query, ':manufacturers_id:', $v_manufacturers_id, 'integer');
@@ -1711,8 +1711,8 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
             $query = $db->bindVars($query, ':products_priced_by_attribute:', $v_products_priced_by_attribute, 'string');
             $query = $db->bindVars($query, ':product_is_always_free_shipping:', $v_product_is_always_free_shipping, 'string');
             $query = $db->bindVars($query, ':tax_class_id:', $v_tax_class_id, 'integer');
-            $query = $db->bindVars($query, ':date_avail:', $v_date_avail, 'string');
-            $query = $db->bindVars($query, ':date_added:', $v_date_added, 'string');
+            $query = $db->bindVars($query, ':date_avail:', $v_date_avail, ($v_date_avail == 'NULL' ? 'noquotestring': 'string'));
+            $query = $db->bindVars($query, ':date_added:', $v_date_added, ($v_date_added == 'CURRENT_TIMESTAMP' ? 'noquotestring': 'string'));
             $query = $db->bindVars($query, ':products_quantity:', $v_products_quantity, 'float');
             $query = $db->bindVars($query, ':categories_id:', $v_categories_id, 'integer');
             $query = $db->bindVars($query, ':manufacturers_id:', $v_manufacturers_id, 'integer');
