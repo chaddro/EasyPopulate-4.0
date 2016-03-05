@@ -69,12 +69,12 @@ function ep_4_SBA1Exists () {
 	if (defined('TABLE_PRODUCTS_WITH_ATTRIBUTES_STOCK')) {
 		$tablePresent = ep_4_query('SELECT * 
 					FROM information_schema.tables
-					WHERE table_schema = ' . DB_DATABASE . '
-					AND table_name = ' . TABLE_PRODUCTS_WITH_ATTRIBUTES_STOCK . '
+					WHERE table_schema = \'' . DB_DATABASE . '\'
+					AND table_name = \'' . TABLE_PRODUCTS_WITH_ATTRIBUTES_STOCK . '\'
 					LIMIT 1;');
 		// Check if database table is present in the database before attempting to access it.  If not present, then no need to
 		//  continue processing.
-		if (($ep_uses_mysqli ? mysqli_num_rows($tablePresent) : mysql_num_rows($tablePresent)) == 0) {
+		if ($tablePresent == false) {
 			return false;
 		}
 		//Now that have identified that the table (applicable to mc12345678's store, has been identified as in existence, now need to look at the setup of the table (Number of columns and if each column identified below is in the table, or conversely if the table's column matches the list below.
