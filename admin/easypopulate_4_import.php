@@ -770,6 +770,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
           // since we have a row, the item already exists.
           // let's check and delete it if requested   
           // v_status == 9 is a delete request  
+          $continueNextRow = false;
           if ($items[$filelayout['v_status']] == 9) {
             $chosen_key = '';
             switch (EP4_DB_FILTER_KEY) {
@@ -787,6 +788,13 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
 
             $display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_DELETED, $items[$filelayout[$chosen_key]]);
             ep_4_remove_product($items[$filelayout[$chosen_key]]);
+
+            $continueNextRow = true;
+          }
+      
+          $zco_notifier->notify('EP4_IMPORT_FILE_EARLY_ROW_PROCESSING');
+
+          if ($continueNextRow == true) {
             continue 2; // short circuit - loop to next record
           }
 
@@ -1475,6 +1483,9 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
             } else {
               $v_products_type = 1; // 1 = standard product
             }
+        
+        $zco_notifier->notify('EP4_IMPORT_FILE_NEW_PRODUCT_PRODUCT_TYPE');
+
 // mc12345678, new item need to address products_id assignment as it is provided
             $query = "INSERT INTO " . TABLE_PRODUCTS . " SET
 							products_model					= :products_model:,
@@ -2212,6 +2223,8 @@ $result_incategory = ($ep_uses_mysqli ? mysqli_fetch_array($result_incategory) :
         } // end of row insertion code
       } // end of Mail While Loop
     } // conditional IF statement
+  
+    $zco_notifier->notify('EP4_IMPORT_FILE_PRE_DISPLAY_OUTPUT');
 
 //    $display_output .= '<h3>Finished Processing Import File</h3>';
     $display_output .= EASYPOPULATE_4_DISPLAY_IMPORT_RESULTS_TITLE;
