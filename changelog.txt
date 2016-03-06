@@ -277,4 +277,5 @@
 				Added a .htaccess file that only includes permission for .csv and .txt files based off
 					of the admin/.htaccess file available from ZC 1.5.4.
 				Updated instructions to add some additional considerations.
-				
+				EP4 had been submitted for download, download from ZC is available from:
+					https://www.zen-cart.com/downloads.php?do=file&id=2068

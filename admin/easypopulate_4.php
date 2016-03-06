@@ -78,8 +78,17 @@ $ep_debug_logging_all = false; // do not comment out.. make false instead
 //$sql_fail_test == true; // used to cause an sql error on new product upload - tests error handling & logs
 /* Test area end */
 
+$curver = '4.0.33';
+$message = '';
+if (IS_ADMIN_FLAG) {
+  $new_version_details = plugin_version_check_for_updates(2068, $curver);
+  if ($new_version_details !== FALSE) {
+    $message = '<span class="alert">' . ' - NOTE: A NEW VERSION OF THIS PLUGIN IS AVAILABLE. <a href="' . $new_version_details['link'] . '" target="_blank">[Details]</a>' . '</span>';
+  }
+}
+
 // Current EP Version - Modded by mc12345678 after Chadd had done so much
-$curver              = '4.0.33 - Beta 02-29-2016';
+$curver              = $curver . ' - Beta 02-29-2016' . $message;
 $display_output = ''; // results of import displayed after script run
 $ep_dltype = NULL;
 $ep_stack_sql_error = false; // function returns true on any 1 error, and notifies user of an error
