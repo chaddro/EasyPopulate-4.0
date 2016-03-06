@@ -407,7 +407,8 @@ while ($row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array
   // concatenate the entire categories path into one string with $category_delimiter for separater.
   if (($ep_dltype == 'full') || ($ep_dltype == 'category')) { // chadd - 12-02-2010 fixed error: missing parenthesis
     // NEW While-loop for unlimited category depth			
-    $category_delimiter = "^"; //Need to move this to the admin panel
+//    $category_delimiter = "^"; //Need to move this to the admin panel // mc12345678 02-29-2016 moved to main file.
+//    $category_delimiter = "\x5e"; This is the UTF-8 implementation of "^".
     $thecategory_id = $row['v_categories_id']; // starting category_id
 
     if ($ep_dltype == 'full' && EASYPOPULATE_4_CONFIG_EXPORT_URI != '0') {

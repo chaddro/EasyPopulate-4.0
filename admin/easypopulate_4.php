@@ -5,6 +5,10 @@
 // $csv_delimiter = "\t"; // "\t" = tab AND "," = COMMA
 $csv_delimiter = ","; // "\t" = tab AND "," = COMMA
 $csv_enclosure = '"'; // chadd - i think you should always use the '"' for best compatibility
+//$category_delimiter = "^"; //Need to move this to the admin panel
+$category_delimiter = "\x5e"; //Need to move this to the admin panel
+// See https://en.wikipedia.org/wiki/UTF-8 for UTF-8 character encodings
+
 
 $excel_safe_output = true; // this forces enclosure in quotes
 
