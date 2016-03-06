@@ -313,9 +313,9 @@ if (((isset($error) && !$error) || !isset($error)) && (!is_null($_POST["delete"]
     <title><?php echo TITLE; ?></title>
     <link rel="stylesheet" type="text/css" href="includes/stylesheet.css">
     <link rel="stylesheet" type="text/css" href="includes/cssjsmenuhover.css" media="all" id="hoverJS">
+    <?php $zco_notifier->notify('EP4_EASYPOPULATE_4_LINK'); ?>
     <script language="javascript" type="text/javascript" src="includes/menu.js"></script>
     <script language="javascript" type="text/javascript" src="includes/general.js"></script>
-    <?php $zco_notifier->notify('EP4_EASYPOPULATE_4_LINK'); ?>
     <!-- <script language="javascript" src="includes/ep4ajax.js"></script> -->
     <script type="text/javascript">
 <!--
