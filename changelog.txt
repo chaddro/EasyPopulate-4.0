@@ -279,3 +279,5 @@
 				Updated instructions to add some additional considerations.
 				EP4 had been submitted for download, download from ZC is available from:
 					https://www.zen-cart.com/downloads.php?do=file&id=2068
+4.0.33a  03/17/2016             Updated version check location to reflect the final submission/accepted download location of:
+                                        https://www.zen-cart.com/downloads.php?do=file&id=2069
