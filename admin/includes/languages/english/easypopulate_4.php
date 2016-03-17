@@ -1,5 +1,5 @@
 <?php
-// $Id: easypopulate_4.php, v4.0.21 06-01-2012 chadderuski $
+// $Id: easypopulate_4.php, v4.0.31 08-29-2015 mc12345678 $
 
 // $display_output defines
 
@@ -40,6 +40,12 @@ define('EASYPOPULATE_4_MSGSTACK_DROSS_DELETE_FAIL', '<b>Deleting of product data
 define('EASYPOPULATE_4_MSGSTACK_DROSS_DELETE_SUCCESS', 'Deleting of product data debris succeeded!');
 define('EASYPOPULATE_4_MSGSTACK_DROSS_DETECTED', '<b>%s partially deleted product(s) found!</b> Delete this dross to prevent unwanted zencart behaviour by clicking <a href="%s">here.</a><br />You are seeing this because there are references in tables to a product that no longer exists, which is usually caused by an incomplete product deletion. This can cause Zen Cart to misbehave in certain circumstances.');
 define('EASYPOPULATE_4_MSGSTACK_DATE_FORMAT_FAIL', '%s is not a valid date format. If you upload any date other than raw format (such as from Excel) you will mangle your dates. Please fix this by correcting your date format in the Easy Populate config.');
+define('EASYPOPULATE_4_ORDERS_DROPDOWN_FIRST', 'Order Type');
+define('EASYPOPULATE_4_ORDERS_FULL', 'Orders Full');
+define('EASYPOPULATE_4_ORDERS_NEWFULL', 'Orders New Full');
+define('EASYPOPULATE_4_ORDERS_NO_ATTRIBS', 'Orders No Attributes');
+define('EASYPOPULATE_4_ORDERS_ATTRIBS', 'Orders Attributes Only');
+define('EASYPOPULATE_4_ORDERS_DROPDOWN_TITLE', '<b>Filterable Orders Exports:</b><br/>');
 
 // install - msg stack alerts - output via $messageStack
 define('EASYPOPULATE_4_MSGSTACK_INSTALL_DELETE_SUCCESS','Redundant file <b>%s</b> was deleted from <b>YOUR_ADMIN%s</b> directory.');
@@ -72,6 +78,7 @@ define('ATTRIB_BASIC_EP','Prefix: %1$s. %2$s will be processed through the Basic
 define('ATTRIB_DETAILED_EP_DESC','Prefix: %1$s. %2$s will be processed through the Detailed Attributes filters.');
 define('SBA_DETAILED_EP_DESC','Prefix: %1$s. %2$s will be processed through the Detailed Stock by Attributes filters.');
 define('SBA_STOCK_EP_DESC','Prefix: %1$s. %2$s will be processed through the Stock by Attributes Stock Modification filters.');
+define('ORDERS_EP_DESC', 'Prefix: %1$s. %2$s will not be processed for import.');
 define('CATCHALL_EP_DESC', 'This contains any other file. %2$s will be processed like the upload of a full data file.');
 
 // error log defines - for ep_debug_log.txt
@@ -84,5 +91,72 @@ define('EASYPOPULATE_4_DISPLAY_SPLIT_SHORT', 'Split Records: ');
 define('EASYPOPULATE_4_DISPLAY_EXEC_TIME', 'Execution Time: ');
 define('EASYPOPULATE_4_DISPLAY_ENABLE_META', 'Enable Products Metatags: ');
 define('EASYPOPULATE_4_DISPLAY_ENABLE_MUSIC', 'Enable Products Music: ');
+define('EASYPOPULATE_4_DISPLAY_CUSTOM_PRODUCT_FIELDS', 'Custom Products Fields');
+define('EASYPOPULATE_4_DISPLAY_STATUS_PRODUCT_SHORT_DESC', 'Product Short Descriptions: ');
+define('EASYPOPULATE_4_DISPLAY_STATUS_PRODUCT_UNIT_MEAS', 'Product Unit of Measure: ');
+define('EASYPOPULATE_4_DISPLAY_STATUS_PRODUCT_UPC', 'Product UPC Code: ');
+define('EASYPOPULATE_4_DISPLAY_STATUS_PRODUCT_GOOGLE_CAT', 'Google Product Category: ');
+define('EASYPOPULATE_4_DISPLAY_STATUS_PRODUCT_MSRP', 'Manufacturer\'s Suggested Retail Price: ');
+define('EASYPOPULATE_4_DISPLAY_STATUS_PRODUCT_MAP', 'Manufacturer\'s Advertised Price: ');
+define('EASYPOPULATE_4_DISPLAY_STATUS_PRODUCT_GP', 'Group Pricing Per Item: ');
+define('EASYPOPULATE_4_DISPLAY_STATUS_PRODUCT_EXCLUSIVE', 'Exclusive Products Mod: ');
+define('EASYPOPULATE_4_DISPLAY_STATUS_PRODUCT_SBA', 'Stock By Attributes Mod: ');
+define('EASYPOPULATE_4_DISPLAY_STATUS_PRODUCT_CEON', 'CEON URI Rewriter Mod: ');
+define('EASYPOPULATE_4_DISPLAY_STATUS_PRODUCT_DPM', 'Dual Pricing Mod: ');
+define('EASYPOPULATE_4_DISPLAY_USER_DEF_FIELDS', 'User Defined Products Fields: ');
+define('EASYPOPULATE_4_DISPLAY_INSTALLED_LANG', 'Installed Languages');
+define('EASYPOPULATE_4_DISPLAY_INSTALLED_LANG_DEF', 'Default Language: ');
+define('EASYPOPULATE_4_DISPLAY_INT_CHAR_ENC', 'Internal Character Encoding: ');
+define('EASYPOPULATE_4_DISPLAY_DB_COLL', 'DB Collation: ');
+define('EASYPOPULATE_4_DISPLAY_DB_FLD_LGTH', 'Database Field Lengths');
+define('EASYPOPULATE_4_DISPLAY_TITLE_UPLOAD', 'Upload EP File');
+define('EASYPOPULATE_4_DISPLAY_MAX_UP_SIZE', 'Http Max Upload File Size: %1$d bytes (%2$d Mbytes)');
+define('EASYPOPULATE_4_DISPLAY_UPLOAD_BUTTON_TEXT', 'Upload File');
+define('EASYPOPULATE_4_DD_STATUS_DEFAULT', 'Status');
+define('EASYPOPULATE_4_DD_STATUS_ACTIVE', 'active');
+define('EASYPOPULATE_4_DD_STATUS_INACTIVE', 'inactive');
+define('EASYPOPULATE_4_DD_STATUS_ALL', 'all');
+define('EASYPOPULATE_4_DD_DOWNLOAD_DEFAULT', 'Download Type');
+define('EASYPOPULATE_4_DD_DOWNLOAD_COMPLETE', 'Complete Products');
+define('EASYPOPULATE_4_DD_DOWNLOAD_QUANTITY', 'Model/Price/Qty');
+define('EASYPOPULATE_4_DD_DOWNLOAD_BREAKS', 'Model/Price/Breaks');
+define('EASYPOPULATE_4_DD_FILTER_CATEGORIES', 'Categories');
+define('EASYPOPULATE_4_DD_FILTER_EXPORT', 'Export');
 
-?>
+define('EASYPOPULATE_4_ORDERS_DROPDOWN_EXPORT', 'Export');
+
+define('EASYPOPULATE_4_DISPLAY_EXPORT_FILE_SPLIT', 'Split');
+define('EASYPOPULATE_4_DISPLAY_EXPORT_FILE_IMPORT_SYNC', 'Import w/Sync');
+define('EASYPOPULATE_4_DISPLAY_EXPORT_FILE_IMPORT', 'Import');
+define('EASYPOPULATE_4_DISPLAY_EXPORT_FILE_DELETE', 'Delete file');
+define('EASYPOPULATE_4_DISPLAY_EXPORT_FILE_DOWNLOAD', 'Download');
+define('EASYPOPULATE_4_DISPLAY_EXPORT_FILE_NONE_SUPPORTED', '<b>No Supported Data Files</b>');
+define('EASYPOPULATE_4_DISPLAY_EXPORT_FILE_ERROR_FOLDER_OPEN', '<b>Error Opening Upload Directory:</b>');
+
+define('EASYPOPULATE_4_DISPLAY_EXPORT_TYPE_ERROR','error: no export type set - press backspace to return.');
+
+define('EASYPOPULATE_4_DISPLAY_EXPORT_TABLE_TITLE_FILENAME', 'File Name');
+define('EASYPOPULATE_4_DISPLAY_EXPORT_TABLE_TITLE_SIZE', 'Size');
+define('EASYPOPULATE_4_DISPLAY_EXPORT_TABLE_TITLE_DATE_TIME', 'Date &amp; Time');
+define('EASYPOPULATE_4_DISPLAY_EXPORT_TABLE_TITLE_TYPE', 'Type');
+define('EASYPOPULATE_4_DISPLAY_EXPORT_TABLE_TITLE_SPLIT', 'Split');
+define('EASYPOPULATE_4_DISPLAY_EXPORT_TABLE_TITLE_IMPORT', 'Import');
+define('EASYPOPULATE_4_DISPLAY_EXPORT_TABLE_TITLE_DELETE', 'Delete');
+define('EASYPOPULATE_4_DISPLAY_EXPORT_TABLE_TITLE_DOWNLOAD', 'Download');
+
+define('EASYPOPULATE_4_DISPLAY_EXPORT_RESULTS_TITLE','<br><u><h3>Export Results</h3></u><br>');
+define('EASYPOPULATE_4_DISPLAY_EXPORT_RESULTS_NUM_RECORDS','<br>Records Exported: %d<br>');
+define('EASYPOPULATE_4_DISPLAY_EXPORT_RESULTS_MEM_USE','<br>Memory Usage: %d');
+define('EASYPOPULATE_4_DISPLAY_EXPORT_RESULTS_MEM_PEAK','<br>Memory Peak: %d');
+define('EASYPOPULATE_4_DISPLAY_EXPORT_RESULTS_EXEC_TIME','<br>Execution Time: %d seconds.');
+
+define('EASYPOPULATE_4_DISPLAY_IMPORT_RESULTS_TITLE','<h3>Finished Processing Import File</h3>');
+define('EASYPOPULATE_4_DISPLAY_IMPORT_RESULTS_NUM_RECORDS_UPDATE','<br/>Updated records: %d');
+define('EASYPOPULATE_4_DISPLAY_IMPORT_RESULTS_NUM_RECORDS_IMPORT','<br/>New Imported records: %d');
+define('EASYPOPULATE_4_DISPLAY_IMPORT_RESULTS_NUM_ERRORS','<br/>Errors Detected: %d');
+define('EASYPOPULATE_4_DISPLAY_IMPORT_RESULTS_NUM_WARNINGS','<br/>Warnings Detected: %d');
+define('EASYPOPULATE_4_DISPLAY_IMPORT_RESULTS_MEM_USE','<br/>Memory Usage: %d');
+define('EASYPOPULATE_4_DISPLAY_IMPORT_RESULTS_MEM_PEAK','<br/>Memory Peak: %d');
+define('EASYPOPULATE_4_DISPLAY_IMPORT_RESULTS_EXEC_TIME','<br/>Execution Time: %d seconds.');
+define('EASYPOPULATE_4_DISPLAY_IMPORT_COMPLETE_ISSUES','File Import Completed with issues.');
+define('EASYPOPULATE_4_DISPLAY_IMPORT_COMPLETE','File Import Completed.');

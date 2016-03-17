@@ -1,5 +1,9 @@
 <?php
-// $Id: easypopulate_4_functions.php, v4.0.30 06-27-2015 mc12345678 $
+// $Id: easypopulate_4_functions.php, v4.0.33 02-29-2016 mc12345678 $
+
+  if (!defined('IS_ADMIN_FLAG')) {
+    die('Illegal Access');
+  } 
 
 function ep_4_curly_quotes($curly_text) {
 	$ep_curly_quotes = (int)EASYPOPULATE_4_CONFIG_CURLY_QUOTES;
@@ -63,10 +67,18 @@ function ep_4_SBA1Exists () {
 	// The current thought is to have one of these Exists files for each version of SBA to consider; however, they also all could fall under one SBA_Exists check provided some return is made and a comparison done on the other end about what was returned.  
 	//Check to see if any version of Stock with attributes is installed (If so, and properly programmed, there should be a define for the table associated with the stock.  There may be more than one, and if so, they should all be verified for the particular SBA.
 	if (defined('TABLE_PRODUCTS_WITH_ATTRIBUTES_STOCK')) {
+		$tablePresent = ep_4_query('SELECT * 
+					FROM information_schema.tables
+					WHERE table_schema = \'' . DB_DATABASE . '\'
+					AND table_name = \'' . TABLE_PRODUCTS_WITH_ATTRIBUTES_STOCK . '\'
+					LIMIT 1;');
+		// Check if database table is present in the database before attempting to access it.  If not present, then no need to
+		//  continue processing.
+		if ($tablePresent == false) {
+			return false;
+		}
 		//Now that have identified that the table (applicable to mc12345678's store, has been identified as in existence, now need to look at the setup of the table (Number of columns and if each column identified below is in the table, or conversely if the table's column matches the list below.
 		//Columns in table: stock_id, products_id, stock_attributes, quantity, and sort.
-//		echo 'In<br />';
-//		$colsarray = $db->Execute('SHOW COLUMNS FROM ' . TABLE_PRODUCTS_WITH_ATTRIBUTES_STOCK);
 		$colsarray = ep_4_query('SHOW COLUMNS FROM ' . TABLE_PRODUCTS_WITH_ATTRIBUTES_STOCK);
 //		echo 'After execute<br />';
 		$numCols = ($ep_uses_mysqli ? mysqli_num_rows($colsarray) : mysql_num_rows($colsarray));
@@ -88,14 +100,6 @@ function ep_4_SBA1Exists () {
 						break;
 						
 				}
-//				print_r($row);
-/*				echo '4<br />';
-				if ($row['Field'] == 'stock_id') {
-					echo ' true <br />';
-				} else {
-					echo ' false <br />';
-				}
-				echo '3<br />'; */
 			}
 			return '1';
 		} elseif ($numCols >= 6) {
@@ -134,25 +138,6 @@ function ep_4_SBA1Exists () {
 		} else {
       return false;
     }
-//		$returnedcols = mysql_fetch_array($colsarray);
-//		$colnames = array_keys($returnedcols);
-/*		echo 'Num Rows: ' . $numCols . '<br />';
-		if ($returnedcols['Field'] == 'stock_id') {
-			echo 'true <br />';
-		} else {
-			echo 'false <br />';
-		}
-		echo '3<br />';
-		echo $returnedcols . '111<br />';
-		print_r($returnedcols);
-		echo '3<br />'; */
-		
-/*		while ($row = mysql_fetch_array($colsarray)){
-			print_r($row);
-			echo '4<br />';
-		}
-		echo '4<br />';*/
-		//return true;
 	} else {
 		return false;
 	}
@@ -166,8 +151,6 @@ function ep_4_CEONURIExists () {
 	if (defined('TABLE_CEON_URI_MAPPINGS')) {
 		//Now that have identified that the table (applicable to mc12345678's store, has been identified as in existence, now need to look at the setup of the table (Number of columns and if each column identified below is in the table, or conversely if the table's column matches the list below.
 		//Columns in table: stock_id, products_id, stock_attributes, quantity, and sort.
-//		echo 'In<br />';
-//		$colsarray = $db->Execute('SHOW COLUMNS FROM ' . TABLE_PRODUCTS_WITH_ATTRIBUTES_STOCK);
 		$colsarray = ep_4_query('SHOW COLUMNS FROM ' . TABLE_CEON_URI_MAPPINGS);
 //		echo 'After execute<br />';
 		$numCols = ($ep_uses_mysqli ? mysqli_num_rows($colsarray) : mysql_num_rows($colsarray));
@@ -198,737 +181,18 @@ function ep_4_CEONURIExists () {
 						
 				}
 			}
-			return true;
+      
+      if (file_exists(DIR_FS_CATALOG . DIR_WS_CLASSES . 'class.CeonURIMappingAdmin.php') ) {
+        return true;
+      } else {
+        return false;
+      }
 		} else {
 			return false;
 		}
-//		$returnedcols = mysql_fetch_array($colsarray);
-//		$colnames = array_keys($returnedcols);
-/*		echo 'Num Rows: ' . $numCols . '<br />';
-		if ($returnedcols['Field'] == 'stock_id') {
-			echo 'true <br />';
-		} else {
-			echo 'false <br />';
-		}
-		echo '3<br />';
-		echo $returnedcols . '111<br />';
-		print_r($returnedcols);
-		echo '3<br />'; */
-		
-/*		while ($row = mysql_fetch_array($colsarray)){
-			print_r($row);
-			echo '4<br />';
-		}
-		echo '4<br />';*/
-		//return true;
 	} else {
 		return false;
 	}
-}
-
-function ep_4_set_filelayout($ep_dltype, &$filelayout_sql, $sql_filter, $langcode, $ep_supported_mods, $custom_fields) {
-	$filelayout = array();
-	switch($ep_dltype) {
-	case 'SBAStock';
-		$filelayout[] = 'v_products_model';
-		$filelayout[] = 'v_status';
-		foreach ($langcode as $key => $lang) { // create variables for each language id
-			$l_id = $lang['id'];
-			$filelayout[] = 'v_products_name_'.$l_id;
-			$filelayout[] = 'v_products_description_'.$l_id;
-			if ($ep_supported_mods['psd'] == true) { // products short description mod
-				$filelayout[] = 'v_products_short_desc_'.$l_id;
-			}
-		}
-   	$ep_4_SBAEnabled = ep_4_SBA1Exists();
-    if ($ep_4_SBAEnabled == '2') {
-      $filelayout[] = 'v_customid';
-    }
-		//$filelayout[] =	'v_products_options_values_name'; // options values name from table PRODUCTS_OPTIONS_VALUES
-		$filelayout[] = 'v_SBA_tracked';
-		$filelayout[] = 'v_table_tracker';
-		$filelayout[] = 'v_products_attributes'; // options name from table 
-		$filelayout[] = 'v_products_quantity';
-		
-		$filelayout_sql = 'SELECT
-			p.products_id					as v_products_id,
-			p.products_model				as v_products_model,';
-		if (count($custom_fields) > 0) { // User Defined Products Fields
-			foreach ($custom_fields as $field) {
-				$filelayout_sql .= 'p.'.$field.' as v_'.$field.',';
-			}
-		}
-		$filelayout_sql .= '
-			p.products_quantity				as v_products_quantity,
-			p.products_status				as v_status 
-			FROM '
-			.TABLE_PRODUCTS.' as p '
-			//.TABLE_CATEGORIES.' as subc,'
-			//.TABLE_PRODUCTS_TO_CATEGORIES.' as ptoc
-			. ($sql_filter <> '' ? 'WHERE '. $sql_filter : '');
-			//p.products_id = ptoc.products_id AND
-			/*ptoc.categories_id = subc.categories_id '.$sql_filter;*/
-		break;
-		
-	case 'full': // FULL products download
-		// The file layout is dynamically made depending on the number of languages
-		$filelayout[] = 'v_products_model';
-		$filelayout[] = 'v_products_type'; // 4-23-2012
-		$filelayout[] = 'v_products_image';
-		foreach ($langcode as $key => $lang) { // create variables for each language id
-			$l_id = $lang['id'];
-			$filelayout[] = 'v_products_name_'.$l_id;
-			$filelayout[] = 'v_products_description_'.$l_id;
-			if ($ep_supported_mods['psd'] == true) { // products short description mod
-				$filelayout[] = 'v_products_short_desc_'.$l_id;
-			}
-			$filelayout[] = 'v_products_url_'.$l_id;
-		} 
-		$filelayout[] = 'v_specials_price';
-		$filelayout[] = 'v_specials_date_avail';
-		$filelayout[] = 'v_specials_expires_date';
-		$filelayout[] = 'v_products_price';
-		if ($ep_supported_mods['uom'] == true) { // price UOM mod
-			$filelayout[] = 'v_products_price_uom';
-		} 
-		if ($ep_supported_mods['upc'] == true) { // UPC Mod
-			$filelayout[] = 'v_products_upc'; 
-		}
-		if ($ep_supported_mods['gpc'] == true) { // Google Product Category for Google Merchant Center - chadd 10-1-2011
-			$filelayout[] = 'v_products_gpc'; 
-		}
-		if ($ep_supported_mods['msrp'] == true) { // Requested Mod Support - Manufacturer's Suggest Retail Price
-			$filelayout[] = 'v_products_msrp'; 
-		}
-		if ($ep_supported_mods['map'] == true) { // Requested Mod Support - Manufacturer's Advertised Price
-      $filelayout[] = 'v_map_enabled';
-      $filelayout[] = 'v_map_price';
-    }
-    if ($ep_supported_mods['gppi'] == true) { // Requested Mod Support - Group Pricing Per Item
-			$filelayout[] = 'v_products_group_a_price';
-			$filelayout[] = 'v_products_group_b_price';
-			$filelayout[] = 'v_products_group_c_price';
-			$filelayout[] = 'v_products_group_d_price';
-		}
-		if ($ep_supported_mods['excl'] == true) { // Exclusive Product Custom Mod
-			$filelayout[] = 'v_products_exclusive'; 
-		}
-		if (count($custom_fields) > 0) { // User Defined Products Fields
-			foreach ($custom_fields as $field) {
-				$filelayout[] = 'v_'.$field;
-			}
-		}
-		$filelayout[] = 'v_products_weight';
-		$filelayout[] = 'v_product_is_call';
-		$filelayout[] = 'v_products_sort_order';
-		$filelayout[] = 'v_products_quantity_order_min';
-		$filelayout[] = 'v_products_quantity_order_units';
-		$filelayout[] = 'v_products_priced_by_attribute'; // 4-30-2012
-		$filelayout[] = 'v_product_is_always_free_shipping'; // 4-30-2012
-		$filelayout[] = 'v_date_avail'; // should be changed to v_products_date_available for clarity
-		$filelayout[] = 'v_date_added'; // should be changed to v_products_date_added for clarity
-		$filelayout[] = 'v_products_quantity';
-		$filelayout[] = 'v_manufacturers_name';
-		// NEW code for 'unlimited' category depth - 1 Category Column for each installed Language
-		foreach ($langcode as $key => $lang) { // create categories variables for each language id
-			$l_id = $lang['id'];
-			$filelayout[] = 'v_categories_name_'.$l_id;
-		} 
-		$filelayout[] = 'v_tax_class_title';
-		$filelayout[] = 'v_status'; // this should be v_products_status for clarity
-		// metatags - 4-23-2012: added switch
-		if ((int)EASYPOPULATE_4_CONFIG_META_DATA) {
-			$filelayout[] = 'v_metatags_products_name_status';
-			$filelayout[] = 'v_metatags_title_status';
-			$filelayout[] = 'v_metatags_model_status';
-			$filelayout[] = 'v_metatags_price_status';
-			$filelayout[] = 'v_metatags_title_tagline_status';
-			foreach ($langcode as $key => $lang) { // create variables for each language id
-				$l_id = $lang['id'];
-				$filelayout[] = 'v_metatags_title_'.$l_id;
-				$filelayout[] = 'v_metatags_keywords_'.$l_id;
-				$filelayout[] = 'v_metatags_description_'.$l_id;
-			}
-		}
-		// music info - 4-23-2012
-		// record_artist, record_artist_info
-		// record_company, record_company_info
-		// music_genre
-		if ((int)EASYPOPULATE_4_CONFIG_MUSIC_DATA) {
-			$filelayout[] = 'v_artists_name';
-			$filelayout[] = 'v_artists_image';
-			foreach ($langcode as $key => $lang) { // create variables for each language id
-				$l_id = $lang['id'];
-				$filelayout[] = 'v_artists_url_'.$l_id;
-			}			
-			$filelayout[] = 'v_record_company_name';
-			$filelayout[] = 'v_record_company_image';
-			foreach ($langcode as $key => $lang) { // create variables for each language id
-				$l_id = $lang['id'];
-				$filelayout[] = 'v_record_company_url_'.$l_id;
-			}
-			$filelayout[] = 'v_music_genre_name';
-		}
-		$filelayout_sql = 'SELECT
-			p.products_id					as v_products_id,
-			p.products_model				as v_products_model,
-			p.products_type					as v_products_type,
-			p.products_image				as v_products_image,
-			p.products_price				as v_products_price,';
-		if ($ep_supported_mods['uom'] == true) { // price UOM mod
-			$filelayout_sql .=  'p.products_price_uom as v_products_price_uom,'; // to soon be changed to v_products_price_uom
-		} 
-		if ($ep_supported_mods['upc'] == true) { // UPC Code mod
-			$filelayout_sql .=  'p.products_upc as v_products_upc,'; 
-		}
-		if ($ep_supported_mods['gpc'] == true) { // Google Product Category for Google Merchant Center - chadd 10-1-2011
-			$filelayout_sql .=  'p.products_gpc as v_products_gpc,'; 
-		}
-		if ($ep_supported_mods['msrp'] == true) { // Requested Mod Support - Manufacturer's Suggest Retail Price
-			$filelayout_sql .=  'p.products_msrp as v_products_msrp,'; 
-		}	
-		if ($ep_supported_mods['map'] == true) { // Requested Mod Support - Manufacturer's Advertised Price
-      $filelayout_sql .= 'p.map_enabled as v_map_enabled,';
-      $filelayout_sql .= 'p.map_price as v_map_price,';
-    }
-		if ($ep_supported_mods['gppi'] == true) { // Requested Mod Support - Group Pricing Per Item
-			$filelayout_sql .=  'p.products_group_a_price as v_products_group_a_price,';
-			$filelayout_sql .=  'p.products_group_b_price as v_products_group_b_price,';
-			$filelayout_sql .=  'p.products_group_c_price as v_products_group_c_price,';
-			$filelayout_sql .=  'p.products_group_d_price as v_products_group_d_price,';
-		}
-		if ($ep_supported_mods['excl'] == true) { // Custom Mode for Exclusive Products Status VARCHAR(32)
-			$filelayout_sql .=  'p.products_exclusive as v_products_exclusive,';
-		}
-		if (count($custom_fields) > 0) { // User Defined Products Fields
-			foreach ($custom_fields as $field) {
-				$filelayout_sql .= 'p.'.$field.' as v_'.$field.',';
-			}
-		}
-		$filelayout_sql .= 'p.products_weight as v_products_weight,
-			p.product_is_call				as v_product_is_call,
-			p.products_sort_order			as v_products_sort_order, 
-			p.products_quantity_order_min	as v_products_quantity_order_min,
-			p.products_quantity_order_units	as v_products_quantity_order_units,
-			p.products_priced_by_attribute	as v_products_priced_by_attribute,
-			p.product_is_always_free_shipping	as v_product_is_always_free_shipping,			
-			p.products_date_available		as v_date_avail,
-			p.products_date_added			as v_date_added,
-			p.products_tax_class_id			as v_tax_class_id,
-			p.products_quantity				as v_products_quantity,
-			p.master_categories_id				as v_master_categories_id,
-			p.manufacturers_id				as v_manufacturers_id,
-			subc.categories_id				as v_categories_id,
-			p.products_status				as v_status,
-			p.metatags_title_status         as v_metatags_title_status,
-			p.metatags_products_name_status as v_metatags_products_name_status,
-			p.metatags_model_status         as v_metatags_model_status,
-			p.metatags_price_status         as v_metatags_price_status,
-			p.metatags_title_tagline_status as v_metatags_title_tagline_status 
-			FROM '
-			.TABLE_PRODUCTS.' as p,'
-			.TABLE_CATEGORIES.' as subc,'
-			.TABLE_PRODUCTS_TO_CATEGORIES.' as ptoc
-			WHERE
-			p.products_id = ptoc.products_id AND
-			ptoc.categories_id = subc.categories_id '.$sql_filter;
-		break;
-
-	case 'featured': // added 5-2-2012
-		$filelayout[] = 'v_products_model';
-		$filelayout[] = 'v_status';
-		$filelayout[] = 'v_featured_date_added';
-		$filelayout[] = 'v_expires_date';
-		$filelayout[] = 'v_date_status_change';
-		$filelayout[] = 'v_featured_date_available';
-
-		$filelayout_sql = 'SELECT
-			p.products_id             as v_products_id,
-			p.products_model          as v_products_model,
-			f.featured_id             as v_featured_id,
-			f.featured_date_added     as v_featured_date_added,
-			f.featured_last_modified  as v_featured_date_modified,
-			f.expires_date            as v_expires_date,
-			f.date_status_change      as v_date_status_change,
-			f.status                  as v_status,
-			f.featured_date_available as v_featured_date_available
-			FROM '
-			.TABLE_PRODUCTS.' as p,'
-			.TABLE_FEATURED.' as f
-			WHERE
-			p.products_id = f.products_id';
-		break;	
-	
-	case 'priceqty':
-		$filelayout[] = 'v_products_model';
-		$filelayout[] = 'v_status'; // 11-23-2010 added product status to price quantity option
-		$filelayout[] = 'v_specials_price';
-		$filelayout[] = 'v_specials_date_avail';
-		$filelayout[] = 'v_specials_expires_date';
-		$filelayout[] = 'v_products_price';
-		if ($ep_supported_mods['uom'] == true) { // price UOM mod
-			$filelayout[] = 'v_products_price_uom';
-		}
-		if ($ep_supported_mods['msrp'] == true) { // Manufacturer's Suggested Retail Price
-			$filelayout[] = 'v_products_msrp'; 
-		}
-		if ($ep_supported_mods['map'] == true) { // Requested Mod Support - Manufacturer's Advertised Price
-      $filelayout[] = 'v_map_enabled';
-      $filelayout[] = 'v_map_price';
-    }
-		$filelayout[] = 'v_products_quantity';
-		$filelayout_sql = 'SELECT
-			p.products_id     as v_products_id,
-			p.products_status as v_status,
-			p.products_model  as v_products_model,
-			p.products_price  as v_products_price,
-			p.manufacturers_id	as v_manufacturers_id,
-			subc.categories_id	as v_categories_id,';
-		if ($ep_supported_mods['uom'] == true) { // price UOM mod
-			$filelayout_sql .= 'p.products_price_uom as v_products_price_uom,';
-		}
-		if ($ep_supported_mods['msrp'] == true) { // Requested Mod Support - Manufacturer's Suggest Retail Price
-			$filelayout_sql .=  'p.products_msrp as v_products_msrp,'; 
-		}	
-		if ($ep_supported_mods['map'] == true) { // Requested Mod Support - Manufacturer's Advertised Price
-      $filelayout_sql .= 'p.map_enabled as v_map_enabled,';
-      $filelayout_sql .= 'p.map_price as v_map_price,';
-    }
-		$filelayout_sql .= 'p.products_tax_class_id as v_tax_class_id,
-			p.products_quantity as v_products_quantity
-			FROM '		
-			.TABLE_PRODUCTS.' as p,'
-			.TABLE_CATEGORIES.' as subc,'
-			.TABLE_PRODUCTS_TO_CATEGORIES.' as ptoc
-			WHERE
-			p.products_id = ptoc.products_id AND
-			ptoc.categories_id = subc.categories_id '.$sql_filter; // added filter 4-13-2012	
-		break;
-		
-	// Quantity price breaks file layout
-	case 'pricebreaks':
-		$filelayout[] =	'v_products_model';
-		$filelayout[] = 'v_status'; // 11-23-2010 added product status to price quantity option
-		$filelayout[] =	'v_products_price';
-		if ($ep_supported_mods['uom'] == true) { // price UOM mod
-			$filelayout[] = 'v_products_price_uom';
-		}
-		if ($ep_supported_mods['msrp'] == true) { // Manufacturer's Suggested Retail Price
-			$filelayout[] = 'v_products_msrp'; 
-		}
-		if ($ep_supported_mods['map'] == true) { // Requested Mod Support - Manufacturer's Advertised Price
-      $filelayout[] = 'v_map_enabled';
-      $filelayout[] = 'v_map_price';
-    }
-		$filelayout[] =	'v_products_discount_type';
-		$filelayout[] =	'v_products_discount_type_from';
-		// discount quantities base on $max_qty_discounts	
-		// must be a better way to get the maximum discounts used at any given time
-		for ($i=1;$i<EASYPOPULATE_4_CONFIG_MAX_QTY_DISCOUNTS+1;$i++) {
-			// $filelayout[] = 'v_discount_id_' . $i; // chadd - no longer needed
-			$filelayout[] = 'v_discount_qty_'.$i;
-			$filelayout[] = 'v_discount_price_'.$i;
-		}
-		$filelayout_sql = 'SELECT
-			p.products_id     as v_products_id,
-			p.products_status as v_status,
-			p.products_model  as v_products_model,
-			p.products_price  as v_products_price,
-			p.manufacturers_id	as v_manufacturers_id,
-			subc.categories_id	as v_categories_id,';
-		if ($ep_supported_mods['uom'] == true) { // price UOM mod
-			$filelayout_sql .= 'p.products_price_uom as v_products_price_uom,';
-		}
-		if ($ep_supported_mods['msrp'] == true) { // Requested Mod Support - Manufacturer's Suggest Retail Price
-			$filelayout_sql .=  'p.products_msrp as v_products_msrp,'; 
-		}	
-		if ($ep_supported_mods['map'] == true) { // Requested Mod Support - Manufacturer's Advertised Price
-      $filelayout_sql .= 'p.map_enabled as v_map_enabled,';
-      $filelayout_sql .= 'p.map_price as v_map_price,';
-    }
-		$filelayout_sql .= 'p.products_discount_type as v_products_discount_type,
-			p.products_discount_type_from as v_products_discount_type_from
-			FROM '
-			.TABLE_PRODUCTS.' as p,'
-			.TABLE_CATEGORIES.' as subc,'
-			.TABLE_PRODUCTS_TO_CATEGORIES.' as ptoc
-			WHERE
-			p.products_id = ptoc.products_id AND
-			ptoc.categories_id = subc.categories_id '.$sql_filter; // added filter 4-13-2012		
-	break;	
-
-	case 'category': 
-		// The file layout is dynamically made depending on the number of languages
-		$filelayout[] = 'v_products_model';
-		// NEW code for unlimited category depth - 1 Category Column for each installed Language
-		foreach ($langcode as $key => $lang) { // create categories variables for each language id
-			$l_id = $lang['id'];
-			$filelayout[] = 'v_categories_name_'.$l_id;
-		} 
-		$filelayout_sql = 'SELECT
-			p.products_id      as v_products_id,
-			p.products_model   as v_products_model,
-			subc.categories_id as v_categories_id
-			FROM '
-			.TABLE_PRODUCTS.'   as p,'
-			.TABLE_CATEGORIES.' as subc,'
-			.TABLE_PRODUCTS_TO_CATEGORIES.' as ptoc      
-			WHERE
-			p.products_id = ptoc.products_id AND
-			ptoc.categories_id = subc.categories_id';
-		break;
-
-    // Categories Meta Data - added 12-02-2010
-	// 12-10-2010 removed array_merge() for better performance
-	case 'categorymeta':
-		$fileMeta = array();
-		$filelayout = array();
-		$filelayout[] = 'v_categories_id';
-		$filelayout[] = 'v_categories_image';
-    foreach ($langcode as $key => $lang) { // create categories variables for each language id
-			$l_id = $lang['id'];
-			$filelayout[] = 'v_categories_name_'.$l_id;
-			$filelayout[] = 'v_categories_description_'.$l_id;
-		} 
-		foreach ($langcode as $key => $lang) { // create metatags variables for each language id
-			$l_id = $lang['id'];
-			$filelayout[]   = 'v_metatags_title_'.$l_id;
-			$filelayout[]   = 'v_metatags_keywords_'.$l_id;
-			$filelayout[]   = 'v_metatags_description_'.$l_id;
-		} 
-    $filelayout[] = 'v_sort_order';
-		$filelayout_sql = 'SELECT
-			c.categories_id    AS v_categories_id,
-			c.categories_image AS v_categories_image,
-      c.sort_order    as v_sort_order
-			FROM '
-			.TABLE_CATEGORIES.' AS c';
-		break;
-		
-	case 'attrib_detailed':
-		$filelayout[] =	'v_products_attributes_id';
-		$filelayout[] =	'v_products_id';
-		$filelayout[] =	'v_products_model'; // product model from table PRODUCTS
-		$filelayout[] =	'v_options_id';
-		$filelayout[] =	'v_products_options_name'; // options name from table PRODUCTS_OPTIONS
-		$filelayout[] =	'v_products_options_type'; // 0-drop down, 1=text , 2=radio , 3=checkbox, 4=file, 5=read only 
-		$filelayout[] =	'v_options_values_id';
-		$filelayout[] =	'v_products_options_values_name'; // options values name from table PRODUCTS_OPTIONS_VALUES
-		$filelayout[] =	'v_options_values_price';
-    if ($ep_supported_mods['dual']) {
-      $filelayout[] = 'v_options_values_price_w';
-    }
-		$filelayout[] =	'v_price_prefix';
-		$filelayout[] =	'v_products_options_sort_order';
-		$filelayout[] =	'v_product_attribute_is_free';
-		$filelayout[] =	'v_products_attributes_weight';
-		$filelayout[] =	'v_products_attributes_weight_prefix';
-		$filelayout[] =	'v_attributes_display_only';
-		$filelayout[] =	'v_attributes_default';
-		$filelayout[] =	'v_attributes_discounted';
-		$filelayout[] =	'v_attributes_image';
-		$filelayout[] =	'v_attributes_price_base_included';
-		$filelayout[] =	'v_attributes_price_onetime';
-		$filelayout[] =	'v_attributes_price_factor';
-		$filelayout[] =	'v_attributes_price_factor_offset';
-		$filelayout[] =	'v_attributes_price_factor_onetime';
-		$filelayout[] =	'v_attributes_price_factor_onetime_offset';
-		$filelayout[] =	'v_attributes_qty_prices';
-		$filelayout[] =	'v_attributes_qty_prices_onetime';
-		$filelayout[] =	'v_attributes_price_words';
-		$filelayout[] =	'v_attributes_price_words_free';
-		$filelayout[] =	'v_attributes_price_letters';
-		$filelayout[] =	'v_attributes_price_letters_free';
-		$filelayout[] =	'v_attributes_required';
-// table TABLE_PRODUCTS_ATTRIBUTES_DOWNLOAD		
-		$filelayout[] =	'v_products_attributes_filename';
-		$filelayout[] =	'v_products_attributes_maxdays';
-		$filelayout[] =	'v_products_attributes_maxcount';
-		
-		
-		// a = table PRODUCTS_ATTRIBUTES
-		// p = table PRODUCTS
-		// o = table PRODUCTS_OPTIONS
-		// v = table PRODUCTS_OPTIONS_VALUES
-		// d = table PRODUCTS_ATTRIBUTES_DOWNLOAD
-		$filelayout_sql = 'SELECT
-			a.products_attributes_id            as v_products_attributes_id,
-			a.products_id                       as v_products_id,
-			p.products_model				    as v_products_model,
-			a.options_id                        as v_options_id,
-			o.products_options_id               as v_products_options_id,
-			o.products_options_name             as v_products_options_name,
-			o.products_options_type             as v_products_options_type,
-			a.options_values_id                 as v_options_values_id,
-			v.products_options_values_id        as v_products_options_values_id,
-			v.products_options_values_name      as v_products_options_values_name,
-			a.options_values_price              as v_options_values_price, ';
-    if ($ep_supported_mods['dual']) {
-$filelayout_sql .= '
-      a.options_values_price_w            as v_options_values_price_w,
-      ';
-    }
-$filelayout_sql .= '
-			a.price_prefix                      as v_price_prefix,
-			a.products_options_sort_order       as v_products_options_sort_order,
-			a.product_attribute_is_free         as v_product_attribute_is_free,
-			a.products_attributes_weight        as v_products_attributes_weight,
-			a.products_attributes_weight_prefix as v_products_attributes_weight_prefix,
-			a.attributes_display_only           as v_attributes_display_only,
-			a.attributes_default                as v_attributes_default,
-			a.attributes_discounted             as v_attributes_discounted,
-			a.attributes_image                  as v_attributes_image,
-			a.attributes_price_base_included    as v_attributes_price_base_included,
-			a.attributes_price_onetime          as v_attributes_price_onetime,
-			a.attributes_price_factor           as v_attributes_price_factor,
-			a.attributes_price_factor_offset    as v_attributes_price_factor_offset,
-			a.attributes_price_factor_onetime   as v_attributes_price_factor_onetime,
-			a.attributes_price_factor_onetime_offset      as v_attributes_price_factor_onetime_offset,
-			a.attributes_qty_prices             as v_attributes_qty_prices,
-			a.attributes_qty_prices_onetime     as v_attributes_qty_prices_onetime,
-			a.attributes_price_words            as v_attributes_price_words,
-			a.attributes_price_words_free       as v_attributes_price_words_free,
-			a.attributes_price_letters          as v_attributes_price_letters,
-			a.attributes_price_letters_free     as v_attributes_price_letters_free,
-			a.attributes_required               as v_attributes_required 
-			FROM '
-			.TABLE_PRODUCTS_ATTRIBUTES.     ' as a,'
-			.TABLE_PRODUCTS.                ' as p,'
-			.TABLE_PRODUCTS_OPTIONS.        ' as o,'
-			.TABLE_PRODUCTS_OPTIONS_VALUES. ' as v
-			WHERE
-			a.products_id       = p.products_id AND
-			a.options_id        = o.products_options_id AND
-			a.options_values_id = v.products_options_values_id AND
-			o.language_id       = v.language_id AND
-			o.language_id       = 1 ORDER BY a.products_id, a.options_id, v.products_options_values_id';
- 		break;
-
-
-	case 'attrib_basic': // simplified sinlge-line attributes ... eventually!
-		// $filelayout[] =	'v_products_attributes_id';
-		// $filelayout[] =	'v_products_id';
-		$filelayout[] =	'v_products_model'; // product model from table PRODUCTS
-		$filelayout[] =	'v_products_options_type'; // 0-drop down, 1=text , 2=radio , 3=checkbox, 4=file, 5=read only 
-		foreach ($langcode as $key => $lang) { // create categories variables for each language id
-			$l_id = $lang['id'];
-			$filelayout[] = 'v_products_options_name_'.$l_id;
-		} 
-		foreach ($langcode as $key => $lang) { // create categories variables for each language id
-			$l_id = $lang['id'];
-			$filelayout[] = 'v_products_options_values_name_'.$l_id;
-		}
-		// a = table PRODUCTS_ATTRIBUTES
-		// p = table PRODUCTS
-		// o = table PRODUCTS_OPTIONS
-		// v = table PRODUCTS_OPTIONS_VALUES
-		$filelayout_sql = 'SELECT
-			a.products_attributes_id            as v_products_attributes_id,
-			a.products_id                       as v_products_id,
-			a.options_id                        as v_options_id,
-			a.options_values_id                 as v_options_values_id,
-			p.products_model				    as v_products_model,
-			o.products_options_id               as v_products_options_id,
-			o.products_options_name             as v_products_options_name,
-			o.products_options_type             as v_products_options_type,
-			v.products_options_values_id        as v_products_options_values_id,
-			v.products_options_values_name      as v_products_options_values_name,
-			v.language_id                       as v_language_id
-			FROM '
-			.TABLE_PRODUCTS_ATTRIBUTES.     ' as a,'
-			.TABLE_PRODUCTS.                ' as p,'
-			.TABLE_PRODUCTS_OPTIONS.        ' as o,'
-			.TABLE_PRODUCTS_OPTIONS_VALUES. ' as v
-			WHERE
-			a.products_id       = p.products_id AND
-			a.options_id        = o.products_options_id AND
-			a.options_values_id = v.products_options_values_id AND
-			o.language_id       = v.language_id ORDER BY a.products_id, a.options_id, v.language_id, v.products_options_values_id';
- 		break;
-		
-	case 'SBA_detailed':
-		$filelayout[] =	'v_stock_id'; // stock id from SBA table
-		$filelayout[] =	'v_products_id';
-		$filelayout[] =	'v_stock_attributes'; 
-		$filelayout[] =	'v_products_model'; // product model from table PRODUCTS
-		$filelayout[] =	'v_quantity';
-   	$ep_4_SBAEnabled = ep_4_SBA1Exists();
-    if ($ep_4_SBAEnabled == '2') {
-      $filelayout[] = 'v_customid';
-    }
-		$filelayout[] =	'v_sort';
-		$filelayout[] =	'v_products_name'; // product name from table PRODUCTS
-		$filelayout[] =	'v_products_options_name'; // options name from table PRODUCTS_OPTIONS
-		$filelayout[] =	'v_products_options_values_name'; // options values name from table PRODUCTS_OPTIONS_VALUES
-		$filelayout[] =	'v_products_attributes_id';
-		$filelayout[] =	'v_products_options_type'; // 0-drop down, 1=text , 2=radio , 3=checkbox, 4=file, 5=read only 
-		$filelayout[] =	'v_options_id';
-		$filelayout[] =	'v_options_values_id';
-//		$filelayout[] =	'v_options_values_price';
-//		$filelayout[] =	'v_price_prefix';
-//		$filelayout[] =	'v_products_options_sort_order';
-//		$filelayout[] =	'v_product_attribute_is_free';
-//		$filelayout[] =	'v_products_attributes_weight';
-//		$filelayout[] =	'v_products_attributes_weight_prefix';
-//		$filelayout[] =	'v_attributes_display_only';
-//		$filelayout[] =	'v_attributes_default';
-//		$filelayout[] =	'v_attributes_discounted';
-//		$filelayout[] =	'v_attributes_image';
-//		$filelayout[] =	'v_attributes_price_base_included';
-//		$filelayout[] =	'v_attributes_price_onetime';
-//		$filelayout[] =	'v_attributes_price_factor';
-//		$filelayout[] =	'v_attributes_price_factor_offset';
-//		$filelayout[] =	'v_attributes_price_factor_onetime';
-//		$filelayout[] =	'v_attributes_price_factor_onetime_offset';
-//		$filelayout[] =	'v_attributes_qty_prices';
-//		$filelayout[] =	'v_attributes_qty_prices_onetime';
-//		$filelayout[] =	'v_attributes_price_words';
-//		$filelayout[] =	'v_attributes_price_words_free';
-//		$filelayout[] =	'v_attributes_price_letters';
-//		$filelayout[] =	'v_attributes_price_letters_free';
-//		$filelayout[] =	'v_attributes_required';
-// table TABLE_PRODUCTS_ATTRIBUTES_DOWNLOAD		
-//		$filelayout[] =	'v_products_SBA_filename';
-		$filelayout[] =	'v_products_attributes_filename';
-		$filelayout[] =	'v_products_attributes_maxdays';
-		$filelayout[] =	'v_products_attributes_maxcount';
-		
-		// a = table PRODUCTS_ATTRIBUTES
-		// p = table PRODUCTS
-		// o = table PRODUCTS_OPTIONS
-		// v = table PRODUCTS_OPTIONS_VALUES
-		// d = table PRODUCTS_ATTRIBUTES_DOWNLOAD
-		// s = table PRODUCTS_WITH_ATTRIBUTES_STOCK
-		// pd = table PRODUCTS_DESCRIPTIONS
-		$filelayout_sql = 'SELECT
-			a.products_attributes_id            as v_products_attributes_id,
-			a.products_id                       as v_products_id,
-			p.products_model				    as v_products_model,
-			a.options_id                        as v_options_id,
-			o.products_options_id               as v_products_options_id,
-			o.products_options_name             as v_products_options_name,
-			o.products_options_type             as v_products_options_type,
-			a.options_values_id                 as v_options_values_id,
-			v.products_options_values_id        as v_products_options_values_id,
-			v.products_options_values_name      as v_products_options_values_name,'./*
-			a.options_values_price              as v_options_values_price,
-			a.price_prefix                      as v_price_prefix,
-			a.products_options_sort_order       as v_products_options_sort_order,
-			a.product_attribute_is_free         as v_product_attribute_is_free,
-			a.products_attributes_weight        as v_products_attributes_weight,
-			a.products_attributes_weight_prefix as v_products_attributes_weight_prefix,
-			a.attributes_display_only           as v_attributes_display_only,
-			a.attributes_default                as v_attributes_default,
-			a.attributes_discounted             as v_attributes_discounted,
-			a.attributes_image                  as v_attributes_image,
-			a.attributes_price_base_included    as v_attributes_price_base_included,
-			a.attributes_price_onetime          as v_attributes_price_onetime,
-			a.attributes_price_factor           as v_attributes_price_factor,
-			a.attributes_price_factor_offset    as v_attributes_price_factor_offset,
-			a.attributes_price_factor_onetime   as v_attributes_price_factor_onetime,
-			a.attributes_price_factor_onetime_offset      as v_attributes_price_factor_onetime_offset,
-			a.attributes_qty_prices             as v_attributes_qty_prices,
-			a.attributes_qty_prices_onetime     as v_attributes_qty_prices_onetime,
-			a.attributes_price_words            as v_attributes_price_words,
-			a.attributes_price_words_free       as v_attributes_price_words_free,
-			a.attributes_price_letters          as v_attributes_price_letters,
-			a.attributes_price_letters_free     as v_attributes_price_letters_free,
-			a.attributes_required               as v_attributes_required, */
-			's.stock_id					 as v_stock_id,
-			s.stock_attributes				 as v_stock_attributes,
-			s.quantity					 as v_quantity,
-			s.sort						 as v_sort,
-			pd.products_name				 as v_products_name' . ( $ep_4_SBAEnabled == '2' ? ',
-        s.customid            as v_customid ' : ' ') .
-				'FROM '
-			.TABLE_PRODUCTS_ATTRIBUTES.     ' as a,'
-			.TABLE_PRODUCTS.                ' as p,'
-			.TABLE_PRODUCTS_OPTIONS.        ' as o,'
-			.TABLE_PRODUCTS_OPTIONS_VALUES. ' as v,'
-			.TABLE_PRODUCTS_WITH_ATTRIBUTES_STOCK. ' as s,'
-			.TABLE_PRODUCTS_DESCRIPTION.	  ' as pd
-			WHERE
-			a.products_id       = p.products_id AND
-			pd.products_id		= p.products_id AND
-			a.options_id        = o.products_options_id AND
-			a.options_values_id = v.products_options_values_id AND
-			o.language_id       = v.language_id AND
-			o.language_id       = 1 AND
-			s.products_id		= p.products_id AND
-			s.stock_attributes	= a.products_attributes_id
-			ORDER BY a.products_id, a.options_id, v.products_options_values_id';
- 		break;
-
-		
-	case 'options':
-		$filelayout[] =	'v_products_options_id';
-		$filelayout[] =	'v_language_id';
-		$filelayout[] =	'v_products_options_name';
-		$filelayout[] =	'v_products_options_sort_order';
-		$filelayout[] =	'v_products_options_type';
-		$filelayout[] =	'v_products_options_length';
-		$filelayout[] =	'v_products_options_comment';
-		$filelayout[] =	'v_products_options_size';
-		$filelayout[] =	'v_products_options_images_per_row';
-		$filelayout[] =	'v_products_options_images_style';
-		$filelayout[] =	'v_products_options_rows';
-		// o = table PRODUCTS_OPTIONS
-		$filelayout_sql = 'SELECT
-			o.products_options_id             AS v_products_options_id,
-			o.language_id                     AS v_language_id,
-			o.products_options_name           AS v_products_options_name,
-			o.products_options_sort_order     AS v_products_options_sort_order,
-			o.products_options_type           AS v_products_options_type,
-			o.products_options_length         AS v_products_options_length,
-			o.products_options_comment        AS v_products_options_comment,
-			o.products_options_size           AS v_products_options_size,
-			o.products_options_images_per_row AS v_products_options_images_per_row,
-			o.products_options_images_style   AS v_products_options_images_style,
-			o.products_options_rows           AS v_products_options_rows '
-			.' FROM '
-			.TABLE_PRODUCTS_OPTIONS. ' AS o';
-		break;
-	
-	case 'values':
-		$filelayout[] =	'v_products_options_values_id';
-		$filelayout[] =	'v_language_id';
-		$filelayout[] =	'v_products_options_values_name';
-		$filelayout[] =	'v_products_options_values_sort_order';
-		// v = table PRODUCTS_OPTIONS_VALUES
-		$filelayout_sql = 'SELECT
-			v.products_options_values_id         AS v_products_options_values_id,
-			v.language_id                        AS v_language_id,
-			v.products_options_values_name       AS v_products_options_values_name,
-			v.products_options_values_sort_order AS v_products_options_values_sort_order '
-			.' FROM '
-			.TABLE_PRODUCTS_OPTIONS_VALUES. ' AS v'; 
-		break;
-
-	case 'optionvalues':
-		$filelayout[] =	'v_products_options_values_to_products_options_id';
-		$filelayout[] =	'v_products_options_id';
-		$filelayout[] =	'v_products_options_name';
-		$filelayout[] =	'v_products_options_values_id';
-		$filelayout[] =	'v_products_options_values_name';
-		// o = table PRODUCTS_OPTIONS
-		// v = table PRODUCTS_OPTIONS_VALUES
-		// otv = table PRODUCTS_OPTIONS_VALUES_TO_PRODUCTS_OPTIONS
-		$filelayout_sql = 'SELECT
-			otv.products_options_values_to_products_options_id AS v_products_options_values_to_products_options_id,   	    	 
-			otv.products_options_id           AS v_products_options_id,
-			o.products_options_name           AS v_products_options_name,
-			otv.products_options_values_id    AS v_products_options_values_id,
-			v.products_options_values_name    AS v_products_options_values_name '
-			.' FROM '
-			.TABLE_PRODUCTS_OPTIONS_VALUES_TO_PRODUCTS_OPTIONS. ' AS otv, '
-			.TABLE_PRODUCTS_OPTIONS.        ' AS o, '
-			.TABLE_PRODUCTS_OPTIONS_VALUES. ' AS v 
-			WHERE 
-			otv.products_options_id        = o.products_options_id AND
-			otv.products_options_values_id = v.products_options_values_id'; 
-		break;
-	}
-return $filelayout;;
 }
 
 if (!function_exists(zen_get_sub_categories)) {
@@ -947,6 +211,74 @@ if (!function_exists(zen_get_sub_categories)) {
 			}
 		}
 	}
+}
+
+if (!function_exists('plugin_version_check_for_updates')) {
+/**
+ * plugin_support.php
+ *
+ * @package functions
+ * @copyright Copyright 2003-2015 Zen Cart Development Team
+ * @copyright Portions Copyright 2003 osCommerce
+ * @license http://www.zen-cart.com/license/2_0.txt GNU Public License V2.0
+ * @version $Id: Modified in v1.5.5 $
+ */
+/**
+ * Functions to support plugin usage
+ */
+  /**
+   * Check for updated version of a plugin
+   * Arguments:
+   *   $plugin_file_id = the fileid number for the plugin as hosted on the zen-cart.com plugins library
+   *   $version_string_to_compare = the version that I have now on my own server (will be checked against the one on the ZC server)
+   * If the "version string" passed to this function evaluates (see strcmp) to a value less-then-or-equal-to the one on the ZC server, FALSE will be returned.
+   * If the "version string" on the ZC server is greater than the version string passed to this function, this function will return an array with up-to-date information. The [link] value is the plugin page at zen-cart.com
+   * If no plugin_file_id is passed, or if no result is found, then FALSE will be returned.
+   *
+   * USAGE:
+   *   if (IS_ADMIN_FLAG) {
+   *     $new_version_details = plugin_version_check_for_updates(999999999, 'some_string');
+   *     if ($new_version_details !== FALSE) {
+   *       $message = '<span class="alert">' . ' - NOTE: A NEW VERSION OF THIS PLUGIN IS AVAILABLE. <a href="' . $new_version_details['link'] . '" target="_blank">[Details]</a>' . '</span>';
+   *     }
+   *   }
+   */
+  function plugin_version_check_for_updates($plugin_file_id = 0, $version_string_to_compare = '')
+  {
+    if ($plugin_file_id == 0) return FALSE;
+    $new_version_available = FALSE;
+    $lookup_index = 0;
+    $url = 'https://www.zen-cart.com/downloads.php?do=versioncheck' . '&id='.(int)$plugin_file_id;
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL,$url);
+    curl_setopt($ch, CURLOPT_VERBOSE, 0);
+    curl_setopt($ch, CURLOPT_HEADER, false);
+    curl_setopt($ch, CURLOPT_USERAGENT, 'Plugin Version Check [' . (int)$plugin_file_id . '] ' . HTTP_SERVER);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    $response = curl_exec($ch);
+    $error = curl_error($ch);
+    if ($error > 0) {
+      curl_setopt($ch, CURLOPT_URL, str_replace('tps:', 'tp:', $url));
+      $response = curl_exec($ch);
+      $error = curl_error($ch);
+    }
+    curl_close($ch);
+    if ($error > 0 || $response == '') {
+      $response = file_get_contents($url);
+    }
+    if ($response === false) {
+      $response = file_get_contents(str_replace('tps:', 'tp:', $url));
+    }
+    if ($response === false) return false;
+    $data = json_decode($response, true);
+    if (!$data || !is_array($data)) return false;
+    // compare versions
+    if (strcmp($data[$lookup_index]['latest_plugin_version'], $version_string_to_compare) > 0) $new_version_available = TRUE;
+    // check whether present ZC version is compatible with the latest available plugin version
+    if (!in_array('v'. PROJECT_VERSION_MAJOR . '.' . PROJECT_VERSION_MINOR, $data[$lookup_index]['zcversions'])) $new_version_available = FALSE;
+    return ($new_version_available) ? $data[$lookup_index] : FALSE;
+  }
+
 }
 
 function ep_4_get_uploaded_file($filename) {
@@ -1057,7 +389,22 @@ function ep_4_remove_product($product_model) {
  	global $db, $ep_debug_logging, $ep_debug_logging_all, $ep_stack_sql_error;
 	$project = PROJECT_VERSION_MAJOR.'.'.PROJECT_VERSION_MINOR;
 	$ep_uses_mysqli = ((PROJECT_VERSION_MAJOR > '1' || PROJECT_VERSION_MINOR >= '5.3') ? true : false);
-	$sql = "SELECT products_id FROM ".TABLE_PRODUCTS." WHERE products_model = '".zen_db_input($product_model)."'";
+	$sql = "SELECT products_id FROM ".TABLE_PRODUCTS;
+  switch (EP4_DB_FILTER_KEY) {
+    case 'products_model':
+      $sql .= " WHERE products_model = :products_model:";
+      $sql = $db->bindVars($sql, ':products_model:', $product_model, 'string');
+      break;
+    case 'blank_new':
+    case 'products_id':
+      $sql .= " WHERE products_id = :products_id:";
+      $sql = $db->bindVars($sql, ':products_id:', $product_model, 'string');
+      break;
+    default:
+      $sql .= " WHERE products_model = :products_model:";
+      $sql = $db->bindVars($sql, ':products_model:', $product_model, 'string');
+      break;
+  }
 	$products = $db->Execute($sql);
 	if (($ep_uses_mysqli ? mysqli_errno($db->link) : mysql_errno())) {
 		$ep_stack_sql_error = true;
@@ -1075,6 +422,25 @@ function ep_4_remove_product($product_model) {
 	}
 	return;
 }
+
+function ep_4_rmv_chars($filelayout, $active_row, $csv_delimiter = "^") {
+//  $datarow = ep_4_rmv_chars($filelayout, $active_row, $csv_delimiter);
+  $dataRow = '';
+
+  $problem_chars = array("\r", "\n", "\t"); // carriage return, newline, tab
+  foreach ($filelayout as $key => $value) {
+//		$thetext = $active_row[$key];
+    // remove carriage returns, newlines, and tabs - needs review
+    $thetext = str_replace($problem_chars, ' ', $active_row[$key]);
+    // encapsulate data in quotes, and escape embedded quotes in data
+    $dataRow .= '"' . str_replace('"', '""', $thetext) . '"' . $csv_delimiter;
+  }
+  // Remove trailing tab, then append the end-of-line
+  $dataRow = rtrim($dataRow, $csv_delimiter) . "\n";
+
+  return $dataRow;
+}
+
 
 // DEPRECATED: no calls to this function!
 // reset products master categories ID - I do not believe this works correctly - chadd
@@ -1154,67 +520,74 @@ function ep_4_query($query) {
 }
 
 function install_easypopulate_4() {
-	global $db;
+  global $db, $zco_notifier;
 	$project = PROJECT_VERSION_MAJOR.'.'.PROJECT_VERSION_MINOR;
 	if ( (substr($project,0,5) == "1.3.8") || (substr($project,0,5) == "1.3.9") ) {
 		$db->Execute("INSERT INTO ".TABLE_CONFIGURATION_GROUP." (configuration_group_title, configuration_group_description, sort_order, visible) VALUES ('Easy Populate 4', 'Configuration Options for Easy Populate 4', '1', '1')");
 		$group_id = mysql_insert_id();
 		$db->Execute("UPDATE ".TABLE_CONFIGURATION_GROUP." SET sort_order = ".$group_id." WHERE configuration_group_id = ".$group_id);
 		$db->Execute("INSERT INTO ".TABLE_CONFIGURATION." (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, last_modified, date_added, use_function, set_function) VALUES 
-			('Uploads Directory',                  'EASYPOPULATE_4_CONFIG_TEMP_DIR', 'temp/', 'Name of directory for your uploads (default: temp/).', ".$group_id.", '0', NULL, now(), NULL, NULL),
-			('Upload File Date Format',            'EASYPOPULATE_4_CONFIG_FILE_DATE_FORMAT', 'm-d-y', 'Choose order of date values that corresponds to your uploads file, usually generated by MS Excel. Raw dates in your uploads file (Eg 2005-09-26 09:00:00) are not affected, and will upload as they are.', ".$group_id.", '1', NULL, now(), NULL, 'zen_cfg_select_option(array(\"m-d-y\", \"d-m-y\", \"y-m-d\"),'),
-			('Default Raw Time',                   'EASYPOPULATE_4_CONFIG_DEFAULT_RAW_TIME', '09:00:00', 'If no time value stipulated in upload file, use this value. Useful for ensuring specials begin after a specific time of the day (default: 09:00:00)', ".$group_id.", '2', NULL, now(), NULL, NULL),
-			('Upload/Download Prices Include Tax', 'EASYPOPULATE_4_CONFIG_PRICE_INC_TAX', 'false', 'Choose to include or exclude tax, depending on how you manage prices outside of Zen Cart.', ".$group_id.", '5', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
-			('Verbose Feedback',                   'EASYPOPULATE_4_CONFIG_VERBOSE', 'true', 'When importing, report all messages. Set to false for only warnings and errors. (default: true).', ".$group_id.", '6', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
-			('Make Zero Qty Products Inactive',    'EASYPOPULATE_4_CONFIG_ZERO_QTY_INACTIVE', 'false', 'When uploading, make the status Inactive for products with zero qty (default: false).', ".$group_id.", '7', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
-			('Smart Tags Replacement of Newlines', 'EASYPOPULATE_4_CONFIG_SMART_TAGS', 'true', 'Allows your description fields in your uploads file to have carriage returns and/or new-lines converted to HTML line-breaks on uploading, thus preserving some rudimentary formatting - Note: this legacy code is disabled until further review. (default: true).', ".$group_id.", '8', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
-			('Advanced Smart Tags',                'EASYPOPULATE_4_CONFIG_ADV_SMART_TAGS', 'false', 'Allow the use of complex regular expressions to format descriptions, making headings bold, add bullets, etc. Note: legacy code is disabled until further review. (default: false).', ".$group_id.", '9', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
-			('Debug Logging',                      'EASYPOPULATE_4_CONFIG_DEBUG_LOGGING', 'true', 'Allow Easy Populate to generate an error log on errors only (default: true)', ".$group_id.", '10', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
-			('Maximum Quantity Discounts',         'EASYPOPULATE_4_CONFIG_MAX_QTY_DISCOUNTS', '3', 'Maximum number of quantity discounts (price breaks). Is the number of discount columns in downloaded file (default: 3).', ".$group_id.", '11', NULL, now(), NULL, NULL),
-			('Split On Number of Records',         'EASYPOPULATE_4_CONFIG_SPLIT_RECORDS', '2000', 'Number of records to split csv files. Used to break large import files into smaller files. Useful on servers with limited resourses. (default: 2000).', ".$group_id.", '12', NULL, now(), NULL, NULL),
-			('Script Execution Time',              'EASYPOPULATE_4_CONFIG_EXECUTION_TIME', '60', 'Number of seconds for script to run before timeout. May not work on some servers. (default: 60).', ".$group_id.", '13', NULL, now(), NULL, NULL),
-			('Convert Curly Quotes, etc.',         'EASYPOPULATE_4_CONFIG_CURLY_QUOTES', '0', 'Convert Curly Quotes, Em-Dash, En-Dash and Ellipsis characters in Product Names &amp; Descriptions (default 0).<br><br>0=No Change<br>1=Replace with Basic Characters<br>3=Replace with HMTL equivalants', ".$group_id.", '14', NULL, now(), NULL, 'zen_cfg_select_option(array(\"0\", \"1\", \"2\"),'),
-			('Convert Character 0x92',             'EASYPOPULATE_4_CONFIG_CHAR_92', '1', 'Convert Character 0x92 characters in Product Names &amp; Descriptions (default 1).<br><br>0=No Change<br>1=Replace with Standard Single Quote<br>2=Replace with HMTL equivalant', ".$group_id.", '15', NULL, now(), NULL, 'zen_cfg_select_option(array(\"0\", \"1\", \"2\"),'),
-			('Enable Products Meta Data',          'EASYPOPULATE_4_CONFIG_META_DATA', '1', 'Enable Products Meta Data Columns (default 1).<br><br>0=Disable<br>1=Enable', ".$group_id.", '16', NULL, now(), NULL, 'zen_cfg_select_option(array(\"0\", \"1\"),'), 
-			('Enable Products Music Data',         'EASYPOPULATE_4_CONFIG_MUSIC_DATA', '0', 'Enable Products Music Data Columns (default 0).<br><br>0=Disable<br>1=Enable', ".$group_id.", '17', NULL, now(), NULL, 'zen_cfg_select_option(array(\"0\", \"1\"),'),
-			('User Defined Products Fields',       'EASYPOPULATE_4_CONFIG_CUSTOM_FIELDS', '', 'User Defined Products Table Fields (comma delimited, no spaces)', ".$group_id.", '18', NULL, now(), NULL, NULL),
-			('Export URI with Prod and or Cat',       'EASYPOPULATE_4_CONFIG_EXPORT_URI', '0', 'Export the current products or categories URI when exporting data? (Yes - 1 or no - 0)', ".$group_id.", '19', NULL, now(), NULL, 'zen_cfg_select_option(array(\"0\", \"1\"),'),
-			('Show all EP4 Filetypes with Files',       'EP4_SHOW_ALL_FILETYPES', 'True', 'When looking at the EP4 Tools screen, should the filename prefix for all specific file types be displayed for all possible file types (True [default]), should only the method(s) that will be used to process the files present be displayed (False), or should there be no assistance be provided on filenaming on the main page (Hidden) like it was until this feature was added? (True, False, or Hidden)', ".$group_id.", '25', NULL, now(), NULL, 'zen_cfg_select_option(array(\"True\", \"False\", \"Hidden\"),')
+			('Uploads Directory',                  'EASYPOPULATE_4_CONFIG_TEMP_DIR', 'temp/', 'Name of directory for your uploads as compared to the setting of Uploads Directory Admin/Catalog.<br /><br />Default is to use YOUR_ADMIN/temp/ by entering temp/ below.<br /><b>Caution:</b> the admin directory folder name should not be entered here as it will be stored in the database.  If the admin directory is to be used please set/verify Uploads Directory Admin/Catalog is set to true.<br /><br />(default is to use the YOUR_ADMIN directory and the below value of: temp/).', ".$group_id.", '10', NULL, now(), 'ep4_directory_check', NULL),
+			('Uploads Directory Admin/Catalog',                  'EP4_ADMIN_TEMP_DIRECTORY', 'true', 'Should the admin directory be used to store the export and import files for EP4?<br /><br />This switch affects how Uploads Directory is used.<br /><br />true (default) or<br />false. ', ".$group_id.", '20', NULL, now(), 'ep4_directory_choice_check', 'zen_cfg_select_option(array(\"true\", \"false\"),'),
+			('Import/Export Primary Key', 'EP4_DB_FILTER_KEY', 'products_model', 'Select the primary key that is to be used for import of the data.<br /><br />The default for Easy Populate v4 is products_model.<br /><br /> The field products_model is independent of the store, while products_id will require/generate the product information associated with that products_id and could lead to duplication of product. Choosing blank_new will import by products_id and create new products when the products_id is not entered/blank.<br /><br />products_model (default)<br />products_id<br />blank_new', ".$group_id.", '30', NULL, now(), NULL, 'zen_cfg_select_option(array(\'products_model\', \'products_id\', \'blank_new\'),'),
+			('Upload File Date Format',            'EASYPOPULATE_4_CONFIG_FILE_DATE_FORMAT', 'm-d-y', 'Choose order of date values that corresponds to your uploads file, usually generated by MS Excel. Raw dates in your uploads file (Eg 2005-09-26 09:00:00) are not affected, and will upload as they are.', ".$group_id.", '40', NULL, now(), NULL, 'zen_cfg_select_option(array(\"m-d-y\", \"d-m-y\", \"y-m-d\"),'),
+			('Default Raw Time',                   'EASYPOPULATE_4_CONFIG_DEFAULT_RAW_TIME', '09:00:00', 'If no time value stipulated in upload file, use this value. Useful for ensuring specials begin after a specific time of the day (default: 09:00:00)', ".$group_id.", '50', NULL, now(), NULL, NULL),
+			('Upload/Download Prices Include Tax', 'EASYPOPULATE_4_CONFIG_PRICE_INC_TAX', 'false', 'Choose to include or exclude tax, depending on how you manage prices outside of Zen Cart.', ".$group_id.", '60', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
+			('Verbose Feedback',                   'EASYPOPULATE_4_CONFIG_VERBOSE', 'true', 'When importing, report all messages. Set to false for only warnings and errors. (default: true).', ".$group_id.", '70', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
+			('Show all EP4 Filetypes with Files',       'EP4_SHOW_ALL_FILETYPES', 'true', 'When looking at the EP4 Tools screen, should the filename prefix for all specific file types be displayed for all possible file types (true [default]), should only the method(s) that will be used to process the files present be displayed (false), or should there be no assistance be provided on filenaming on the main page (Hidden) like it was until this feature was added? (true, false, or Hidden)', ".$group_id.", '80', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\", \"Hidden\"),'),
+      ('Replace Blank Image', 'EP4_REPLACE_BLANK_IMAGE', 'false', 'On import, if the image information is blank, then update the image path to the path of the blank image (true)? Otherwise the image path will remain blank (false <Default>).<br /><br />false (Default)<br />true.', ".$group_id.", '90', NULL, now(), NULL, 'zen_cfg_select_option(array(\'false\', \'true\'),'),
+			('Make Zero Qty Products Inactive',    'EASYPOPULATE_4_CONFIG_ZERO_QTY_INACTIVE', 'false', 'When uploading, make the status Inactive for products with zero qty (default: false).', ".$group_id.", '100', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
+			('Smart Tags Replacement of Newlines', 'EASYPOPULATE_4_CONFIG_SMART_TAGS', 'true', 'Allows your description fields in your uploads file to have carriage returns and/or new-lines converted to HTML line-breaks on uploading, thus preserving some rudimentary formatting - Note: this legacy code is disabled until further review. (default: true).', ".$group_id.", '110', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
+			('Advanced Smart Tags',                'EASYPOPULATE_4_CONFIG_ADV_SMART_TAGS', 'false', 'Allow the use of complex regular expressions to format descriptions, making headings bold, add bullets, etc. Note: legacy code is disabled until further review. (default: false).', ".$group_id.", '120', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
+			('Debug Logging',                      'EASYPOPULATE_4_CONFIG_DEBUG_LOGGING', 'true', 'Allow Easy Populate to generate an error log on errors only (default: true)', ".$group_id.", '130', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
+			('Maximum Quantity Discounts',         'EASYPOPULATE_4_CONFIG_MAX_QTY_DISCOUNTS', '3', 'Maximum number of quantity discounts (price breaks). Is the number of discount columns in downloaded file (default: 3).', ".$group_id.", '140', NULL, now(), NULL, NULL),
+			('Split On Number of Records',         'EASYPOPULATE_4_CONFIG_SPLIT_RECORDS', '2000', 'Number of records to split csv files. Used to break large import files into smaller files. Useful on servers with limited resourses. (default: 2000).', ".$group_id.", '150', NULL, now(), NULL, NULL),
+			('Script Execution Time',              'EASYPOPULATE_4_CONFIG_EXECUTION_TIME', '60', 'Number of seconds for script to run before timeout. May not work on some servers. (default: 60).', ".$group_id.", '160', NULL, now(), NULL, NULL),
+			('Convert Curly Quotes, etc.',         'EASYPOPULATE_4_CONFIG_CURLY_QUOTES', '0', 'Convert Curly Quotes, Em-Dash, En-Dash and Ellipsis characters in fields displayed to customer (default 0).<br><br>0=No Change<br>1=Replace with Basic Characters<br>2=Replace with HTML equivalents', ".$group_id.", '170', NULL, now(), NULL, 'zen_cfg_select_option(array(\"0\", \"1\", \"2\"),'),
+			('Convert Character 0x92',             'EASYPOPULATE_4_CONFIG_CHAR_92', '1', 'Convert Character 0x92 characters in Product Names &amp; Descriptions (default 1).<br><br>0=No Change<br>1=Replace with Standard Single Quote<br>2=Replace with HMTL equivalant', ".$group_id.", '180', NULL, now(), NULL, 'zen_cfg_select_option(array(\"0\", \"1\", \"2\"),'),
+			('Enable Products Meta Data',          'EASYPOPULATE_4_CONFIG_META_DATA', '1', 'Enable Products Meta Data Columns (default 1).<br><br>0=Disable<br>1=Enable', ".$group_id.", '190', NULL, now(), NULL, 'zen_cfg_select_option(array(\"0\", \"1\"),'), 
+			('Enable Products Music Data',         'EASYPOPULATE_4_CONFIG_MUSIC_DATA', '0', 'Enable Products Music Data Columns (default 0).<br><br>0=Disable<br>1=Enable', ".$group_id.", '200', NULL, now(), NULL, 'zen_cfg_select_option(array(\"0\", \"1\"),'),
+			('User Defined Products Fields',       'EASYPOPULATE_4_CONFIG_CUSTOM_FIELDS', '', 'User Defined Products Table Fields (comma delimited, no spaces)', ".$group_id.", '210', NULL, now(), NULL, NULL),
+			('Export URI with Prod and or Cat',       'EASYPOPULATE_4_CONFIG_EXPORT_URI', '0', 'Export the current products or categories URI when exporting data? (Yes - 1 or no - 0)', ".$group_id.", '220', NULL, now(), NULL, 'zen_cfg_select_option(array(\"0\", \"1\"),')
 		");
 	} elseif (PROJECT_VERSION_MAJOR > '1' || PROJECT_VERSION_MINOR >= '5.0') {
 		$db->Execute("INSERT INTO ".TABLE_CONFIGURATION_GROUP." (configuration_group_title, configuration_group_description, sort_order, visible) VALUES ('Easy Populate 4', 'Configuration Options for Easy Populate 4', '1', '1')");
 		if (PROJECT_VERSION_MAJOR > '1' || PROJECT_VERSION_MINOR >= '5.3') {
 			$group_id = mysqli_insert_id($db->link);
 		} else {
-    	$group_id = mysql_insert_id();
+			$group_id = mysql_insert_id();
 		}
 		$db->Execute("UPDATE ".TABLE_CONFIGURATION_GROUP." SET sort_order = ".$group_id." WHERE configuration_group_id = ".$group_id);
 		
         zen_register_admin_page('easypopulate_4_config', 'BOX_TOOLS_EASYPOPULATE_4','FILENAME_CONFIGURATION', 'gID='.$group_id, 'configuration', 'Y', 97);
 		$db->Execute("INSERT INTO ".TABLE_CONFIGURATION." (configuration_title, configuration_key, configuration_value, configuration_description, configuration_group_id, sort_order, last_modified, date_added, use_function, set_function) VALUES 
-			('Uploads Directory',                  'EASYPOPULATE_4_CONFIG_TEMP_DIR', 'temp/', 'Name of directory for your uploads (default: temp/).', ".$group_id.", '0', NULL, now(), NULL, NULL),
-			('Upload File Date Format',            'EASYPOPULATE_4_CONFIG_FILE_DATE_FORMAT', 'm-d-y', 'Choose order of date values that corresponds to your uploads file, usually generated by MS Excel. Raw dates in your uploads file (Eg 2005-09-26 09:00:00) are not affected, and will upload as they are.', ".$group_id.", '1', NULL, now(), NULL, 'zen_cfg_select_option(array(\"m-d-y\", \"d-m-y\", \"y-m-d\"),'),
-			('Default Raw Time',                   'EASYPOPULATE_4_CONFIG_DEFAULT_RAW_TIME', '09:00:00', 'If no time value stipulated in upload file, use this value. Useful for ensuring specials begin after a specific time of the day (default: 09:00:00)', ".$group_id.", '2', NULL, now(), NULL, NULL),
-			('Upload/Download Prices Include Tax', 'EASYPOPULATE_4_CONFIG_PRICE_INC_TAX', 'false', 'Choose to include or exclude tax, depending on how you manage prices outside of Zen Cart.', ".$group_id.", '5', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
-			('Verbose Feedback',                   'EASYPOPULATE_4_CONFIG_VERBOSE', 'true', 'When importing, report all messages. Set to false for only warnings and errors. (default: true).', ".$group_id.", '6', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
-			('Make Zero Qty Products Inactive',    'EASYPOPULATE_4_CONFIG_ZERO_QTY_INACTIVE', 'false', 'When uploading, make the status Inactive for products with zero qty (default: false).', ".$group_id.", '7', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
-			('Smart Tags Replacement of Newlines', 'EASYPOPULATE_4_CONFIG_SMART_TAGS', 'true', 'Allows your description fields in your uploads file to have carriage returns and/or new-lines converted to HTML line-breaks on uploading, thus preserving some rudimentary formatting - Note: this legacy code is disabled until further review. (default: true).', ".$group_id.", '8', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
-			('Advanced Smart Tags',                'EASYPOPULATE_4_CONFIG_ADV_SMART_TAGS', 'false', 'Allow the use of complex regular expressions to format descriptions, making headings bold, add bullets, etc. Note: legacy code is disabled until further review. (default: false).', ".$group_id.", '9', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
-			('Debug Logging',                      'EASYPOPULATE_4_CONFIG_DEBUG_LOGGING', 'true', 'Allow Easy Populate to generate an error log on errors only (default: true)', ".$group_id.", '10', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
-			('Maximum Quantity Discounts',         'EASYPOPULATE_4_CONFIG_MAX_QTY_DISCOUNTS', '3', 'Maximum number of quantity discounts (price breaks). Is the number of discount columns in downloaded file (default: 3).', ".$group_id.", '11', NULL, now(), NULL, NULL),
-			('Split On Number of Records',         'EASYPOPULATE_4_CONFIG_SPLIT_RECORDS', '2000', 'Number of records to split csv files. Used to break large import files into smaller files. Useful on servers with limited resourses. (default: 2000).', ".$group_id.", '12', NULL, now(), NULL, NULL),
-			('Script Execution Time',              'EASYPOPULATE_4_CONFIG_EXECUTION_TIME', '60', 'Number of seconds for script to run before timeout. May not work on some servers. (default: 60).', ".$group_id.", '13', NULL, now(), NULL, NULL),
-			('Convert Curly Quotes, etc.',         'EASYPOPULATE_4_CONFIG_CURLY_QUOTES', '0', 'Convert Curly Quotes, Em-Dash, En-Dash and Ellipsis characters in Products Description (default 0).<br><br>0=No Change<br>1=Replace with Basic Characters<br>3=Replace with HMTL equivalants', ".$group_id.", '14', NULL, now(), NULL, 'zen_cfg_select_option(array(\"0\", \"1\", \"2\"),'),
-			('Convert Character 0x92',             'EASYPOPULATE_4_CONFIG_CHAR_92', '1', 'Convert Character 0x92 characters in Product Names &amp; Descriptions (default 1).<br><br>0=No Change<br>1=Replace with Standard Single Quote<br>2=Replace with HMTL equivalant', ".$group_id.", '15', NULL, now(), NULL, 'zen_cfg_select_option(array(\"0\", \"1\", \"2\"),'),
-			('Enable Products Meta Data',          'EASYPOPULATE_4_CONFIG_META_DATA', '1', 'Enable Products Meta Data Columns (default 1).<br><br>0=Disable<br>1=Enable', ".$group_id.", '16', NULL, now(), NULL, 'zen_cfg_select_option(array(\"0\", \"1\"),'), 
-			('Enable Products Music Data',         'EASYPOPULATE_4_CONFIG_MUSIC_DATA', '0', 'Enable Products Music Data Columns (default 0).<br><br>0=Disable<br>1=Enable', ".$group_id.", '17', NULL, now(), NULL, 'zen_cfg_select_option(array(\"0\", \"1\"),'),
-			('User Defined Products Fields',       'EASYPOPULATE_4_CONFIG_CUSTOM_FIELDS', '', 'User Defined Products Table Fields (comma delimited, no spaces)', ".$group_id.", '18', NULL, now(), NULL, NULL),
-			('Export URI with Prod and or Cat',       'EASYPOPULATE_4_CONFIG_EXPORT_URI', '0', 'Export the current products or categories URI when exporting data? (Yes - 1 or no - 0)', ".$group_id.", '19', NULL, now(), NULL, 'zen_cfg_select_option(array(\"0\", \"1\"),'),
-			('Show all EP4 Filetypes with Files',       'EP4_SHOW_ALL_FILETYPES', 'True', 'When looking at the EP4 Tools screen, should the filename prefix for all specific file types be displayed for all possible file types (True [default]), should only the method(s) that will be used to process the files present be displayed (False), or should there be no assistance be provided on filenaming on the main page (Hidden) like it was until this feature was added? (True, False, or Hidden)', ".$group_id.", '25', NULL, now(), NULL, 'zen_cfg_select_option(array(\"True\", \"False\", \"Hidden\"),')
+			('Uploads Directory',                  'EASYPOPULATE_4_CONFIG_TEMP_DIR', 'temp/', 'Name of directory for your uploads as compared to the setting of Uploads Directory Admin/Catalog.<br /><br />Default is to use YOUR_ADMIN/temp/ by entering temp/ below.<br /><b>Caution:</b> the admin directory folder name should not be entered here as it will be stored in the database.  If the admin directory is to be used please set/verify Uploads Directory Admin/Catalog is set to true.<br /><br />(default is to use the YOUR_ADMIN directory and the below value of: temp/).', ".$group_id.", '10', NULL, now(), 'ep4_directory_check', NULL),
+			('Uploads Directory Admin/Catalog',                  'EP4_ADMIN_TEMP_DIRECTORY', 'true', 'Should the admin directory be used to store the export and import files for EP4?<br /><br />This switch affects how Uploads Directory is used.<br /><br />true (default) or<br />false. ', ".$group_id.", '20', NULL, now(), 'ep4_directory_choice_check', 'zen_cfg_select_option(array(\"true\", \"false\"),'),
+			('Import/Export Primary Key', 'EP4_DB_FILTER_KEY', 'products_model', 'Select the primary key that is to be used for import of the data.<br /><br />The default for Easy Populate v4 is products_model.<br /><br /> The field products_model is independent of the store, while products_id will require/generate the product information associated with that products_id and could lead to duplication of product. Choosing blank_new will import by products_id and create new products when the products_id is not entered/blank.<br /><br />products_model (default)<br />products_id<br />blank_new', ".$group_id.", '30', NULL, now(), NULL, 'zen_cfg_select_option(array(\'products_model\', \'products_id\', \'blank_new\'),'),
+			('Upload File Date Format',            'EASYPOPULATE_4_CONFIG_FILE_DATE_FORMAT', 'm-d-y', 'Choose order of date values that corresponds to your uploads file, usually generated by MS Excel. Raw dates in your uploads file (Eg 2005-09-26 09:00:00) are not affected, and will upload as they are.', ".$group_id.", '40', NULL, now(), NULL, 'zen_cfg_select_option(array(\"m-d-y\", \"d-m-y\", \"y-m-d\"),'),
+			('Default Raw Time',                   'EASYPOPULATE_4_CONFIG_DEFAULT_RAW_TIME', '09:00:00', 'If no time value stipulated in upload file, use this value. Useful for ensuring specials begin after a specific time of the day (default: 09:00:00)', ".$group_id.", '50', NULL, now(), NULL, NULL),
+			('Upload/Download Prices Include Tax', 'EASYPOPULATE_4_CONFIG_PRICE_INC_TAX', 'false', 'Choose to include or exclude tax, depending on how you manage prices outside of Zen Cart.', ".$group_id.", '60', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
+			('Verbose Feedback',                   'EASYPOPULATE_4_CONFIG_VERBOSE', 'true', 'When importing, report all messages. Set to false for only warnings and errors. (default: true).', ".$group_id.", '70', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
+			('Show all EP4 Filetypes with Files',       'EP4_SHOW_ALL_FILETYPES', 'true', 'When looking at the EP4 Tools screen, should the filename prefix for all specific file types be displayed for all possible file types (true [default]), should only the method(s) that will be used to process the files present be displayed (false), or should there be no assistance be provided on filenaming on the main page (Hidden) like it was until this feature was added? (true, false, or Hidden)', ".$group_id.", '80', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\", \"Hidden\"),'),
+      ('Replace Blank Image', 'EP4_REPLACE_BLANK_IMAGE', 'false', 'On import, if the image information is blank, then update the image path to the path of the blank image (true)? Otherwise the image path will remain blank (false <Default>).<br /><br />false (Default)<br />true.', ".$group_id.", '90', NULL, now(), NULL, 'zen_cfg_select_option(array(\'false\', \'true\'),'),
+			('Make Zero Qty Products Inactive',    'EASYPOPULATE_4_CONFIG_ZERO_QTY_INACTIVE', 'false', 'When uploading, make the status Inactive for products with zero qty (default: false).', ".$group_id.", '100', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
+			('Smart Tags Replacement of Newlines', 'EASYPOPULATE_4_CONFIG_SMART_TAGS', 'true', 'Allows your description fields in your uploads file to have carriage returns and/or new-lines converted to HTML line-breaks on uploading, thus preserving some rudimentary formatting - Note: this legacy code is disabled until further review. (default: true).', ".$group_id.", '110', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
+			('Advanced Smart Tags',                'EASYPOPULATE_4_CONFIG_ADV_SMART_TAGS', 'false', 'Allow the use of complex regular expressions to format descriptions, making headings bold, add bullets, etc. Note: legacy code is disabled until further review. (default: false).', ".$group_id.", '120', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
+			('Debug Logging',                      'EASYPOPULATE_4_CONFIG_DEBUG_LOGGING', 'true', 'Allow Easy Populate to generate an error log on errors only (default: true)', ".$group_id.", '130', NULL, now(), NULL, 'zen_cfg_select_option(array(\"true\", \"false\"),'),
+			('Maximum Quantity Discounts',         'EASYPOPULATE_4_CONFIG_MAX_QTY_DISCOUNTS', '3', 'Maximum number of quantity discounts (price breaks). Is the number of discount columns in downloaded file (default: 3).', ".$group_id.", '140', NULL, now(), NULL, NULL),
+			('Split On Number of Records',         'EASYPOPULATE_4_CONFIG_SPLIT_RECORDS', '2000', 'Number of records to split csv files. Used to break large import files into smaller files. Useful on servers with limited resourses. (default: 2000).', ".$group_id.", '150', NULL, now(), NULL, NULL),
+			('Script Execution Time',              'EASYPOPULATE_4_CONFIG_EXECUTION_TIME', '60', 'Number of seconds for script to run before timeout. May not work on some servers. (default: 60).', ".$group_id.", '160', NULL, now(), NULL, NULL),
+			('Convert Curly Quotes, etc.',         'EASYPOPULATE_4_CONFIG_CURLY_QUOTES', '0', 'Convert Curly Quotes, Em-Dash, En-Dash and Ellipsis characters in fields displayed to customer (default 0).<br><br>0=No Change<br>1=Replace with Basic Characters<br>2=Replace with HTML equivalents', ".$group_id.", '170', NULL, now(), NULL, 'zen_cfg_select_option(array(\"0\", \"1\", \"2\"),'),
+			('Convert Character 0x92',             'EASYPOPULATE_4_CONFIG_CHAR_92', '1', 'Convert Character 0x92 characters in Product Names &amp; Descriptions (default 1).<br><br>0=No Change<br>1=Replace with Standard Single Quote<br>2=Replace with HMTL equivalant', ".$group_id.", '180', NULL, now(), NULL, 'zen_cfg_select_option(array(\"0\", \"1\", \"2\"),'),
+			('Enable Products Meta Data',          'EASYPOPULATE_4_CONFIG_META_DATA', '1', 'Enable Products Meta Data Columns (default 1).<br><br>0=Disable<br>1=Enable', ".$group_id.", '190', NULL, now(), NULL, 'zen_cfg_select_option(array(\"0\", \"1\"),'), 
+			('Enable Products Music Data',         'EASYPOPULATE_4_CONFIG_MUSIC_DATA', '0', 'Enable Products Music Data Columns (default 0).<br><br>0=Disable<br>1=Enable', ".$group_id.", '200', NULL, now(), NULL, 'zen_cfg_select_option(array(\"0\", \"1\"),'),
+			('User Defined Products Fields',       'EASYPOPULATE_4_CONFIG_CUSTOM_FIELDS', '', 'User Defined Products Table Fields (comma delimited, no spaces)', ".$group_id.", '210', NULL, now(), NULL, NULL),
+			('Export URI with Prod and or Cat',       'EASYPOPULATE_4_CONFIG_EXPORT_URI', '0', 'Export the current products or categories URI when exporting data? (Yes - 1 or no - 0)', ".$group_id.", '220', NULL, now(), NULL, 'zen_cfg_select_option(array(\"0\", \"1\"),')
 		");
 	} else { // unsupported version 
 		// i should do something here!
 	} 
+    $zco_notifier->notify('EP4_EXTRA_FUNCTIONS_INSTALL_END', array('group_id' => $group_id));
 }
 
 function remove_easypopulate_4() {
@@ -1245,12 +618,12 @@ function remove_easypopulate_4() {
 
 function ep_4_chmod_check($tempdir) {
 	global $messageStack;
-	if (!@file_exists(DIR_FS_CATALOG . $tempdir . ".")) { // directory does not exist
-		$messageStack->add(sprintf(EASYPOPULATE_4_MSGSTACK_TEMP_FOLDER_MISSING, $tempdir, DIR_FS_CATALOG), 'warning');
+  if (!@file_exists((EP4_ADMIN_TEMP_DIRECTORY !== 'true' ? /* Storeside */ DIR_FS_CATALOG : /* Admin side */ DIR_FS_ADMIN) . $tempdir . ".")) { // directory does not exist
+		$messageStack->add(sprintf(EASYPOPULATE_4_MSGSTACK_TEMP_FOLDER_MISSING, $tempdir, (EP4_ADMIN_TEMP_DIRECTORY !== 'true' ? /* Storeside */ DIR_FS_CATALOG : /* Admin side */ DIR_FS_ADMIN)), 'warning');
 		$chmod_check = false;
 	} else { // directory exists, test is writeable
-		if (!@is_writable(DIR_FS_CATALOG . $tempdir . ".")) { // directory does not exist
-			$messageStack->add(sprintf(EASYPOPULATE_4_MSGSTACK_TEMP_FOLDER_NOT_WRITABLE, $tempdir, DIR_FS_CATALOG), 'warning');
+		if (!@is_writable((EP4_ADMIN_TEMP_DIRECTORY !== 'true' ? /* Storeside */ DIR_FS_CATALOG : /* Admin side */ DIR_FS_ADMIN) . $tempdir . ".")) { // directory does not exist
+			$messageStack->add(sprintf(EASYPOPULATE_4_MSGSTACK_TEMP_FOLDER_NOT_WRITABLE, $tempdir, (EP4_ADMIN_TEMP_DIRECTORY !== 'true' ? /* Storeside */ DIR_FS_CATALOG : /* Admin side */ DIR_FS_ADMIN)), 'warning');
 			$chmod_check = false;
 		} else { 
 			$chmod_check = true;
@@ -1259,6 +632,52 @@ function ep_4_chmod_check($tempdir) {
 	return $chmod_check;
 }
 
+function ep4_directory_check($ep_debug_log_path) {
+  global $db, $parameters;
+  
+  if (EP4_ADMIN_TEMP_DIRECTORY !== 'true') {
+
+    if (strpos(DIR_FS_CATALOG . $ep_debug_log_path, DIR_FS_ADMIN) === 0) {
+      
+      $temp_rem = substr(DIR_FS_CATALOG . $ep_debug_log_path, strlen(DIR_FS_ADMIN));
+      $db->Execute('UPDATE ' . TABLE_CONFIGURATION . ' SET configuration_value = \'true\' where configuration_key = \'EP4_ADMIN_TEMP_DIRECTORY\'', false, false, 0, true);
+      
+      $db->Execute('UPDATE ' . TABLE_CONFIGURATION . ' SET configuration_value = \'' . $temp_rem . '\' WHERE configuration_key = \'EASYPOPULATE_4_CONFIG_TEMP_DIR\'', false, false, 0, true);
+  
+      // need a message to  be displayed...
+//      zen_redirect(zen_href_link(FILENAME_CONFIGURATION /*, $parameters*/));
+      // zen_redirect(zen_href_link(FILENAME_EASYPOPULATE_4));
+    }
+  }
+  $ep_debug_log_path = $db->Execute('SELECT configuration_value FROM ' . TABLE_CONFIGURATION . ' where configuration_key = \'EASYPOPULATE_4_CONFIG_TEMP_DIR\'', false, false, 0, true);
+
+  return $ep_debug_log_path->fields['configuration_value'];
+}
+
+
+function ep4_directory_choice_check($ep_debug_log_path) {
+  global $db, $parameters;
+  
+  $temp_dir = $db->Execute('SELECT configuration_value FROM ' . TABLE_CONFIGURATION . ' where configuration_key = \'EP4_ADMIN_TEMP_DIRECTORY\'', false, false, 0, true);
+
+  if (EP4_ADMIN_TEMP_DIRECTORY !== 'true') {
+
+    if (strpos(DIR_FS_CATALOG . $ep_debug_log_path, DIR_FS_ADMIN) === 0) {
+      
+      $temp_rem = substr(DIR_FS_CATALOG . $ep_debug_log_path, strlen(DIR_FS_ADMIN));
+      $db->Execute('UPDATE ' . TABLE_CONFIGURATION . ' SET configuration_value = \'true\' where configuration_key = \'EP4_ADMIN_TEMP_DIRECTORY\'', false, false, 0, true);
+      
+      $db->Execute('UPDATE ' . TABLE_CONFIGURATION . ' SET configuration_value = \'' . $temp_rem . '\' WHERE configuration_key = \'EASYPOPULATE_4_CONFIG_TEMP_DIR\'', false, false, 0, true);
+  
+      // need a message to  be displayed...
+//      zen_redirect(zen_href_link(FILENAME_CONFIGURATION /*, $parameters*/));
+      // zen_redirect(zen_href_link(FILENAME_EASYPOPULATE_4));
+    }
+  }
+  $ep_debug_log_path = $db->Execute('SELECT configuration_value FROM ' . TABLE_CONFIGURATION . ' where configuration_key = \'EP4_ADMIN_TEMP_DIRECTORY\'', false, false, 0, true);
+
+  return ($ep_debug_log_path->fields['configuration_value'] == 'true' ? 'true' : 'false');
+}
 // The following functions are for testing purposes only
 // available zen functions of use..
 /*

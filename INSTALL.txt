@@ -1,18 +1,33 @@
 REQUIREMENTS:
 
-Zencart 1.38/1.39 or 1.5
+Zencart 1.38/1.39 or 1.5.x except 1.5.2
 PHP 4.3.2 or above.
 
 PRIOR TO INSTALLATION:
 
-I highly recommend that you install Dr. Bytes "Backup MYSQL Plugin" before installing 
-and using EasyPopulate 4.0 Beta (EP4). It has recently been updated to work with Zencart 1.5 
+It is highly recommended that you install Dr. Bytes "Backup MYSQL Plugin" before installing 
+and using EasyPopulate 4.0 Beta (EP4). It has been updated to work with Zencart 1.5 
 and can be downloaded from here:
 
 http://www.zen-cart.com/index.php?main_page=product_contrib_info&products_id=81
 
 Also note that EasyPopulate 4.0 Beta will install and run independently of all other 
 versions of easypopulate. Names 1.2.5.4 (and flavors) and EP Advance 3.0.3.
+
+INSTALLATION (Upgrade from any prior version of EP4) is suggested as follows:
+
+1) From the configuration->Easy Populate menu, document all of the settings so 
+   that they may be re-entered after installation.
+2) From the tools->Easy Populate 4 menu, uninstall EP4 through the link in the 
+   upper right corner.
+3) Load the files from the attached zip file into their standard location as is 
+   done through the below EP4 installation instruction.
+4) Refresh the Tools->EP4 window.
+5) Select the install option in the middle of the Tools->EP4 window.
+6) Return to the configuration->Easy Populate window and re-enter the settings 
+   captured in step 1.  Also review the new options made available to support 
+   use of the rewriter.
+
 
 INSTALLATION:
 
@@ -24,8 +39,8 @@ INSTALLATION:
 	a) If you are using zencart 1.3.8/1.3.9, you need to also upload the additional
         files in the "zencart 1.3 extra files" folder. 
 
-	b)  If you are using zencart 1.5, you need to also upload the additional
-         files in the "zencart 1.5 extra files" folder. 
+	b)  If you are using zencart 1.5.x, no additional files need to be uploaded as the file necessary
+	 to support ZenCart 1.5.x has been placed within the above "admin" directory. 
 
 3. Login to your store's admin. Under Tools you will see a new entry "Easy Populate 4". 
    (If you do not see this entry, you did not upload your files correctly.)
@@ -36,19 +51,23 @@ INSTALLATION:
    Your uploads folder is missing. Your configuration indicates that your uploads folder is named EASYPOPULATE_4_CONFIG_TEMP_DIR/, and is located in .../public_html/.
    Warning Easy Populate Configuration Missing. Please install your configuration by clicking here
 
-   Click the "here" link to install EP4's configuration files.
+   Click the "here" link to install EP4's configuration data.
 
 5. Now go to Configuration -> Easy Populate 4 and edit the Uploads Directory. The default directory is "temp/"
-   This assumes you have a directory "temp" in the root of your website. I highly recommend that you
-   move your temp directory into your admin, or change the name to something that is obscure for security reasons.
+   This assumes you have a directory "temp" in the admin of your website. I highly recommend that you
+   keep your temp directory in your admin, or change the name to something that is obscure for security reasons.
 
    Note: If you are using Zencart 1.5 and want to move your Uploads directory into this folder, you will need to 
-   customize an .htaccess file to add allowed file types of .csv/.CSV and .txt/.TXT. 
+   customize the/an .htaccess file to add allowed file types of .csv/.CSV and .txt/.TXT.  Otherwise when attempting to
+   download these files you may be presented with a denial to access the file(s).  This can also be accomplished by
+   copying the file .htaccess from the folder htaccess4AdminTempFolder.  *DO NOT* copy this file over an existing .htaccess.
 
 6. Now click on Tools -> Easy Populate 4. The warning messages should be gone. Note that your temp/
    directory will need correct permissions. EP4 will give you a warning if it cannot write to the temp/ directory
    that you set. Common permissions are "777" or "755". Contact your hosting provider if you are having problems
    setting permissions to writable, but you can usually do this through your site's CPANEL, or via a FTP program.
+   
+   Further usage instructions can be found in the README.txt file.
 
 UN-INSTALLATION:
 
@@ -58,8 +77,7 @@ This will remove the Configuration keys for EP4. You will then need to delete EP
 
 POST INSTALLATION NOTES:
 
-My EP4 will display the current version and Beta date. This will help you keep track of your version and updates as I post them
-go github.
+EP4 will display the current version and Beta date. This will help you keep track of your version and updates as they are posted to github.
 
 On the right-hand side of your screen you will see some additional information:
 
@@ -68,10 +86,12 @@ On the right-hand side of your screen you will see some additional information:
 	- Supported Mods
 	- Installed Languages
 
-Supported Mods: These are where you'll find additional fields that have been added to the products table.
-Note that Product Unit of Measure (UOM) and Product UPC Code are two of my own custom mods.
+Supported Mods: These are where you'll find additional fields that have been added to the products table by a separate application
+and are recognized by EP4 for use.
+Note that Product Unit of Measure (UOM) and Product UPC Code are two custom mods of Chadd.  Product UPC Code is also 
+  added/recognized by other ZC plugins.
 
-I will continue to update github with improvement as they come. Once EP4 has passed "beta" I will submit it 
+Github will continue to be updated with improvements as they come. Once EP4 has passed "beta" it will be submitted 
 to the Zencart team for consideration. Your feedback and testing is greatly appreciated!
 
 Thank you,
