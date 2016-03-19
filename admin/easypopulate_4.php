@@ -1,5 +1,5 @@
 <?php
-// $Id: easypopulate_4.php, v4.0.33 02-29-2016 mc12345678 $
+// $Id: easypopulate_4.php, v4.0.34 03-19-2016 mc12345678 $
 
 // CSV VARIABLES - need to make this configurable in the ADMIN
 // $csv_delimiter = "\t"; // "\t" = tab AND "," = COMMA
@@ -78,7 +78,7 @@ $ep_debug_logging_all = false; // do not comment out.. make false instead
 //$sql_fail_test == true; // used to cause an sql error on new product upload - tests error handling & logs
 /* Test area end */
 
-$curver = '4.0.33a';
+$curver = '4.0.34';
 $message = '';
 if (IS_ADMIN_FLAG) {
   $new_version_details = plugin_version_check_for_updates(2069, $curver);
@@ -88,7 +88,7 @@ if (IS_ADMIN_FLAG) {
 }
 
 // Current EP Version - Modded by mc12345678 after Chadd had done so much
-$curver              = $curver . ' - Beta 02-29-2016' . $message;
+$curver              = $curver . ' - Beta 03-19-2016' . $message;
 $display_output = ''; // results of import displayed after script run
 $ep_dltype = NULL;
 $ep_stack_sql_error = false; // function returns true on any 1 error, and notifies user of an error
@@ -666,13 +666,13 @@ if (((isset($error) && !$error) || !isset($error)) && (!is_null($_POST["delete"]
 
                   echo "<td align=center>" . zen_draw_form('delete_form', basename($_SERVER['SCRIPT_NAME']), /*$parameters = */'', 'post', /*$params =*/ '', $request_type == 'SSL') . zen_draw_hidden_field('delete', urlencode($files[$val[$i]]), /*$parameters = */'') . zen_draw_input_field('delete_button', EASYPOPULATE_4_DISPLAY_EXPORT_FILE_DELETE, /*$parameters = */'', /*$required = */false, /*$type = */'submit') . "</form></td>";
 /*                  echo "<td align=center><a href=\"" . $_SERVER['SCRIPT_NAME'] . "?delete=" . urlencode($files[$val[$i]]) . "\">" . EASYPOPULATE_4_DISPLAY_EXPORT_FILE_DELETE . "</a></td>";*/
-                  echo "<td align=center><a href=\"" . ($request_type == 'SSL' ? (EP4_ADMIN_TEMP_DIRECTORY !== 'true' ? /* Storeside */ HTTPS_CATALOG_SERVER . DIR_WS_HTTPS_CATALOG : /*Admin Side */ HTTPS_SERVER . DIR_WS_HTTPS_ADMIN) : (EP4_ADMIN_TEMP_DIRECTORY !== 'true' ? /* Storeside */ HTTP_CATALOG_SERVER . DIR_WS_CATALOG : /*Admin Side */ HTTP_SERVER . DIR_WS_ADMIN)) . $tempdir . $files[$val[$i]] . "\" target=_blank>" . EASYPOPULATE_4_DISPLAY_EXPORT_FILE_DOWNLOAD . "</a></td></tr>\n";
+                  echo "<td align=center><a href=\"" . (EP4_ADMIN_TEMP_DIRECTORY !== 'true' ? /* BOF Storeside */ defined('ENABLE_SSL_CATALOG') && ENABLE_SSL_CATALOG === 'true' ? HTTPS_CATALOG_SERVER . DIR_WS_HTTPS_CATALOG : HTTP_CATALOG_SERVER . DIR_WS_CATALOG /* EOF Storeside */ : /* BOF Adminside */ (defined('ENABLE_SSL_ADMIN') && ENABLE_SSL_ADMIN === 'true' ? (defined('HTTPS_SERVER') ? HTTPS_SERVER : HTTP_SERVER) . (defined('DIR_WS_HTTPS_ADMIN') ? DIR_WS_HTTPS_ADMIN : DIR_WS_ADMIN) : HTTP_SERVER . DIR_WS_ADMIN) /* EOF Adminside */) . $tempdir . $files[$val[$i]] . "\" target=_blank>" . EASYPOPULATE_4_DISPLAY_EXPORT_FILE_DOWNLOAD . "</a></td></tr>\n";
                 } else {
                   echo "<td>&nbsp;</td>\n";
                   echo "<td>&nbsp;</td>\n";
 //                  echo "<td align=center><a href=\"" . $_SERVER['SCRIPT_NAME'] . "?delete=" . urlencode($files[$val[$i]]) . "\">" . EASYPOPULATE_4_DISPLAY_EXPORT_FILE_DELETE . "</a></td>";
                   echo "<td align=center>" . zen_draw_form('delete_form', basename($_SERVER['SCRIPT_NAME']), /*$parameters = */'', 'post', /*$params =*/ '', $request_type == 'SSL') . zen_draw_hidden_field('delete', urlencode($files[$val[$i]]), /*$parameters = */'') . zen_draw_input_field('delete_button', EASYPOPULATE_4_DISPLAY_EXPORT_FILE_DELETE, /*$parameters = */'', /*$required = */false, /*$type = */'submit') . "</form></td>";
-                  echo "<td align=center><a href=\"" . ($request_type == 'SSL' ? (EP4_ADMIN_TEMP_DIRECTORY !== 'true' ? /* Storeside */ HTTPS_CATALOG_SERVER . DIR_WS_HTTPS_CATALOG : /*Admin Side */ HTTPS_SERVER . DIR_WS_HTTPS_ADMIN) : (EP4_ADMIN_TEMP_DIRECTORY !== 'true' ? /* Storeside */ HTTP_CATALOG_SERVER . DIR_WS_CATALOG : /*Admin Side */ HTTP_SERVER . DIR_WS_ADMIN)) . $tempdir . $files[$val[$i]] . "\" target=_blank>" . EASYPOPULATE_4_DISPLAY_EXPORT_FILE_DOWNLOAD . "</a></td></tr>\n";
+                  echo "<td align=center><a href=\"" . (EP4_ADMIN_TEMP_DIRECTORY !== 'true' ? /* BOF Storeside */ defined('ENABLE_SSL_CATALOG') && ENABLE_SSL_CATALOG === 'true' ? HTTPS_CATALOG_SERVER . DIR_WS_HTTPS_CATALOG : HTTP_CATALOG_SERVER . DIR_WS_CATALOG /* EOF Storeside */ : /* BOF Adminside */ (defined('ENABLE_SSL_ADMIN') && ENABLE_SSL_ADMIN === 'true' ? (defined('HTTPS_SERVER') ? HTTPS_SERVER : HTTP_SERVER) . (defined('DIR_WS_HTTPS_ADMIN') ? DIR_WS_HTTPS_ADMIN : DIR_WS_ADMIN) : HTTP_SERVER . DIR_WS_ADMIN) /* EOF Adminside */) . $tempdir . $files[$val[$i]] . "\" target=_blank>" . EASYPOPULATE_4_DISPLAY_EXPORT_FILE_DOWNLOAD . "</a></td></tr>\n";
                 }
               }
             } // End loop within a filetype
