@@ -281,3 +281,5 @@
 					https://www.zen-cart.com/downloads.php?do=file&id=2068
 4.0.33a  03/17/2016             Updated version check location to reflect the final submission/accepted download location of:
                                         https://www.zen-cart.com/downloads.php?do=file&id=2069
+4.0.34   03/19/2016             After report of an issue with EP4.0.33 being used on ZC 1.5.5, a change was made to how paths are
+                                        generated for admin side related code.
