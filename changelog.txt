@@ -283,3 +283,6 @@
                                         https://www.zen-cart.com/downloads.php?do=file&id=2069
 4.0.34   03/19/2016             After report of an issue with EP4.0.33 being used on ZC 1.5.5, a change was made to how paths are
                                         generated for admin side related code.
+                                On import of priceqty files, the absence of language designated fields
+                                	now that the products description section has been rewritten
+                                	would cause a sql error on update.  This has been resolved.
