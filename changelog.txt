@@ -292,3 +292,7 @@
                                         be properly formatted regex type expression.  The UTF-8 version of the character was not
                                         properly formatted and no further action was taken on the variable (until now).  This restores
                                         EP4 to its full functionality before attempting to make that improvement.
+4.0.35   04/03/2016             Added an additional notifier to follow the loading of the admin's header.php file.  The header.php 
+                                        file also loads JQuery, such that if JQuery was loaded in an earlier notifier, it would be
+                                        overridden within the header.php file when JQuery is loaded without consideration of previous
+                                        loadings/presence.
