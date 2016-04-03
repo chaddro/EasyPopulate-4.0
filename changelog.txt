@@ -286,3 +286,9 @@
                                 On import of priceqty files, the absence of language designated fields
                                 	now that the products description section has been rewritten
                                 	would cause a sql error on update.  This has been resolved.
+4.0.34.a 04/02/2016             Apply correction to importing on category information.  An attempt was previously made to centralize
+                                        the use of the delimiter between categories.  The technical reason for this not working as
+                                        expected was that the multi-byte function that acts on the data required the delimiter to
+                                        be properly formatted regex type expression.  The UTF-8 version of the character was not
+                                        properly formatted and no further action was taken on the variable (until now).  This restores
+                                        EP4 to its full functionality before attempting to make that improvement.
