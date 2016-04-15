@@ -88,7 +88,7 @@ if (IS_ADMIN_FLAG) {
 }
 
 // Current EP Version - Modded by mc12345678 after Chadd had done so much
-$curver              = $curver . ' - 04-03-2016' . $message;
+$curver              = $curver . ' - 04-15-2016' . $message;
 $display_output = ''; // results of import displayed after script run
 $ep_dltype = NULL;
 $ep_stack_sql_error = false; // function returns true on any 1 error, and notifies user of an error
@@ -97,7 +97,12 @@ $has_specials = false;
 $zco_notifier->notify('EP4_START');
 
 // Load language file(s) for main screen menu(s).
-require(DIR_FS_ADMIN . DIR_WS_LANGUAGES . $_SESSION['language'] . '/easypopulate_4_menus.php');
+if(file_exists(DIR_FS_ADMIN . DIR_WS_LANGUAGES . $_SESSION['language'] . '/easypopulate_4_menus.php'))
+{
+  require(DIR_FS_ADMIN . DIR_WS_LANGUAGES . $_SESSION['language'] . '/easypopulate_4_menus.php');
+} else {
+  require(DIR_FS_ADMIN . DIR_WS_LANGUAGES . 'english' . '/easypopulate_4_menus.php');
+}
 
 // all mods go in this array as 'name' => 'true' if exist. eg $ep_supported_mods['psd'] => true means it exists.
 $ep_supported_mods = array();
