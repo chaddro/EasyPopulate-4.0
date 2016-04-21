@@ -1,5 +1,5 @@
 <?php
-// $Id: easypopulate_4_attrib.php, v4.0.32 12-30-2015 mc12345678 $
+// $Id: easypopulate_4_attrib.php, v4.0.35 04-21-2016 mc12345678 $
 
 if (!defined('IS_ADMIN_FLAG')) {
   die('Illegal Access');
@@ -21,7 +21,8 @@ while ($contents = fgetcsv($handle, 0, $csv_delimiter, $csv_enclosure)) { // whi
 
 	// READ products_id and products_model from TABLE_PRODUCTS
 	// Since products_model must be unique (for EP4 at least), this query can be LIMIT 1 
-	$query ="SELECT * FROM ".TABLE_PRODUCTS." WHERE (products_model = '" . addslashes($v_products_model) . "') LIMIT 1";
+	$query ="SELECT * FROM ".TABLE_PRODUCTS." WHERE (products_model = :v_products_model:) LIMIT 1";
+	$query = $db->bindVars($query, ':v_products_model', $v_products_model, 'string');
 	$result = ep_4_query($query);
 
 	if (($ep_uses_mysqli ? mysqli_num_rows($result) : mysql_num_rows($result)) == 0)  { // products_model is not in TABLE_PRODUCTS
@@ -67,7 +68,9 @@ while ($contents = fgetcsv($handle, 0, $csv_delimiter, $csv_enclosure)) { // whi
 // HERE ==> language 1 is main key, and assumbed
 			$l_id = 1; // temporary check - should this be the default language id?
 			$query  = "SELECT products_options_id, products_options_name FROM ".TABLE_PRODUCTS_OPTIONS."
-				WHERE products_options_name = '".$v_products_options_name[$l_id]."' AND language_id = '".$l_id."'";
+				WHERE products_options_name = :v_products_options_name: AND language_id = :language_id:";
+			$query = $db->bindVars($query, ':v_products_options_name:', $v_products_options_name[$l_id], 'string');
+			$query = $db->bindVars($query, ':language_id:', $l_id, 'integer');
 			$result = ep_4_query($query);
 		
 			// insert new products_options_name
@@ -88,7 +91,11 @@ while ($contents = fgetcsv($handle, 0, $csv_delimiter, $csv_enclosure)) { // whi
 					$sql = "INSERT INTO ".TABLE_PRODUCTS_OPTIONS." 
 						(products_options_id, language_id, products_options_name, products_options_type)
 						VALUES
-						('$v_products_options_id', '".$l_id."', '".$v_products_options_name[$l_id]."', '".zen_db_input($v_products_options_type)."')";
+						(:v_products_options_id:, :language_id:, :v_products_options_name:, :v_products_options_type:)";
+					$sql = $db->bindVars($sql, ':v_products_options_id:', $v_products_options_id, 'integer');
+					$sql = $db->bindVars($sql, ':language_id:', $l_id, 'integer');
+					$sql = $db->bindVars($sql, ':v_products_options_name', $v_products_options_name[$l_id], 'string');
+					$sql = $db->bindVars($sql, ':v_products_options_type', $v_products_options_type, 'integer');
 					$errorcheck = ep_4_query($sql);
 				}
 				$new_options_name++;
@@ -141,9 +148,11 @@ while ($contents = fgetcsv($handle, 0, $csv_delimiter, $csv_enclosure)) { // whi
 						.TABLE_PRODUCTS_OPTIONS_VALUES_TO_PRODUCTS_OPTIONS." as a, "
 						.TABLE_PRODUCTS_OPTIONS_VALUES." as b 
 						WHERE 
-						a.products_options_id = '".$v_products_options_id."' AND
+						a.products_options_id = :v_products_options_id: AND
 						a.products_options_values_id = b.products_options_values_id AND
-						b.products_options_values_name = '".$values_names_array[$l_id][$values_names_index]."'";
+						b.products_options_values_name = :values_name:";
+					$sql = $db->bindVars($sql, ':v_products_options_id:', $v_products_options_id, 'integer');
+					$sql = $db->bindVars($sql, ':values_name:', $values_names_array[$l_id][$values_names_index], 'string');
 					$result4 = ep_4_query($sql);
 
 					// if $result4 == 0, products_options_values_name not found
@@ -158,10 +167,14 @@ while ($contents = fgetcsv($handle, 0, $csv_delimiter, $csv_enclosure)) { // whi
 								products_options_values_name, 
 								products_options_values_sort_order)
 								VALUES ( 
-								'$products_options_values_id', 
-								'".$l_id."', 
-								'".$values_names_array[$l_id][$values_names_index]."',
-								'$products_options_values_sort_order')";
+								:products_options_values_id:, 
+								:language_id:, 
+								:values_name:,
+								:products_options_values_sort_order:)";
+							$sql = $db->bindVars($sql, ':products_options_values_id:', $products_options_values_id, 'integer');
+							$sql = $db->bindVars($sql, ':language_id:', $l_id, 'integer');
+							$sql = $db->bindVars($sql, ':values_name:', $values_names_array[$l_id][$values_names_index], 'string');
+							$sql = $db->bindVars($sql, ':products_options_values_sort_order:', $products_options_values_sort_order, 'integer');
 							$errorcheck = ep_4_query($sql);
 						} // foreach
 						$new_options_values_name++;
@@ -179,15 +192,16 @@ while ($contents = fgetcsv($handle, 0, $csv_delimiter, $csv_enclosure)) { // whi
 						FROM "
 						.TABLE_PRODUCTS_OPTIONS_VALUES_TO_PRODUCTS_OPTIONS."
 						WHERE
-						products_options_id =  '".$v_products_options_id."' AND
+						products_options_id =  :v_products_options_id: AND
 						products_options_values_id = '0'";
+					$sql5 = $db->bindVars($sql5, ':v_products_options_id:', $v_products_options_id, 'integer');
 					$result5 = ep_4_query($sql5);
 					// if $result5 == 0, combination not found
 					if (($ep_uses_mysqli ? mysqli_num_rows($result5) : mysql_num_rows($result5)) == 0)  { // combination is not in TABLE_PRODUCTS_OPTIONS_VALUES_TO_PRODUCTS_OPTIONS
 						// insert new combination
 						$errorcheck = ep_4_query("INSERT INTO ".TABLE_PRODUCTS_OPTIONS_VALUES_TO_PRODUCTS_OPTIONS."
 						(products_options_values_to_products_options_id, products_options_id, products_options_values_id) 
-						VALUES('$products_options_values_to_products_options_id', '$v_products_options_id', '0')");
+						VALUES(" . (int)$products_options_values_to_products_options_id . ", " . (int)$v_products_options_id . ", 0)");
 					} else { // duplicate entry, skip
 					} 
 				} else { // add $products_options_values_id
@@ -201,16 +215,18 @@ while ($contents = fgetcsv($handle, 0, $csv_delimiter, $csv_enclosure)) { // whi
 						.TABLE_PRODUCTS_OPTIONS_VALUES_TO_PRODUCTS_OPTIONS. " as a, "
 						.TABLE_PRODUCTS_OPTIONS_VALUES. " as b 
 						WHERE 
-						a.products_options_id = '".$v_products_options_id."' AND
+						a.products_options_id = :v_products_options_id: AND
 						a.products_options_values_id = b.products_options_values_id AND
-						b.products_options_values_name = '".$values_names_array[$l_id][$values_names_index]."'";
+						b.products_options_values_name = :values_name:";
+					$sql5 = $db->bindVars($sql5, ':v_products_options_id', $v_products_options_id, 'integer');
+					$sql5 = $db->bindVars($sql5, ':values_name:', $values_names_array[$l_id][$values_names_index], 'string');
 					$result5 = ep_4_query($sql5);
 
 					// if $result5 == 0, combination not found
 					if (($ep_uses_mysqli ? mysqli_fetch_array($result5) : mysql_num_rows($result5)) == 0)  { // combination is not in TABLE_PRODUCTS_OPTIONS_VALUES_TO_PRODUCTS_OPTIONS
 						$errorcheck = ep_4_query("INSERT INTO ".TABLE_PRODUCTS_OPTIONS_VALUES_TO_PRODUCTS_OPTIONS."
 							(products_options_values_to_products_options_id, products_options_id, products_options_values_id) 
-							VALUES('$products_options_values_to_products_options_id', '$v_products_options_id', '$products_options_values_id')");
+							VALUES(" . (int)$products_options_values_to_products_options_id . ", " . (int)$v_products_options_id . ", " . (int)$products_options_values_id . ")");
 					} else { // duplicate entry, skip
 					}
 				}
@@ -220,7 +236,7 @@ while ($contents = fgetcsv($handle, 0, $csv_delimiter, $csv_enclosure)) { // whi
 				if (in_array($v_products_options_type, $exclude_array)) { // 
 					$errorcheck = ep_4_query("INSERT INTO ".TABLE_PRODUCTS_ATTRIBUTES."
 					(products_id, options_id, options_values_id) 
-					VALUES ('".$v_products_id."', '".$v_products_options_id."','0')");
+					VALUES (".(int)$v_products_id.", ".(int)$v_products_options_id.",0)");
 				} else {
 					$l_id = 1; // default first language is main key
 					$sql5 = "SELECT 
@@ -232,9 +248,11 @@ while ($contents = fgetcsv($handle, 0, $csv_delimiter, $csv_enclosure)) { // whi
 						.TABLE_PRODUCTS_OPTIONS_VALUES_TO_PRODUCTS_OPTIONS. " as a, "
 						.TABLE_PRODUCTS_OPTIONS_VALUES. " as b 
 						WHERE 
-						a.products_options_id = '".$v_products_options_id."' AND
+						a.products_options_id = :v_products_options_id: AND
 						a.products_options_values_id = b.products_options_values_id AND
-						b.products_options_values_name = '". $values_names_array[$l_id][$values_names_index]."'";
+						b.products_options_values_name = :values_name:";
+					$sql5 = $db->bindVars($sql5, ':v_products_options_id:', $v_products_options_id, 'integer');
+					$sql5 = $db->bindVars($sql5, ':values_name:', $values_names_array[$l_id][$values_names_index], 'string');
 					$result5 = ep_4_query($sql5);
 					
 					$row5 = ($ep_uses_mysqli ? mysqli_fetch_array($result5) : mysql_fetch_array($result5));
@@ -247,23 +265,30 @@ while ($contents = fgetcsv($handle, 0, $csv_delimiter, $csv_enclosure)) { // whi
 					$sql6 = "SELECT * FROM "
 						.TABLE_PRODUCTS_ATTRIBUTES. "
 						WHERE 
-						products_id = '".$v_products_id."' AND
-						options_id = '".$v_products_options_id."' AND
-						options_values_id = '".$a_products_options_values_id."'";
+						products_id = :v_products_id: AND
+						options_id = :v_products_options_id: AND
+						options_values_id = :a_products_options_values_id:";
+					$sql6 = $db->bindVars($sql6, ':v_products_id:', $v_products_id, 'integer');
+					$sql6 = $db->bindVars($sql6, ':v_products_options_id:', $v_products_options_id, 'integer');
+					$sql6 = $db->bindVars($sql6, ':a_products_options_values_id:', $a_products_options_values_id, 'integer');
 					$result6 = ep_4_query($sql6);
 					$row6 = ($ep_uses_mysqli ? mysqli_fetch_array($result6) : mysql_fetch_array($result6));
 					if (($ep_uses_mysqli ? mysqli_num_rows($result6) : mysql_num_rows($result6)) == 0)  {
 						$errorcheck = ep_4_query("INSERT INTO ".TABLE_PRODUCTS_ATTRIBUTES."
 							(products_id, options_id, options_values_id) 
-							VALUES ('".$v_products_id."', '".$v_products_options_id."','".$a_products_options_values_id."')");
+							VALUES (".(int)$v_products_id.", ".(int)$v_products_options_id.",".(int)$a_products_options_values_id.")");
 						$table_products_attributes_update = 0;
 					} else { // UPDATE
 						$sql7 ="UPDATE ".TABLE_PRODUCTS_ATTRIBUTES." SET
-							products_options_sort_order ='".$values_names_index."'
+							products_options_sort_order = :values_names_index:
 							WHERE
-							products_id = '".$v_products_id."' AND
-							options_id = '".$v_products_options_id."' AND
-							options_values_id = '".$a_products_options_values_id."'";
+							products_id = :v_products_id: AND
+							options_id = :v_products_options_id: AND
+							options_values_id = :a_products_options_values_id:";
+						$sql7 = $db->bindVars($sql7, ':values_names_index:', $values_names_index, 'integer');
+						$sql7 = $db->bindVars($sql7, ':v_products_id:', $v_products_id, 'integer');
+						$sql7 = $db->bindVars($sql7, ':v_products_options_id:', $v_products_options_id, 'integer');
+						$sql7 = $db->bindVars($sql7, ':a_products_options_values_id:', $a_productsion_options_values_id, 'integer');
 						$errorcheck = ep_4_query($sql7);
 						$table_products_attributes_update = 1;
 					}
