@@ -1,5 +1,5 @@
 <?php
-// $Id: easypopulate_4_import.php, v4.0.33 02-29-2016 mc12345678 $
+// $Id: easypopulate_4_import.php, v4.0.34a 03-29-2016 mc12345678 $
 
 if (!defined('IS_ADMIN_FLAG')) {
   die('Illegal Access');
@@ -1109,7 +1109,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
             // iso-8859-1
             // $categories_names_array[$lang['id']] = explode($categories_delimiter,$items[$filelayout['v_categories_name_'.$lang['id']]]); 
             // utf-8 
-            $categories_names_array[$lang['id']] = mb_split($categories_delimiter, $items[$filelayout['v_categories_name_' . $lang['id']]]);
+            $categories_names_array[$lang['id']] = mb_split(preg_quote($categories_delimiter), $items[$filelayout['v_categories_name_' . $lang['id']]]);
 
             // get the number of tokens in $categories_names_array[]
             $categories_count[$lang['id']] = count($categories_names_array[$lang['id']]);
@@ -1919,7 +1919,13 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
           // the following is common in both the updating an existing product and creating a new product // mc12345678 updated to allow omission of v_products_description in the import file.
     $add_products_description_data = false;
     $zco_notifier->notify('EP4_IMPORT_FILE_PRODUCTS_DESCRIPTION_ADD_OR_CHANGE_DATA');
-    if (isset($v_products_name) || isset($v_products_description) || ($ep_supported_mods['psd'] == true && isset($v_products_short_desc) ) || isset($v_products_url) || $add_products_description_data) { // 
+    if ((isset($v_products_name) && is_array($v_products_name)) || (isset($v_products_description) && is_array
+            ($v_products_description)) ||
+        ($ep_supported_mods['psd'] == true
+            &&
+            isset
+            ($v_products_short_desc) ) || (isset($v_products_url) && is_array($v_products_url)) ||
+        $add_products_description_data) { //
       // Effectively need a way to step through all language options, this section to be "accepted" if there is something to be updated.  Prefer the ability to verify update need without having to loop on anything, but just by "presence" of information.
       foreach ($langcode as $lang) {
         // foreach ($v_products_name as $key => $name) {  // Decouple the dependency on the products_name being imported to update the products_name, description, short description and/or URL. //mc12345678 2015-Dec-12
@@ -1987,7 +1993,8 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
             $sql .= ($update_count ? ", " : "") . " products_url = :v_products_url: ";
             $update_count = true;
           }
-                
+          // If using this notifier to add to the $sql, the when something is added be sure to
+          //  set $update_count = true;
           $zco_notifier->notify('EP4_IMPORT_FILE_PRODUCTS_DESCRIPTION_UPDATE_FIELDS_VALUES');
                 
           $sql .= "        WHERE products_id = :v_products_id: AND language_id = :language_id:";
@@ -2003,10 +2010,14 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
           $sql = $db->bindVars($sql, ':language_id:', $lang_id, 'integer');
           $zco_notifier->notify('EP4_IMPORT_FILE_PRODUCTS_DESCRIPTION_FIELDS_BIND_END');
                 
-                $result = ep_4_query($sql);
-                if ($result) {
-                  zen_record_admin_activity('Updated product ' . (int) $v_products_id . ' description via EP4.', 'info');
-                }
+                // Be sure to run the update query only if there has been something provded to
+                //  update.
+                if ($update_count == true) {
+                  $result = ep_4_query($sql);
+                  if ($result) {
+                    zen_record_admin_activity('Updated product ' . (int)$v_products_id . ' description via EP4.', 'info');
+                  }
+                }  // Perform query if there is something to update.
               } // END: already in description, update it
             } // END: foreach on languages
           } // END: Products Descriptions End
