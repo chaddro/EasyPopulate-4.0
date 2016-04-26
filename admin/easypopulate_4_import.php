@@ -159,7 +159,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
             } else {
               $v_featured_date_available = '0001-01-01';
             }
-            if (($v_today >= strtotime($v_featured_date_available)) && ($v_today < strtotime($v_expires_date))) {
+            if (($v_today >= strtotime($v_featured_date_available)) && ($v_today < strtotime($v_expires_date)) || ($v_today >= strtotime($v_featured_date_available) && $v_featured_date_available != '0001-01-01' && $v_expires_date == '0001-01-01')) {
               $v_status = 1;
               $v_date_status_change = date("Y-m-d");
             } else {
@@ -195,9 +195,17 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
               $max_featured_id = 1;
             }
             $v_today = strtotime(date("Y-m-d"));
-            $v_expires_date = $items[$filelayout['v_expires_date']];
-            $v_featured_date_available = $items[$filelayout['v_featured_date_available']];
-            if (($v_today >= strtotime($v_featured_date_available)) && ($v_today < strtotime($v_expires_date))) {
+            if (isset($filelayout['v_expires_date']) && $items[$filelayout['v_expires_date']] > '0001-01-01') {
+              $v_expires_date = $items[$filelayout['v_expires_date']];
+            } else {
+              $v_expires_date = '0001-01-01';
+            }
+            if(isset($filelayout['v_featured_date_available']) && $items[$filelayout['v_featured_date_available']] > '0001-01-01') {
+              $v_featured_date_available = $items[$filelayout['v_featured_date_available']];
+            } else {
+              $v_featured_date_available = '0001-01-01';
+            }
+            if (($v_today >= strtotime($v_featured_date_available)) && ($v_today < strtotime($v_expires_date)) || ($v_today >= strtotime($v_featured_date_available) && $v_featured_date_available != '0001-01-01' && $v_expires_date == '0001-01-01')) {
               $v_status = 1;
               $v_date_status_change = date("Y-m-d");
             } else {
