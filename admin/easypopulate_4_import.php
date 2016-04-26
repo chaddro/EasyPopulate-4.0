@@ -1031,7 +1031,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
         $v_date_avail = ($v_date_avail == true && $v_date_avail > "0001-01-01") ? date("Y-m-d H:i:s", strtotime($v_date_avail)) : "NULL";
 
         // if products has been added before, do not change, else use current time stamp
-        $v_date_added = ($v_date_added == true & $v_date_added > "0001-01-01") ? date("Y-m-d H:i:s", strtotime($v_date_added)) : "CURRENT_TIMESTAMP";
+        $v_date_added = ($v_date_added == true && $v_date_added > "0001-01-01") ? date("Y-m-d H:i:s", strtotime($v_date_added)) : "CURRENT_TIMESTAMP";
 
         // default the stock if they spec'd it or if it's blank
         // $v_db_status = '1'; // default to active
