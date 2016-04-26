@@ -159,7 +159,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
             } else {
               $v_featured_date_available = '0001-01-01';
             }
-            if (($v_today >= strtotime($v_featured_date_available)) && ($v_today < strtotime($v_expires_date)) || ($v_today >= strtotime($v_featured_date_available) && $v_featured_date_available != '0001-01-01' && $v_expires_date == '0001-01-01')) {
+            if (($v_today >= strtotime($v_featured_date_available)) && ($v_today < strtotime($v_expires_date)) || ($v_today >= strtotime($v_featured_date_available) && $v_featured_date_available != '0001-01-01' && $v_expires_date == '0001-01-01') || ($v_featured_date_available == '0001-01-01' && $v_expires_date == '0001-01-01' && (defined('EP4_ACTIVATE_BLANK_FEATURED') ? EP4_ACTIVATE_BLANK_FEATURED : true))) {
               $v_status = 1;
               $v_date_status_change = date("Y-m-d");
             } else {
@@ -205,7 +205,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
             } else {
               $v_featured_date_available = '0001-01-01';
             }
-            if (($v_today >= strtotime($v_featured_date_available)) && ($v_today < strtotime($v_expires_date)) || ($v_today >= strtotime($v_featured_date_available) && $v_featured_date_available != '0001-01-01' && $v_expires_date == '0001-01-01')) {
+            if (($v_today >= strtotime($v_featured_date_available)) && ($v_today < strtotime($v_expires_date)) || ($v_today >= strtotime($v_featured_date_available) && $v_featured_date_available != '0001-01-01' && $v_expires_date == '0001-01-01') || ($v_featured_date_available == '0001-01-01' && $v_expires_date == '0001-01-01' && (defined('EP4_ACTIVATE_BLANK_FEATURED') ? EP4_ACTIVATE_BLANK_FEATURED : true))) {
               $v_status = 1;
               $v_date_status_change = date("Y-m-d");
             } else {
