@@ -1,5 +1,5 @@
 <?php
-// $Id: easypopulate_4_import.php, v4.0.34a 03-29-2016 mc12345678 $
+// $Id: easypopulate_4_import.php, v4.0.35 04-27-2016 mc12345678 $
 
 if (!defined('IS_ADMIN_FLAG')) {
   die('Illegal Access');
@@ -1646,6 +1646,10 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
             // CHADD - why is master_categories_id not being set on update??? //mc12345678 Because on update, the category was already set, on the first upload it was set to be the master_category_id, but now the product is merely updated to add the category(ies) to it, not to update the master_category_id which should be done on a separate transaction.
             $query = "UPDATE " . TABLE_PRODUCTS . " SET
 							products_price = :products_price:, ";
+
+            if ($chosen_key != '' && $chosen_key != 'v_products_model' && isset($filelayout['v_products_model']) && !in_array('products_model', $custom_fields)) {
+              $query .= "products_model = :products_model:, ";
+            }
             if ($ep_supported_mods['uom'] == true) { // price UOM mod
               $query .= "products_price_uom = :products_price_uom:, ";
             }
@@ -1674,7 +1678,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
             if (count($custom_fields) > 0) {
               foreach ($custom_fields as $field) {
                 $value = 'v_' . $field;
-                if ($filelayout[$value]) {
+                if (isset($filelayout[$value])) {
                   $query .= ":field: = :value:, ";
                   $query = $db->bindVars($query, ':field:', $field, 'noquotestring');
                   $query = $db->bindVars($query, ':value:', ${$value}, 'string');
@@ -1704,6 +1708,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
 							metatags_price_status			= :metatags_price_status:,
 							metatags_title_tagline_status	= :metatags_title_tagline_status:
                      WHERE (products_id = :products_id:)";
+            $query = $db->bindVars($query, ':products_model:', $v_products_model , 'string');
             $query = $db->bindVars($query, ':products_price:', $v_products_price , 'currency');
             $query = $db->bindVars($query, ':products_price_uom:', $v_products_price_uom , 'currency');
             $query = $db->bindVars($query, ':products_upc:', $v_products_upc, 'string');
