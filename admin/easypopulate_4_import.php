@@ -200,7 +200,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
             } else {
               $v_expires_date = '0001-01-01';
             }
-            if(isset($filelayout['v_featured_date_available']) && $items[$filelayout['v_featured_date_available']] > '0001-01-01') {
+            if (isset($filelayout['v_featured_date_available']) && $items[$filelayout['v_featured_date_available']] > '0001-01-01') {
               $v_featured_date_available = $items[$filelayout['v_featured_date_available']];
             } else {
               $v_featured_date_available = '0001-01-01';
@@ -1122,10 +1122,13 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
           $categories_delimiter = $category_delimiter; // add this to configuration variables
           // get all defined categories
           foreach ($langcode as $key => $lang) {
+            if (!function_exists('mb_split')) {
             // iso-8859-1
-            // $categories_names_array[$lang['id']] = explode($categories_delimiter,$items[$filelayout['v_categories_name_'.$lang['id']]]); 
+              $categories_names_array[$lang['id']] = explode($categories_delimiter,$items[$filelayout['v_categories_name_'.$lang['id']]]); 
+            } else {
             // utf-8 
-            $categories_names_array[$lang['id']] = mb_split(preg_quote($categories_delimiter), $items[$filelayout['v_categories_name_' . $lang['id']]]);
+              $categories_names_array[$lang['id']] = mb_split(preg_quote($categories_delimiter), $items[$filelayout['v_categories_name_' . $lang['id']]]);
+            }
 
             // get the number of tokens in $categories_names_array[]
             $categories_count[$lang['id']] = count($categories_names_array[$lang['id']]);
