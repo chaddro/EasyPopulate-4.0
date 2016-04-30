@@ -307,3 +307,6 @@
                                 Expanded the use of the code with systems that do not have mb_
                                 Added language fallback to english capability if the SESSION['language'] folder does not exist for EP4 menus.
                                 Modified one import bitwise operator to a comparison operator (& to &&).
+4.0.35.ZC 04/29/2016            Modified version number as github contained 4.0.35 and wanted to be sure that users that downloaded
+                                        that version would receive notification of the updated file.  This is the version
+                                        submitted to ZC.
