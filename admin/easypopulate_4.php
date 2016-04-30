@@ -1,5 +1,5 @@
 <?php
-// $Id: easypopulate_4.php, v4.0.35 04-03-2016 mc12345678 $
+// $Id: easypopulate_4.php, v4.0.35 04-29-2016 mc12345678 $
 
 // CSV VARIABLES - need to make this configurable in the ADMIN
 // $csv_delimiter = "\t"; // "\t" = tab AND "," = COMMA
@@ -88,7 +88,7 @@ if (IS_ADMIN_FLAG) {
 }
 
 // Current EP Version - Modded by mc12345678 after Chadd had done so much
-$curver              = $curver . ' - 04-15-2016' . $message;
+$curver              = $curver . ' - 04-29-2016' . $message;
 $display_output = ''; // results of import displayed after script run
 $ep_dltype = NULL;
 $ep_stack_sql_error = false; // function returns true on any 1 error, and notifies user of an error
