@@ -22,7 +22,7 @@ while ($contents = fgetcsv($handle, 0, $csv_delimiter, $csv_enclosure)) { // whi
 	// READ products_id and products_model from TABLE_PRODUCTS
 	// Since products_model must be unique (for EP4 at least), this query can be LIMIT 1 
 	$query ="SELECT * FROM ".TABLE_PRODUCTS." WHERE (products_model = :v_products_model:) LIMIT 1";
-	$query = $db->bindVars($query, ':v_products_model', $v_products_model, 'string');
+	$query = $db->bindVars($query, ':v_products_model:', $v_products_model, 'string');
 	$result = ep_4_query($query);
 
 	if (($ep_uses_mysqli ? mysqli_num_rows($result) : mysql_num_rows($result)) == 0)  { // products_model is not in TABLE_PRODUCTS
@@ -94,8 +94,8 @@ while ($contents = fgetcsv($handle, 0, $csv_delimiter, $csv_enclosure)) { // whi
 						(:v_products_options_id:, :language_id:, :v_products_options_name:, :v_products_options_type:)";
 					$sql = $db->bindVars($sql, ':v_products_options_id:', $v_products_options_id, 'integer');
 					$sql = $db->bindVars($sql, ':language_id:', $l_id, 'integer');
-					$sql = $db->bindVars($sql, ':v_products_options_name', $v_products_options_name[$l_id], 'string');
-					$sql = $db->bindVars($sql, ':v_products_options_type', $v_products_options_type, 'integer');
+					$sql = $db->bindVars($sql, ':v_products_options_name:', $v_products_options_name[$l_id], 'string');
+					$sql = $db->bindVars($sql, ':v_products_options_type:', $v_products_options_type, 'integer');
 					$errorcheck = ep_4_query($sql);
 				}
 				$new_options_name++;
