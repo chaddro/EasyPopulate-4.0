@@ -292,3 +292,21 @@
                                         be properly formatted regex type expression.  The UTF-8 version of the character was not
                                         properly formatted and no further action was taken on the variable (until now).  This restores
                                         EP4 to its full functionality before attempting to make that improvement.
+4.0.35   04/29/2016             Added an additional notifier to follow the loading of the admin's header.php file.  The header.php 
+                                        file also loads JQuery, such that if JQuery was loaded in an earlier notifier, it would be
+                                        overridden within the header.php file when JQuery is loaded without consideration of previous
+                                        loadings/presence.
+                                Full upgrade requires remove/install of the configuration settings, otherwise this version added a 
+                                        default to activate featured product that have an expiration date that is "blank" (0001-01-01)
+                                Added a notifier to follow loading the admin header.php file to support adding jquery related loads in 
+                                        a logical location rather than forcing the use of an alternative notifier.
+                                Modified the import of featured product to expand the capability and use of featured
+                                        product management.
+                                Incorporated data cleaning on import of basic attributes.
+                                Modified import file to fallback to strlen comparison if mb_strlen is not installed/active on a site.
+                                Expanded the use of the code with systems that do not have mb_
+                                Added language fallback to english capability if the SESSION['language'] folder does not exist for EP4 menus.
+                                Modified one import bitwise operator to a comparison operator (& to &&).
+4.0.35.ZC 04/29/2016            Modified version number as github contained 4.0.35 and wanted to be sure that users that downloaded
+                                        that version would receive notification of the updated file.  This is the version
+                                        submitted to ZC.

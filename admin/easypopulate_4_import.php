@@ -1,5 +1,5 @@
 <?php
-// $Id: easypopulate_4_import.php, v4.0.34a 03-29-2016 mc12345678 $
+// $Id: easypopulate_4_import.php, v4.0.35 04-27-2016 mc12345678 $
 
 if (!defined('IS_ADMIN_FLAG')) {
   die('Illegal Access');
@@ -149,9 +149,17 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
           if ($row2 = ($ep_uses_mysqli ? mysqli_fetch_array($result2) : mysql_fetch_array($result2))) { // update featured product
             $v_featured_id = $row2['featured_id'];
             $v_today = strtotime(date("Y-m-d"));
-            $v_expires_date = $items[$filelayout['v_expires_date']];
-            $v_featured_date_available = $items[$filelayout['v_featured_date_available']];
-            if (($v_today >= strtotime($v_featured_date_available)) && ($v_today < strtotime($v_expires_date))) {
+            if (isset($filelayout['v_expires_date']) && $items[$filelayout['v_expires_date']] > '0001-01-01') {
+              $v_expires_date = $items[$filelayout['v_expires_date']];
+            } else {
+              $v_expires_date = '0001-01-01';
+            }
+            if (isset($filelayout['v_featured_date_available']) && $items[$filelayout['v_featured_date_available']] > '0001-01-01') {
+              $v_featured_date_available = $items[$filelayout['v_featured_date_available']];
+            } else {
+              $v_featured_date_available = '0001-01-01';
+            }
+            if (($v_today >= strtotime($v_featured_date_available)) && ($v_today < strtotime($v_expires_date)) || ($v_today >= strtotime($v_featured_date_available) && $v_featured_date_available != '0001-01-01' && $v_expires_date == '0001-01-01') || ($v_featured_date_available == '0001-01-01' && $v_expires_date == '0001-01-01' && (defined('EP4_ACTIVATE_BLANK_FEATURED') ? EP4_ACTIVATE_BLANK_FEATURED : true))) {
               $v_status = 1;
               $v_date_status_change = date("Y-m-d");
             } else {
@@ -187,9 +195,17 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
               $max_featured_id = 1;
             }
             $v_today = strtotime(date("Y-m-d"));
-            $v_expires_date = $items[$filelayout['v_expires_date']];
-            $v_featured_date_available = $items[$filelayout['v_featured_date_available']];
-            if (($v_today >= strtotime($v_featured_date_available)) && ($v_today < strtotime($v_expires_date))) {
+            if (isset($filelayout['v_expires_date']) && $items[$filelayout['v_expires_date']] > '0001-01-01') {
+              $v_expires_date = $items[$filelayout['v_expires_date']];
+            } else {
+              $v_expires_date = '0001-01-01';
+            }
+            if (isset($filelayout['v_featured_date_available']) && $items[$filelayout['v_featured_date_available']] > '0001-01-01') {
+              $v_featured_date_available = $items[$filelayout['v_featured_date_available']];
+            } else {
+              $v_featured_date_available = '0001-01-01';
+            }
+            if (($v_today >= strtotime($v_featured_date_available)) && ($v_today < strtotime($v_expires_date)) || ($v_today >= strtotime($v_featured_date_available) && $v_featured_date_available != '0001-01-01' && $v_expires_date == '0001-01-01') || ($v_featured_date_available == '0001-01-01' && $v_expires_date == '0001-01-01' && (defined('EP4_ACTIVATE_BLANK_FEATURED') ? EP4_ACTIVATE_BLANK_FEATURED : true))) {
               $v_status = 1;
               $v_date_status_change = date("Y-m-d");
             } else {
@@ -947,7 +963,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
           if (isset($filelayout['v_products_name_' . $l_id])) { // do for each language in our upload file if exist
             // check products name length and display warning on error, but still process record
             $v_products_name[$l_id] = ep_4_curly_quotes($items[$filelayout['v_products_name_' . $l_id]]);
-            if (mb_strlen($v_products_name[$l_id]) > $products_name_max_len) {
+            if ((function_exists('mb_strlen') && mb_strlen($v_products_name[$l_id]) > $products_name_max_len) || (!function_exists('mb_strlen') && strlen($v_products_name[$l_id]) > $products_name_max_len)) {
               $display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_PRODUCTS_NAME_LONG, $v_products_model, $v_products_name[$l_id], $products_name_max_len);
               $ep_warning_count++;
             }
@@ -976,7 +992,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
           if (isset($filelayout['v_products_url_' . $l_id])) { // do for each language in our upload file if exist
             $v_products_url[$l_id] = $items[$filelayout['v_products_url_' . $l_id]];
             // check products url length and display warning on error, but still process record
-            if (mb_strlen($v_products_url[$l_id]) > $products_url_max_len) {
+            if ((function_exists('mb_strlen') && mb_strlen($v_products_url[$l_id]) > $products_url_max_len) || (!function_exists('mb_strlen') && strlen($v_products_url[$l_id]) > $products_url_max_len)) {
               $display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_PRODUCTS_URL_LONG, $v_products_model, $v_products_url[$l_id], $products_url_max_len);
               $ep_warning_count++;
             }
@@ -1015,7 +1031,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
         $v_date_avail = ($v_date_avail == true && $v_date_avail > "0001-01-01") ? date("Y-m-d H:i:s", strtotime($v_date_avail)) : "NULL";
 
         // if products has been added before, do not change, else use current time stamp
-        $v_date_added = ($v_date_added == true & $v_date_added > "0001-01-01") ? date("Y-m-d H:i:s", strtotime($v_date_added)) : "CURRENT_TIMESTAMP";
+        $v_date_added = ($v_date_added == true && $v_date_added > "0001-01-01") ? date("Y-m-d H:i:s", strtotime($v_date_added)) : "CURRENT_TIMESTAMP";
 
         // default the stock if they spec'd it or if it's blank
         // $v_db_status = '1'; // default to active
@@ -1043,7 +1059,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
         }
 
         // check size of v_products_model, loop on error
-        if (mb_strlen($v_products_model) > $products_model_max_len) {
+        if ((function_exists('mb_strlen') && mb_strlen($v_products_model) > $products_model_max_len) || (!function_exists('mb_strlen') && strlen($v_products_model) > $products_model_max_len)) {
           $display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_PRODUCTS_MODEL_LONG, $v_products_model, $products_model_max_len);
           $ep_error_count++;
           continue; // short-circuit on error
@@ -1051,7 +1067,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
 
         // BEGIN: Manufacturer's Name
         // convert the manufacturer's name into id's for the database
-        if (isset($v_manufacturers_name) && ($v_manufacturers_name != '') && (mb_strlen($v_manufacturers_name) <= $manufacturers_name_max_len)) {
+        if (isset($v_manufacturers_name) && ($v_manufacturers_name != '') && ((function_exists('mb_strlen') && mb_strlen($v_manufacturers_name) <= $manufacturers_name_max_len) || (!function_exists('mb_strlen') && strlen($v_manufacturers_name) <= $manufacturers_name_max_len))) {
           $sql = "SELECT man.manufacturers_id AS manID FROM " . TABLE_MANUFACTURERS . " AS man WHERE man.manufacturers_name = :manufacturers_name: LIMIT 1";
           $sql = $db->bindVars($sql, ':manufacturers_name:', $v_manufacturers_name, 'string');
           
@@ -1084,7 +1100,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
             }
           }
         } else { // $v_manufacturers_name == '' or name length violation
-          if (mb_strlen($v_manufacturers_name) > $manufacturers_name_max_len) {
+          if ((function_exists('mb_strlen') && mb_strlen($v_manufacturers_name) > $manufacturers_name_max_len) || (!function_exists('mb_strlen') && strlen($v_manufacturers_name) > $manufacturers_name_max_len)) {
             $display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_MANUFACTURER_NAME_LONG, $v_manufacturers_name, $manufacturers_name_max_len);
             $ep_error_count++;
             continue;
@@ -1106,17 +1122,20 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
           $categories_delimiter = $category_delimiter; // add this to configuration variables
           // get all defined categories
           foreach ($langcode as $key => $lang) {
+            if (!function_exists('mb_split')) {
             // iso-8859-1
-            // $categories_names_array[$lang['id']] = explode($categories_delimiter,$items[$filelayout['v_categories_name_'.$lang['id']]]); 
+              $categories_names_array[$lang['id']] = explode($categories_delimiter,$items[$filelayout['v_categories_name_'.$lang['id']]]); 
+            } else {
             // utf-8 
-            $categories_names_array[$lang['id']] = mb_split(preg_quote($categories_delimiter), $items[$filelayout['v_categories_name_' . $lang['id']]]);
+              $categories_names_array[$lang['id']] = mb_split(preg_quote($categories_delimiter), $items[$filelayout['v_categories_name_' . $lang['id']]]);
+            }
 
             // get the number of tokens in $categories_names_array[]
             $categories_count[$lang['id']] = count($categories_names_array[$lang['id']]);
             // check category names for length violation. abort on error
             if ($categories_count[$lang['id']] > 0) { // only check $categories_name_max_len if $categories_count[$lang['id']] > 0
               for ($category_index = 0; $category_index < $categories_count[$lang['id']]; $category_index++) {
-                if (mb_strlen($categories_names_array[$lang['id']][$category_index]) > $categories_name_max_len) {
+                if ((function_exists('mb_strlen') && mb_strlen($categories_names_array[$lang['id']][$category_index]) > $categories_name_max_len) || (!function_exists('mb_strlen') && strlen($categories_names_array[$lang['id']][$category_index]))) {
                   $display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_CATEGORY_NAME_LONG, ${$chosen_key}, $categories_names_array[$lang['id']][$category_index], $categories_name_max_len);
                   $ep_error_count++;
                   continue 3; // skip to next record
@@ -1256,7 +1275,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
         // HERE ==========================>
         // BEGIN: record_artists
         if (isset($filelayout['v_artists_name'])) {
-          if (isset($v_artists_name) && ($v_artists_name != '') && (mb_strlen($v_artists_name) <= $artists_name_max_len)) {
+          if (isset($v_artists_name) && ($v_artists_name != '') && ((function_exists('mb_strlen') && mb_strlen($v_artists_name) <= $artists_name_max_len) || (!function_exists('mb_strlen') && strlen($v_artists_name) <= $artists_name_max_len))) {
             $sql = "SELECT artists_id AS artistsID FROM " . TABLE_RECORD_ARTISTS . " WHERE artists_name = :artists_name: LIMIT 1";
             $sql = $db->bindVars($sql, ':artists_name:', ep_4_curly_quotes($v_artists_name), 'string');
             $result = ep_4_query($sql);
@@ -1326,7 +1345,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
               }
             }
           } else { // $v_artists_name == '' or name length violation
-            if (mb_strlen($v_artists_name) > $artists_name_max_len) {
+            if ((function_exists('mb_strlen') && mb_strlen($v_artists_name) > $artists_name_max_len) || (!function_exists('mb_strlen') && strlen($v_artists_name) > $artists_name_max_len)) {
               $display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_ARTISTS_NAME_LONG, $v_artists_name, $artists_name_max_len);
               $ep_error_count++;
               continue;
@@ -1339,7 +1358,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
         // HERE ==========================>
         // BEGIN: record_company
         if (isset($filelayout['v_record_company_name'])) {
-          if (isset($v_record_company_name) && ($v_record_company_name != '') && (mb_strlen($v_record_company_name) <= $record_company_name_max_len)) {
+          if (isset($v_record_company_name) && ($v_record_company_name != '') && ((function_exists('mb_strlen') && mb_strlen($v_record_company_name) <= $record_company_name_max_len) || (!function_exists('mb_strlen') && strlen($v_record_company_name) <= $record_company_name_max_len))) {
             $sql = "SELECT record_company_id AS record_companyID FROM " . TABLE_RECORD_COMPANY . " WHERE record_company_name = :record_company_name: LIMIT 1";
             $sql = $db->bindVars($sql, ':record_company_name:', ep_4_curly_quotes($v_record_company_name), 'string');
             $result = ep_4_query($sql);
@@ -1395,7 +1414,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
               }
             }
           } else { // $v_record_company_name == '' or name length violation
-            if (mb_strlen($v_record_company_name) > $record_company_name_max_len) {
+            if ((function_exists('mb_strlen') && mb_strlen($v_record_company_name) > $record_company_name_max_len) || (!function_exists('mb_strlen') && strlen($v_record_company_name) > $record_company_name_max_len)) {
               $display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_RECORD_COMPANY_NAME_LONG, $v_record_company_name, $record_company_name_max_len);
               $ep_error_count++;
               continue;
@@ -1408,7 +1427,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
         // HERE ==========================>
         // BEGIN: music_genre
         if (isset($filelayout['v_music_genre_name'])) {
-          if (isset($v_music_genre_name) && ($v_music_genre_name != '') && (mb_strlen($v_music_genre_name) <= $music_genre_name_max_len)) {
+          if (isset($v_music_genre_name) && ($v_music_genre_name != '') && ((function_exists('mb_strlen') && mb_strlen($v_music_genre_name) <= $music_genre_name_max_len) || (!function_exists('mb_strlen') && strlen($v_music_genre_name) <= $music_genre_name_max_len))) {
             $sql = "SELECT music_genre_id AS music_genreID FROM " . TABLE_MUSIC_GENRE . " WHERE music_genre_name = :music_genre_name: LIMIT 1";
             $sql = $db->bindVars($sql, ':music_genre_name:', $v_music_genre_name, 'string');
             $result = ep_4_query($sql);
@@ -1425,7 +1444,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
               $v_music_genre_id = ($ep_uses_mysqli ? mysqli_insert_id($db->link) : mysql_insert_id()); // id is auto_increment
             }
           } else { // $v_music_genre_name == '' or name length violation
-            if (mb_strlen($v_music_genre_name) > $music_genre_name_max_len) {
+            if ((function_exists('mb_strlen') && mb_strlen($v_music_genre_name) > $music_genre_name_max_len) || (!function_exists('mb_strlen') && strlen($v_music_genre_name) > $music_genre_name_max_len)) {
               $display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_MUSIC_GENRE_NAME_LONG, $v_music_genre_name, $music_genre_name_max_len);
               $ep_error_count++;
               continue;
@@ -1646,6 +1665,10 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
             // CHADD - why is master_categories_id not being set on update??? //mc12345678 Because on update, the category was already set, on the first upload it was set to be the master_category_id, but now the product is merely updated to add the category(ies) to it, not to update the master_category_id which should be done on a separate transaction.
             $query = "UPDATE " . TABLE_PRODUCTS . " SET
 							products_price = :products_price:, ";
+
+            if ($chosen_key != '' && $chosen_key != 'v_products_model' && isset($filelayout['v_products_model']) && !in_array('products_model', $custom_fields)) {
+              $query .= "products_model = :products_model:, ";
+            }
             if ($ep_supported_mods['uom'] == true) { // price UOM mod
               $query .= "products_price_uom = :products_price_uom:, ";
             }
@@ -1674,7 +1697,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
             if (count($custom_fields) > 0) {
               foreach ($custom_fields as $field) {
                 $value = 'v_' . $field;
-                if ($filelayout[$value]) {
+                if (isset($filelayout[$value])) {
                   $query .= ":field: = :value:, ";
                   $query = $db->bindVars($query, ':field:', $field, 'noquotestring');
                   $query = $db->bindVars($query, ':value:', ${$value}, 'string');
@@ -1704,6 +1727,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
 							metatags_price_status			= :metatags_price_status:,
 							metatags_title_tagline_status	= :metatags_title_tagline_status:
                      WHERE (products_id = :products_id:)";
+            $query = $db->bindVars($query, ':products_model:', $v_products_model , 'string');
             $query = $db->bindVars($query, ':products_price:', $v_products_price , 'currency');
             $query = $db->bindVars($query, ':products_price_uom:', $v_products_price_uom , 'currency');
             $query = $db->bindVars($query, ':products_upc:', $v_products_upc, 'string');

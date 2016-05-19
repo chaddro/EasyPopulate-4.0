@@ -1,5 +1,5 @@
 <?php
-// $Id: easypopulate_4.php, v4.0.34a 04-02-2016 mc12345678 $
+// $Id: easypopulate_4.php, v4.0.35.ZC 04-29-2016 mc12345678 $
 
 // CSV VARIABLES - need to make this configurable in the ADMIN
 // $csv_delimiter = "\t"; // "\t" = tab AND "," = COMMA
@@ -78,7 +78,7 @@ $ep_debug_logging_all = false; // do not comment out.. make false instead
 //$sql_fail_test == true; // used to cause an sql error on new product upload - tests error handling & logs
 /* Test area end */
 
-$curver = '4.0.34.a';
+$curver = '4.0.35.ZC';
 $message = '';
 if (IS_ADMIN_FLAG) {
   $new_version_details = plugin_version_check_for_updates(2069, $curver);
@@ -88,7 +88,7 @@ if (IS_ADMIN_FLAG) {
 }
 
 // Current EP Version - Modded by mc12345678 after Chadd had done so much
-$curver              = $curver . ' - 04-02-2016' . $message;
+$curver              = $curver . ' - 04-29-2016' . $message;
 $display_output = ''; // results of import displayed after script run
 $ep_dltype = NULL;
 $ep_stack_sql_error = false; // function returns true on any 1 error, and notifies user of an error
@@ -97,7 +97,12 @@ $has_specials = false;
 $zco_notifier->notify('EP4_START');
 
 // Load language file(s) for main screen menu(s).
-require(DIR_FS_ADMIN . DIR_WS_LANGUAGES . $_SESSION['language'] . '/easypopulate_4_menus.php');
+if(file_exists(DIR_FS_ADMIN . DIR_WS_LANGUAGES . $_SESSION['language'] . '/easypopulate_4_menus.php'))
+{
+  require(DIR_FS_ADMIN . DIR_WS_LANGUAGES . $_SESSION['language'] . '/easypopulate_4_menus.php');
+} else {
+  require(DIR_FS_ADMIN . DIR_WS_LANGUAGES . 'english' . '/easypopulate_4_menus.php');
+}
 
 // all mods go in this array as 'name' => 'true' if exist. eg $ep_supported_mods['psd'] => true means it exists.
 $ep_supported_mods = array();
@@ -344,7 +349,9 @@ if (((isset($error) && !$error) || !isset($error)) && (!is_null($_POST["delete"]
     </style>
   </head>
   <body onLoad="init()">
-       <?php require(DIR_WS_INCLUDES . 'header.php'); ?>
+       <?php require(DIR_WS_INCLUDES . 'header.php'); 
+       $zco_notifier->notify('EP4_ZC155_AFTER_HEADER');
+       ?>
 
     <!-- body -->
     <div style="padding:5px">
