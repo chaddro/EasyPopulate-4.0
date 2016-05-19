@@ -218,7 +218,7 @@ while ($contents = fgetcsv($handle, 0, $csv_delimiter, $csv_enclosure)) { // whi
 						a.products_options_id = :v_products_options_id: AND
 						a.products_options_values_id = b.products_options_values_id AND
 						b.products_options_values_name = :values_name:";
-					$sql5 = $db->bindVars($sql5, ':v_products_options_id', $v_products_options_id, 'integer');
+					$sql5 = $db->bindVars($sql5, ':v_products_options_id:', $v_products_options_id, 'integer');
 					$sql5 = $db->bindVars($sql5, ':values_name:', $values_names_array[$l_id][$values_names_index], 'string');
 					$result5 = ep_4_query($sql5);
 
