@@ -1135,7 +1135,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
             // check category names for length violation. abort on error
             if ($categories_count[$lang['id']] > 0) { // only check $categories_name_max_len if $categories_count[$lang['id']] > 0
               for ($category_index = 0; $category_index < $categories_count[$lang['id']]; $category_index++) {
-                if ((function_exists('mb_strlen') && mb_strlen($categories_names_array[$lang['id']][$category_index]) > $categories_name_max_len) || (!function_exists('mb_strlen') && strlen($categories_names_array[$lang['id']][$category_index]))) {
+                if ((function_exists('mb_strlen') && mb_strlen($categories_names_array[$lang['id']][$category_index]) > $categories_name_max_len) || (!function_exists('mb_strlen') && strlen($categories_names_array[$lang['id']][$category_index]) > $categories_name_max_len)) {
                   $display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_CATEGORY_NAME_LONG, ${$chosen_key}, $categories_names_array[$lang['id']][$category_index], $categories_name_max_len);
                   $ep_error_count++;
                   continue 3; // skip to next record
