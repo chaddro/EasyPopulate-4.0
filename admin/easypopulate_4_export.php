@@ -36,7 +36,7 @@ if (isset($_POST['ep_export_type'])) {
     $ep_dltype = 'priceqty'; // Model/Price/Qty
   } elseif ($_POST['ep_export_type'] == '2') {
     $ep_dltype = 'pricebreaks'; // Model/Price/Breaks
-	}
+  }
 }
 
 // override for $ep_dltype

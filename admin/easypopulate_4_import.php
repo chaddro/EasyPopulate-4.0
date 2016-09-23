@@ -1,5 +1,5 @@
 <?php
-// $Id: easypopulate_4_import.php, v4.0.35 04-27-2016 mc12345678 $
+// $Id: easypopulate_4_import.php, v4.0.35.ZC.1 07-05-2016 mc12345678 $
 
 if (!defined('IS_ADMIN_FLAG')) {
   die('Illegal Access');
@@ -1079,11 +1079,13 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
 							VALUES (:manufacturers_name:, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
             $sql = $db->bindVars($sql, ':manufacturers_name:', ep_4_curly_quotes($v_manufacturers_name), 'string');
             $result = ep_4_query($sql);
+            
+            $v_manufacturers_id = ($ep_uses_mysqli ? mysqli_insert_id($db->link) : mysql_insert_id()); // id is auto_increment, so can use this function
+            
             if ($result) {
               zen_record_admin_activity('Inserted manufacturer ' . addslashes($v_manufacturers_name) . ' via EP4.', 'info');
             }
-            $v_manufacturers_id = ($ep_uses_mysqli ? mysqli_insert_id($db->link) : mysql_insert_id()); // id is auto_increment, so can use this function
-				
+
             // BUG FIX: TABLE_MANUFACTURERS_INFO need an entry for each installed language! chadd 11-14-2011
             // This is not a complete fix, since we are not importing manufacturers_url
             foreach ($langcode as $lang) {
@@ -1318,10 +1320,13 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
               $sql = $db->bindVars($sql, ':artists_name:', ep_4_curly_quotes($v_artists_name), 'string');
               $sql = $db->bindVars($sql, ':artists_image:', $v_artists_image, 'string');
               $result = ep_4_query($sql);
+              
+              $v_artists_id = ($ep_uses_mysqli ? mysqli_insert_id($db->link) : mysql_insert_id()); // id is auto_increment, so can use this function
+              
               if ($result) {
                 zen_record_admin_activity('Inserted record artist ' . $addslashes(ep_4_curly_quotes($v_artists_name)) . ' via EP4.', 'info');
               }
-              $v_artists_id = ($ep_uses_mysqli ? mysqli_insert_id($db->link) : mysql_insert_id()); // id is auto_increment, so can use this function
+
               foreach ($langcode as $lang) {
                 $l_id = $lang['id'];
                 // If the artists_url column for this language was not in the file,
@@ -1396,10 +1401,13 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
               $sql = $db->bindVars($sql, ':record_company_name:', ep_4_curly_quotes($v_record_company_name), 'string');
               $sql = $db->bindVars($sql, ':record_company_image:', $v_record_company_image, 'string');
               $result = ep_4_query($sql);
+              
+              $v_record_company_id = ($ep_uses_mysqli ? mysqli_insert_id($db->link) : mysql_insert_id()); // id is auto_increment, so can use this function
+              
               if ($result) {
                 zen_record_admin_activity('Inserted record company ' . addslashes(ep_4_curly_quotes($v_record_company_name)) . ' via EP4.', 'info');
               }
-              $v_record_company_id = ($ep_uses_mysqli ? mysqli_insert_id($db->link) : mysql_insert_id()); // id is auto_increment, so can use this function
+
               foreach ($langcode as $lang) {
                 $l_id = $lang['id'];
                 $sql = "INSERT INTO " . TABLE_RECORD_COMPANY_INFO . " (record_company_id, languages_id, record_company_url)
@@ -1438,10 +1446,12 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
 								VALUES (:music_genre_name:, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
               $sql = $db->bindVars($sql, ':music_genre_name:', $v_music_genre_name, 'string');
               $result = ep_4_query($sql);
+              
+              $v_music_genre_id = ($ep_uses_mysqli ? mysqli_insert_id($db->link) : mysql_insert_id()); // id is auto_increment
+              
               if ($result) {
                 zen_record_admin_activity('Inserted music genre ' . addslashes($v_music_genre_name) . ' via EP4.', 'info');
               }
-              $v_music_genre_id = ($ep_uses_mysqli ? mysqli_insert_id($db->link) : mysql_insert_id()); // id is auto_increment
             }
           } else { // $v_music_genre_name == '' or name length violation
             if ((function_exists('mb_strlen') && mb_strlen($v_music_genre_name) > $music_genre_name_max_len) || (!function_exists('mb_strlen') && strlen($v_music_genre_name) > $music_genre_name_max_len)) {

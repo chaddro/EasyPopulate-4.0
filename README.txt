@@ -11,54 +11,71 @@ Things of Importance:
 You should select the Comma as your field delimiter, and the Double Quote as your text delimiter. You may not get proper results using Excel.
 At least one specific known issue is that dates must be formatted to be like: YYYY-MM-DD HH:MM:SS (or without the time at the end)
 
-2) There are now two ways to address product that is imported.  The default remains the products_model.  When assigned the products_model must
-   be used to distinguish your products for import. Any record with a blank v_products_model entry will be skipped.
-   Also note that if you enter the same products_model twice, the latest record entry will over-write any previous entries. The exception
-   here is if you enter a different category; this will result in a linked product. "Duplicate" products with the same products_model number
-   is not supported. If you have these entries in your database, you may get unpredictable results.
+2) There are now two ways to address product that is imported.  The default as installed remains the products_model.  
+   When assigned as the primary key, the products_model must be used to distinguish your products for import. Any record with a 
+   blank v_products_model entry will be skipped. 
    
-   The second method of import is to use the products_id.  Incorrect use of the products_id can severely corrupt your database and store.
-   It is always possible to export the products_id as a user defined field even if products_model is the chosen primary field.  Use of the 
-   products_model field allows for matching of data from perhaps an outside vendor to the data in the database.  Use of the products_id will
-   allow export of the store, modification of that file and then again import of the applicable rows of data to update the modified field(s).
-   There are two settings, one with products_id only, where rows with a blank products_id will be skipped like with products_model above, the 
-   other, "", will assign a new products_id (next "available") for records that have a blank for the products_id field in the applicable row.
+   Also note that if you enter the same products_model twice, the latest (last) record
+   entry will over-write any previous entry. The exception here is if you enter a different category; this will result in a linked
+   product. This means that if two rows of data have the same v_products_model data with only a difference of the category name,
+   then the product will appear in both categories and a change to the data in one entry will appear in the other category. See the
+   previous sentence about effect of two products having the same products_model identifier.
+   "Duplicate" products with the same products_model number is not supported when using the v_products_model as the primary key. 
+   If you have these entries in your database, you may get unpredictable results when importing data.
+   
+   The second method of import is to use the products_id.  
+   
+   NOTE: Incorrect use of the products_id can severely corrupt your database and store.  
+   
+   It is always possible to export the products_id as a user defined field even if products_model is the chosen primary
+   field.  Use of the products_model field allows for matching of data from perhaps an outside vendor to the data in the database.
+   Use of the products_id will allow export of the store, modification of that file and then again import of the applicable row(s) of
+   data to update the modified field(s).  When working with the products_id as a primary key, there are two settings.  One with
+   products_id only, where rows with a blank products_id will be skipped like with a blank products_model entry described above, the 
+   other, blank_new, will assign a new products_id (next "available") for records that have a blank for the products_id field in the
+   applicable row.
 
-3) Categories are handled differently from other versions of EP. You can now import multilingual categories (Like Products Names, descriptions, etc.).
-To achieve this, each v_categories_names_1, v_categories_names_2, etc. correspond to a language installed in your system, and individual category 
-names are separated by the Carat "^" symbol ($category_delimiter) . For Example: Bar Supplies^Glass Washers^Brushes
+3) Categories are handled differently from other versions of EP. You can now import multilingual categories and related multilingual
+data (like Products Names, descriptions, etc.).
+To achieve this, each v_categories_names_1, v_categories_names_2, etc. with the number corresponding to a language installed in your system. Individual category names for a product are separated by the Carat "^" symbol ($category_delimiter). 
 
-"Bar Supplies" will be your Top level Category, with "Glass Washers" as a sub-directory, and "Brushes" as a sub-directory of "Glass Washers".
+For Example: Bar Supplies^Glass Washers^Brushes
 
-Be careful when creating your category names. "Bar Supplies" is not equal to "BAR Supplies" ... this will result in TWO category entries and 
-will effectively create a linked product entry.
+"Bar Supplies" will be your Top level Category, with "Glass Washers" as a sub-category, and "Brushes" as a sub-category of "Glass Washers" (sub-sub-category of "Bar Supplies").
 
-As of 4.0.17, your lowest defined language (by language id) is needed to be used when creating categories. In the future I'll change this to the defined default language, but that
-will take some additional work.
+Be careful when creating your category names, the routine is case sensitive. "Bar Supplies" is not equal to "BAR Supplies" ... this
+will result in TWO category entries and will effectively create a linked product entry (same product will appear in each category).
+
+As of 4.0.17, your lowest defined language (by language id) is needed to be used when creating categories. In the future I'll change
+this to the defined default language, but that will take some additional work.
 
 4) Work flow is somewhat different than other versions of EP. With EP4 you first upload your file, then click on Import. Optionally 
-you can also Split an import file if it is too large. You can set the number of records to split on in the configuration settings. Default 
-is 2000. If you have a powerful server, you can increase this significantly. Testing on a VPS with an import file of 900,000 records, I 
-broke the file into 50,000 record segments. Import of each 50,000 records took about 250 seconds.
+after the file is uploaded, you can also Split an import file if it is too large. The number of records on which to split the file 
+is controlled in the configuration settings. Default is 2000. If you have a powerful server, you can increase this significantly.
+Testing on a VPS with an import file of 900,000 records, I split the file into 50,000 record segments. Import of each 50,000 records
+took about 250 seconds.
 
-Also there is NO streaming upload or download support. Sorry if you liked this feature. A lot of effort has been put into improving the 
-code's performance and streaming the data was a real memory hog. To download your exported file, you will need to "right-click, save-as". You 
-may be able to set your browser to automatically download csv/CSV files. I'll come up with a better solution in due time. 
+Also there is NO streaming upload or download support. Sorry if you liked this feature. A lot of effort has been put into improving
+the code's performance and streaming the data was a real memory hog. To download your exported file, you will need to 
+"right-click, save-as". You may be able to set your browser to automatically download csv/CSV files when clicking on the download link. I'll come up with a better solution in due time. 
 
-5) File names act as a switch inside the script for Importing. Namely: PriceBreaks-EP, CategoryMeta-EP, Featured-EP, SBA-Stock-EP, and 
-Attrib-Basic-EP/Attrib-Detailed-EP ... these import files must have names that start with this string.
+5) File names act as a switch inside the script for Importing. This means that in order to affect the fields associated with say
+featured product, the filename must begin with the non-case sensitive name of Featured-EP.  Anything that follows that name can be
+modified to suit but must follow the file naming convention of your host and software.  The filenames requiring this unique file
+naming are namely: PriceBreaks-EP, CategoryMeta-EP, Featured-EP, SBA-Stock-EP, and Attrib-Basic-EP/Attrib-Detailed-EP ... these 
+import files must have names that start with this string.
 
-For example, attempting to upload a file to modify the featured part(s) of a product where the filename does not begin with Featured-EP (case insensitive)
-data will not update the featured specific data of the product.  Files that are not named using the identified unique filename prefix will be 
-processed as a full product with each field processed as might be expected for a full product import.
+For example, attempting to upload a file to modify the featured part(s) of a product where the filename does not begin with 
+Featured-EP (case insensitive) data will not update the featured specific data of the product.  Files that are not named using the
+identified unique filename prefix will be processed as a full product with each field processed as might be expected for a full
+product import.
 
-6) Basic Attribute Import. Please read the notes below carefully for how to use this feature which is still in development. Currently, you can 
-at Import create your products_options_name (your attribute name, ie. color) , products_options_type (checkbox, dropdown, etc) and, 
+6) Basic Attribute Import. Please read the notes below carefully about importing attributes for how to use this feature which is still in development. Currently, you can 
+at Import create your products_options_name (your attribute name, ie. color), products_options_type (checkbox, dropdown, etc), and 
 products_options_values_name (red, green, blue).
 
-LASTLY but definitely not LEAST and applicable to all of EP4: Be sure to backup your data before importing your files. Remember, this is 
-still "beta". I have made every attempt to make this a solid bug free product, but it does require more testing. I have added a lot of error 
-trapping, but I'm sure I've missed things.
+LASTLY but definitely not LEAST and applicable to all of EP4: Be sure to backup your data before importing your files. I have made every attempt to make this a solid bug free product, but occasionally new features require more testing. A lot of error 
+trapping has been added, but I'm sure I've missed things.
 
 
 IMPORTING ATTRIBUTES
@@ -69,32 +86,37 @@ the options to an associated product's model. It is possible to create
 multiple sets of Option Names / Option Values and assign to a single 
 product, say "Size" and "Color".
 
-CSV file currently has 4 column:
+The basic attributes CSV file currently has 4 columns:
 1) v_products_model
 	a) The products model number must already exist, and should be
-	   unique to the store as linked products have not been tested.
+	   unique within the store as linked products have not been tested.
 
 2) v_products_option_type
 	a) this is the type of attribute you want to create and must be
-	   a number between 0 - 5 and are defined as follows:
+	   a number between 0 - 5 (for a default store or the number associated with your added software) and are defined as follows:
 		0 - Drop Down Box
 		1 - Text Box
 		2 - Radio Button
 		3 - Check Box
 		4 - File Upload
 		5 - Read Only
+		One way to identify the number associated with an additional option type is to navigate to Catalog->Option Names. Once there,
+		note the option type assigned to the product on screen and the list of option types in the dropdown list. Now view the source of
+		the page and search for one of the option types in the list that are not otherwise used on the screen.  The found html option
+		values do/should match the list above and then show any new(er) option type values that can be used by the software.
+		
 	b) for a given option_name (say "Color"), do not change the products_option_type
 	   on subsequent entries, doing so will not give the results you want.
 	c) If you need a "Color" with both a drop down box and check box, you will need
 	   to define two unique Options Names.
 
 3) v_products_options_name_1
-	a) The option name you want to create or use
+	a) The option name you want to create or use in the language associated with the number at the end.
 	b) It is important to note that Zen Cart will allow you to create
 	   from within the admin two identical Options names, and assign 
 	   unique options values to each. For example:
 		"Color" with "red,green,blue" as one option name/value pair
-		"Color" with "cyan,magenta,yellow" as another option name/value pair
+		"Color" with "cyan,magenta,yellow" as another option name/value pair.
 	   Internally, Zen Cart knows these are two distinct options names, 
 	   but this info is not available to the user. (It would have been
 	   better to have a unique Options Name, and associated Options Display Name
@@ -104,10 +126,13 @@ CSV file currently has 4 column:
 	   the sum of the example above: { red,green,blue,cyan,magenta,yellow }.  
 	   (This is information in the database. The product will still only show 
 	   the attributes assigned.)
+	d) It is generally easier to work with and understand the attributes if there
+	   is one option name that has multiple option values associated with it, but 
+	   there is no requirement to setup your site this way.
 	   
 4) v_products_options_values_names_1
 	a) these are the values names that are assigned to the products_options_name
-	b) enter the values_names, delimited with a comma
+	b) enter the values_names, delimited with a comma for each value.
 	c) note that ONLY these products_options_values_names will be assigned 
 	   to the given products_model
 
@@ -115,25 +140,25 @@ IMPORTANT NOTE:
 When creating your CSV file, please use Open Office (it's free!). When you save 
 CSV files from Open Office (OO), it will properly encapsulate all fields for import. Excel will not 
 necessarily do this, depending on your data, and the export CSV option 
-you pick from within Excel, also dates and date formats may be revised by Excel.
+you pick from within Excel, also dates and date formats may be revised by Excel and not readable upon import.
 
 In the /examples directory is a sample input file: Attrib-Basic-EP-examples.csv
 
 The "Detailed Products Attributes" shows all attribute details assigned to a given products_model,
-with one line per option_name. So a product with a dropbox of 3 colors will result in 3 lines of
+with one line per option_name/value combination. So a product with a dropbox of 3 colors will result in 3 lines of
 data exported. As you can see, there is a significant amount of data that is associated with
 attributes.
 
-The "Stock of Items with Attributes Including SBA" option is used to support performing an inventory of stock that includes products that 
+The "Stock of Items with Attributes Including SBA" option is used to support performing an inventory of stock providing a list of products that 
   1) do not have any attributes, 
   2) have attributes but are not tracked by stock, and 
   3) are tracked by stock by attributes (have attributes and the quantity of items that have that attribute/set of attributes is maintained).  
   
-  This functionality will only show when the appropriate version of stock by attributes (SBA) is installed to the cart.  If SBA is not 
-    installed, then this functionality will not be presented and the remaining instruction regarding this feature can be skipped.
+  This functionality will only show when the appropriate version of stock by attributes (SBA) is detected to be installed to the cart.
+  If SBA is not installed, then this functionality will not be presented and the remaining instruction regarding this feature can be skipped.
 
-Below is a brief summary of the report that is generated by the Easy Populate version 4 (EP4) "Stock of Items with Attributes Including SBA" 
-  option and the method to access it. The file prefix has been set to: SBA-Stock-EP
+Below is a brief summary of the report that is generated by the Easy Populate version 4 (EP4) "Stock of Items with Attributes
+Including SBA" option and the method to access it. The file prefix has been set to: SBA-Stock-EP
 
 The two primary characteristics to consider when using EP4 are the columns (headers) across the top of the spreadsheet and the items 
   being displayed. To explain, the headers from left to right offered by this feature are:
@@ -146,8 +171,9 @@ The two primary characteristics to consider when using EP4 are the columns (head
    have the customid, otherwise, all of the columns below will move left to replace what would be in this column.
 6. Whether the item listed in the row is tracked by Stock by Attributes (SBA) using a marker if yes and leaving the row's field blank if no.
 7. A unique identifier associated with the data type of item in the row.
-8. The attributes associated with the item in the row (if any exist) put together in the format OptionName1: OptionValue1; OptionName2: 
-   OptionValue2; etc... OptionName1 may be the same as OptionName2 and still will be listed as shown.
+8. The attributes associated with the item in the row (if any exist) put together in the format 
+OptionName1: OptionValue1; OptionName2:  OptionValue2; etc... 
+OptionName1 may be the same as OptionName2 and still will be listed as shown with a different OptionValueX at each entry.
 9. The quantity of the item in the row.
 
 On upload/import, the only field that will change in the Zen Cart database with this report is the quantity associated with the row's data.
@@ -156,7 +182,7 @@ Item 7 of the list was abbreviated to simplify the explanation. For an entry dis
   product, the value in that column is the products_id taken from the products table of the database. For a row that contains SBA 
   information, the value is the stock_id taken from the products_with_attributes_stock table. These values are provided to support 
   import of the data and they should not be revised for normal operation. The position of the column was chosen to not place it adjacent 
-  to a field that is likely to be changed by the user. (Technically for EP4 to import this new file, the only two columns important for the 
+  to a field that is likely to be changed by the user. (Technically for EP4 to import this new file, the only columns important for the 
   import are the ones located in items 6, 7 and 9, all of the other columns were provided to help the individual performing the stock 
   inventory identify the product(s).) Ideally, column 7 would not exist and instead the program would determine the appropriate value for 
   that column based on other information in the table so that the spreadsheet would not be dependent on the current database but could be 
@@ -175,7 +201,7 @@ Product has no attributes:
 | Attribute(s)              | Quantity
 |                           | 70
 
-Product has two attributes:
+Product has two attributes (2 option values, but one option name):
 | Attribute(s)              | Quantity
 | Color: green;Color: blue  | 70
 
