@@ -252,7 +252,7 @@ if (($collation == 'utf8') && ((substr($project, 0, 5) == "1.3.8") || (substr($p
 // default langauage should not be important since all installed languages are used $langcode[]
 // and we should iterate through that array (even if only 1 stored value)
 // $epdlanguage_id is used only in categories generation code since the products import code doesn't support multi-language categories
-/* @var $epdlanguage_query type array */
+/* @var $epdlanguage_query array */
 //$epdlanguage_query = $db->Execute("SELECT languages_id, name FROM ".TABLE_LANGUAGES." WHERE code = '".DEFAULT_LANGUAGE."'");
 if (!defined(DEFAULT_LANGUAGE)) {
   $epdlanguage_query = ep_4_query("SELECT languages_id, code FROM " . TABLE_LANGUAGES . " ORDER BY languages_id LIMIT 1");
