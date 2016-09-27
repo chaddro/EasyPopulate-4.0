@@ -463,6 +463,15 @@ if (((isset($error) && !$error) || !isset($error)) && (!is_null($_POST["delete"]
 
         <div align = "left">
              <?php
+             $export_type_array = array();
+             $export_type_array = array(array("id" => '0', 'text' => EASYPOPULATE_4_DD_DOWNLOAD_DEFAULT),
+               array("id" => '0', 'text' => EASYPOPULATE_4_DD_DOWNLOAD_COMPLETE),
+               array("id" => '1', 'text' => EASYPOPULATE_4_DD_DOWNLOAD_QUANTITY),
+               array("id" => '2', 'text' => EASYPOPULATE_4_DD_DOWNLOAD_BREAKS));
+
+             $category_filter_array = array();
+             $category_filter_array = array_merge(array(0 => array("id" => '', 'text' => EASYPOPULATE_4_DD_FILTER_CATEGORIES)), zen_get_category_tree());
+
              $manufacturers_array = array();
              $manufacturers_array[] = array("id" => '', 'text' => EASYPOPULATE_4_DISPLAY_MANUFACTURERS);
              if ($ep_uses_mysqli) {
@@ -478,10 +487,6 @@ if (((isset($error) && !$error) || !isset($error)) && (!is_null($_POST["delete"]
                }
              }
              $status_array = array(array("id" => '1', 'text' => EASYPOPULATE_4_DD_STATUS_DEFAULT ), array("id" => '1', 'text' => EASYPOPULATE_4_DD_STATUS_ACTIVE), array("id" => '0', 'text' => EASYPOPULATE_4_DD_STATUS_INACTIVE), array("id" => '3', 'text' => EASYPOPULATE_4_DD_STATUS_ALL));
-             $export_type_array = array(array("id" => '0', 'text' => EASYPOPULATE_4_DD_DOWNLOAD_DEFAULT),
-               array("id" => '0', 'text' => EASYPOPULATE_4_DD_DOWNLOAD_COMPLETE),
-               array("id" => '1', 'text' => EASYPOPULATE_4_DD_DOWNLOAD_QUANTITY),
-               array("id" => '2', 'text' => EASYPOPULATE_4_DD_DOWNLOAD_BREAKS));
 
              echo "<b>" . EASYPOPULATE_4_DISPLAY_FILTERABLE_EXPORTS . "</b><br />";
 
