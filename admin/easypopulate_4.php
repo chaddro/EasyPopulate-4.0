@@ -546,12 +546,10 @@ if (((isset($error) && !$error) || !isset($error)) && (!is_null($_POST["delete"]
         <?php } /* End SBA1 Addition */ 
 		$zco_notifier->notify('EP4_LINK_SELECTION_END');
 		?>
-
         <br><?php echo EASYPOPULATE_4_DISPLAY_TITLE_EXPORT_ONLY; ?><br />
         <a href="<?php echo zen_href_link(FILENAME_EASYPOPULATE_4, 'export=options', $request_type); ?>"><?php echo EASYPOPULATE_4_DISPLAY_EXPORT_OPTION_NAMES; ?></a><br />
         <a href="<?php echo zen_href_link(FILENAME_EASYPOPULATE_4, 'export=values', $request_type); ?>"><?php echo EASYPOPULATE_4_DISPLAY_EXPORT_OPTION_VALUES; ?></a><br />
         <a href="<?php echo zen_href_link(FILENAME_EASYPOPULATE_4, 'export=optionvalues', $request_type); ?>"><?php echo EASYPOPULATE_4_DISPLAY_EXPORT_OPTION_NAMES_TO_VALUES; ?></a><br />
-
         <?php
 // List uploaded files in multifile mode
 // Table header

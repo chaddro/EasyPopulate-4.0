@@ -24,6 +24,10 @@ function ep_4_curly_quotes($curly_text) {
 		$clean_text = str_replace("\x92", "&rsquo;", $clean_text);
 		//echo '<br>option 2 - html <br>';
 	}
+  
+  unset($ep_curly_quotes);
+  unset($ep_char_92);
+  
 	return $clean_text;
 }
 
@@ -38,10 +42,20 @@ function ep4_zen_field_length($tbl, $fld) {
 	$result = ($ep_uses_mysqli ? mysqli_query("SELECT $fld FROM $tbl") : mysql_query("SELECT $fld FROM $tbl"));
 	if (!$result) {
     	echo 'Could not run query: ' . ($ep_uses_mysqli ? mysqli_error($db->link) : mysql_error());
+      unset($project);
+      unset($ep_uses_mysqli);
+      unset($meta);
+      unset($result);
+      
     	exit;
 	}
 	$length = ($ep_uses_mysqli ? mysqli_field_len($result, 0) : mysql_field_len($result, 0));
-    return $length;
+  unset($project);
+  unset($ep_uses_mysqli);
+  unset($meta);
+  unset($result);
+  
+  return $length;
 }
 
 function ep_4_get_languages() {
@@ -58,6 +72,13 @@ function ep_4_get_languages() {
 			'code' => $ep_languages['code']
 			);
 	}
+  unset($project);
+  unset($ep_uses_mysqli);
+  unset($langcode);
+  unset($languages_query);
+  unset($i);
+  unset($ep_languages);
+  
 	return $ep_languages_array;
 }
 
@@ -75,6 +96,9 @@ function ep_4_SBA1Exists () {
 		// Check if database table is present in the database before attempting to access it.  If not present, then no need to
 		//  continue processing.
 		if ($tablePresent == false) {
+      unset($project);
+      unset($ep_uses_mysqli);
+      unset($tablePresent);
 			return false;
 		}
 		//Now that have identified that the table (applicable to mc12345678's store, has been identified as in existence, now need to look at the setup of the table (Number of columns and if each column identified below is in the table, or conversely if the table's column matches the list below.
@@ -96,15 +120,27 @@ function ep_4_SBA1Exists () {
 					case 'sort':
 						break;
 					default:
+            unset($project);
+            unset($ep_uses_mysqli);
+            unset($tablePresent);
+            unset($colsarray);
+            unset($numCols);
+            unset($row);
 						return false;
 						break;
 						
 				}
 			}
+      unset($project);
+      unset($ep_uses_mysqli);
+      unset($tablePresent);
+      unset($colsarray);
+      unset($numCols);
+      unset($row);
 			return '1';
 		} elseif ($numCols >= 6) {
       $desired = 0;
-      $addToList = array();
+//      $addToList = array();
 			while ($row = ($ep_uses_mysqli ? mysqli_fetch_array($colsarray) : mysql_fetch_array($colsarray))){
 				switch ($row['Field']) {
 					case 'stock_id':
@@ -126,19 +162,36 @@ function ep_4_SBA1Exists () {
             $desired++;
             break;
           default:
-            $addToList = $row['Field'];
+//            $addToList = $row['Field'];
             break;
 				}
       }
+      unset($project);
+      unset($ep_uses_mysqli);
+      unset($tablePresent);
+      unset($colsarray);
+      unset($numCols);
+      unset($row);
       if ($desired >= 6) {
+        unset($desired);
         return '2';
       } else {
+        unset($desired);
         return false;
       }
 		} else {
+      unset($project);
+      unset($ep_uses_mysqli);
+      unset($tablePresent);
+      unset($colsarray);
+      unset($numCols);
+      unset($row);
       return false;
     }
 	} else {
+    unset($project);
+    unset($ep_uses_mysqli);
+
 		return false;
 	}
 }
@@ -176,21 +229,37 @@ function ep_4_CEONURIExists () {
 					case 'date_added':
 						break;
 					default:
+            unset($project);
+            unset($ep_uses_mysqli);
+            unset($colsarray);
+            unset($numCols);
+            unset($row);
 						return false;
 						break;
 						
 				}
 			}
       
+      unset($project);
+      unset($ep_uses_mysqli);
+      unset($colsarray);
+      unset($numCols);
+      unset($row);
       if (file_exists(DIR_FS_CATALOG . DIR_WS_CLASSES . 'class.CeonURIMappingAdmin.php') ) {
         return true;
       } else {
         return false;
       }
 		} else {
+      unset($project);
+      unset($ep_uses_mysqli);
+      unset($colsarray);
+      unset($numCols);
 			return false;
 		}
 	} else {
+    unset($project);
+    unset($ep_uses_mysqli);
 		return false;
 	}
 }
@@ -210,6 +279,10 @@ if (!function_exists(zen_get_sub_categories)) {
 				zen_get_sub_categories($categories, $sub_categories['categories_id']);
 			}
 		}
+    unset($project);
+    unset($ep_uses_mysqli);
+    unset($sub_categories_query);
+    unset($sub_categories);
 	}
 }
 
@@ -336,6 +409,11 @@ function ep_4_get_tax_class_rate($tax_class_id) {
 			$tax_multiplier += $tax['tax_rate'];
 		}
 	}
+  unset($project);
+  unset($ep_uses_mysqli);
+  unset($tax_query);
+  unset($tax);
+
 	return $tax_multiplier;
 }
 
@@ -348,7 +426,13 @@ function ep_4_get_tax_title_class_id($tax_class_title) {
 		" WHERE tax_class_title = '".zen_db_input($tax_class_title)."'"));
 	$tax_class_array = ($ep_uses_mysqli ? mysqli_fetch_array($classes_query) : mysql_fetch_array($classes_query));
 	$tax_class_id = $tax_class_array['tax_class_id'];
-	return $tax_class_id ;
+  
+  unset($project);
+  unset($ep_uses_mysqli);
+  unset($classes_query);
+  unset($tax_class_array);
+  
+	return $tax_class_id;
 }
 
 function print_el_4($item2) {
@@ -368,6 +452,8 @@ function smart_tags_4($string,$tags,$crsub,$doit) {
 			$tag = '/('.$tag.')/';
 			$string = preg_replace($tag,$new,$string);
 		}
+    unset($tag);
+    unset($new);
 	}
 	// we remove problem characters here anyway as they are not wanted..
 	$string = preg_replace("/(\r\n|\n|\r)/", "", $string);
@@ -376,7 +462,6 @@ function smart_tags_4($string,$tags,$crsub,$doit) {
 }
 
 function ep_4_check_table_column($table_name,$column_name) {
-	global $db;
 	$project = PROJECT_VERSION_MAJOR.'.'.PROJECT_VERSION_MINOR;
 	$ep_uses_mysqli = ((PROJECT_VERSION_MAJOR > '1' || PROJECT_VERSION_MINOR >= '5.3') ? true : false);
 	$sql = "SHOW COLUMNS FROM ".$table_name;
@@ -384,9 +469,24 @@ function ep_4_check_table_column($table_name,$column_name) {
 	while ($row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array($result))) {
 		$column = $row['Field'];
 		if ($column == $column_name) {
+      unset($project);
+      unset($ep_uses_mysqli);
+      unset($sql);
+      unset($result);
+      unset($column);
+      unset($row);
+      
 			return true;
 		}
 	}
+  
+  unset($project);
+  unset($ep_uses_mysqli);
+  unset($sql);
+  unset($result);
+  unset($column);
+  unset($row);
+  
 	return false;
 }
 
@@ -425,6 +525,11 @@ function ep_4_remove_product($product_model) {
 		zen_remove_product($products->fields['products_id']);
 		$products->MoveNext();
 	}
+  unset($project);
+  unset($ep_uses_mysqli);
+  unset($sql);
+  unset($products);
+  unset($string);
 	return;
 }
 
@@ -443,6 +548,9 @@ function ep_4_rmv_chars($filelayout, $active_row, $csv_delimiter = "^") {
   // Remove trailing tab, then append the end-of-line
   $dataRow = rtrim($dataRow, $csv_delimiter) . "\n";
 
+  unset($problem_chars);
+  unset($thetext);
+  
   return $dataRow;
 }
 
@@ -503,6 +611,9 @@ function write_debug_log_4($string) {
 	$fp = fopen($logFile,'ab');
 	fwrite($fp, $string);
 	fclose($fp);
+  unset($logFile);
+  unset($fp);
+  
 	return;
 }
 
@@ -521,6 +632,10 @@ function ep_4_query($query) {
 		$string = ($ep_uses_mysqli ? "MySQLi" : "MySQL") . " PASSED\nWhen executing:\n$query\n";
 		write_debug_log_4($string);
 	}
+  unset($project);
+  unset($ep_uses_mysqli);
+  unset($string);
+
 	return $result;
 }
 
@@ -708,6 +823,8 @@ function install_easypopulate_4() {
 		// i should do something here!
 	} 
     $zco_notifier->notify('EP4_EXTRA_FUNCTIONS_INSTALL_END', array('group_id' => $group_id));
+    unset($project);
+    unset($group_id);
 }
 
 function remove_easypopulate_4() {
@@ -734,6 +851,11 @@ function remove_easypopulate_4() {
 		}
 	} else { // unsupported version 
 	} 
+  unset($project);
+  unset($ep_uses_mysqli);
+  unset($sql);
+  unset($result);
+
 }
 
 function ep_4_chmod_check($tempdir) {
@@ -753,7 +875,7 @@ function ep_4_chmod_check($tempdir) {
 }
 
 function ep4_directory_check($ep_debug_log_path) {
-  global $db, $parameters;
+  global $db;
   
   if (EP4_ADMIN_TEMP_DIRECTORY !== 'true') {
 
@@ -763,7 +885,7 @@ function ep4_directory_check($ep_debug_log_path) {
       $db->Execute('UPDATE ' . TABLE_CONFIGURATION . ' SET configuration_value = \'true\' where configuration_key = \'EP4_ADMIN_TEMP_DIRECTORY\'', false, false, 0, true);
       
       $db->Execute('UPDATE ' . TABLE_CONFIGURATION . ' SET configuration_value = \'' . $temp_rem . '\' WHERE configuration_key = \'EASYPOPULATE_4_CONFIG_TEMP_DIR\'', false, false, 0, true);
-  
+      unset($temp_rem);
       // need a message to  be displayed...
 //      zen_redirect(zen_href_link(FILENAME_CONFIGURATION /*, $parameters*/));
       // zen_redirect(zen_href_link(FILENAME_EASYPOPULATE_4));
@@ -776,9 +898,9 @@ function ep4_directory_check($ep_debug_log_path) {
 
 
 function ep4_directory_choice_check($ep_debug_log_path) {
-  global $db, $parameters;
+  global $db;
   
-  $temp_dir = $db->Execute('SELECT configuration_value FROM ' . TABLE_CONFIGURATION . ' where configuration_key = \'EP4_ADMIN_TEMP_DIRECTORY\'', false, false, 0, true);
+  //$temp_dir = $db->Execute('SELECT configuration_value FROM ' . TABLE_CONFIGURATION . ' where configuration_key = \'EP4_ADMIN_TEMP_DIRECTORY\'', false, false, 0, true);
 
   if (EP4_ADMIN_TEMP_DIRECTORY !== 'true') {
 
@@ -788,7 +910,7 @@ function ep4_directory_choice_check($ep_debug_log_path) {
       $db->Execute('UPDATE ' . TABLE_CONFIGURATION . ' SET configuration_value = \'true\' where configuration_key = \'EP4_ADMIN_TEMP_DIRECTORY\'', false, false, 0, true);
       
       $db->Execute('UPDATE ' . TABLE_CONFIGURATION . ' SET configuration_value = \'' . $temp_rem . '\' WHERE configuration_key = \'EASYPOPULATE_4_CONFIG_TEMP_DIR\'', false, false, 0, true);
-  
+      unset($temp_rem);
       // need a message to  be displayed...
 //      zen_redirect(zen_href_link(FILENAME_CONFIGURATION /*, $parameters*/));
       // zen_redirect(zen_href_link(FILENAME_EASYPOPULATE_4));

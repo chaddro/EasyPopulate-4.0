@@ -26,11 +26,11 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
   
   require(DIR_FS_ADMIN . DIR_WS_MODULES . 'easypopulate_4_default_these.php');
 
-  if (count($custom_fields) > 0) {
+  /*if (count($custom_fields) > 0) {
     foreach ($custom_fields as $field) {
       $filelayout[] = 'v_' . $field;
     }
-  }
+  }*/
 
   $file_location = (EP4_ADMIN_TEMP_DIRECTORY !== 'true' ? /* Storeside */ DIR_FS_CATALOG : /* Admin side */ DIR_FS_ADMIN) . $tempdir . $file['name'];
   // Error Checking
@@ -244,7 +244,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
           }
 
           // Create variables and assign default values for each language products name, description, url and optional short description
-          foreach ($langcode as $key => $lang) {
+          foreach ($langcode as $lang) {
             $sql2 = 'SELECT * FROM ' . TABLE_PRODUCTS_DESCRIPTION . ' WHERE products_id = :products_id: AND language_id = :language_id:';
             $sql2 = $db->bindVars($sql2, ':products_id:', $row['v_products_id'], 'integer');
             $sql2 = $db->bindVars($sql2, ':language_id:', $lang['id'], 'integer');
@@ -329,7 +329,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
           if (zen_not_null($items[$filelayout[$chosen_key]])) { // must have products_model
             // new products must have a categories_name to be added to the store.
             $categories_name_exists = false; // assume no column defined
-            foreach ($langcode as $key => $lang) {
+            foreach ($langcode as $lang) {
               // test column headers for each language
               if (zen_not_null(trim($items[$filelayout['v_categories_name_' . $lang['id']]]))) { // import column found
                 $categories_name_exists = true;
@@ -541,7 +541,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
 	
         // BEGIN: CATEGORIES2 ===============================================================================================	
         $categories_name_exists = false; // assume no column defined
-        foreach ($langcode as $key => $lang) {
+        foreach ($langcode as $lang) {
           // test column headers for each language
           if (zen_not_null(trim($items[$filelayout['v_categories_name_' . $lang['id']]]))) { // import column found
             $categories_name_exists = true; // at least one language column defined
@@ -552,7 +552,11 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
           // $categories_delimiter = "\x5e"; // add this to configuration variables
           $categories_delimiter = $category_delimiter; // add this to configuration variables
           // get all defined categories
-          foreach ($langcode as $key => $lang) {
+          
+          $categories_names_array = array();
+          $categories_count = array();
+          
+          foreach ($langcode as $lang) {
             if (!function_exists('mb_split')) {
             // iso-8859-1
               $categories_names_array[$lang['id']] = explode($categories_delimiter,$items[$filelayout['v_categories_name_'.$lang['id']]]); 
@@ -578,7 +582,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
           // need check on $categories_count to ensure all counts are equal
           if (count($categories_count) > 1) { // check elements 
             $categories_count_value = $categories_count[$langcode[1]['id']];
-            foreach ($langcode as $key => $lang) {
+            foreach ($langcode as $lang) {
               $v_categories_name_check = 'v_categories_name_' . $lang['id'];
               if (isset(${$v_categories_name_check})) {
                 if (($categories_count_value != $categories_count[$lang['id']]) && ($categories_count[$lang['id']] != 0)) {
@@ -599,6 +603,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
           // start from the highest possible category and work our way down from the parent
           $v_categories_id = 0;
           $theparent_id = 0; // 0 is top level parent
+          $thiscategoryid = 0;
 //category_index, 					// $categories_delimiter = "^"; // add this to configuration variables
           for ($category_index = 0; $category_index < $categories_count[$lid]; $category_index++) {
             $thiscategoryname = ep_4_curly_quotes($categories_names_array[$lid][$category_index]); // category name - 5-3-2012 added curly quote fix
@@ -619,11 +624,11 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
             // if $row is not null, we found entry, so retrive info
             if ($row != '') { // category exists
               $parent_category_id = $theparent_id;
-              foreach ($row as $item) {
-                $thiscategoryid = $item; // array of data
+              /*foreach ($row as $item)*/ {
+                $thiscategoryid = end($row)/*$item*/; // array of data
                 $current_category_id = $thiscategoryid;
               }
-              foreach ($langcode as $key => $lang2) {
+              foreach ($langcode as $lang2) {
                 $v_categories_name_check = 'v_categories_name_' . $lang2['id'];
                 if (isset(${$v_categories_name_check})) { // update
                   $cat_lang_id = $lang2['id'];
@@ -669,7 +674,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
               // categories_name = '".addslashes($thiscategoryname)."'";
               // else, set to that langauges category entry:
               // categories_name = '".addslashes($categories_names_array[$lid][$category_index])."'";
-              foreach ($langcode as $key => $lang2) {
+              foreach ($langcode as $lang2) {
                 $v_categories_name_check = 'v_categories_name_' . $lang2['id'];
                 if (isset(${$v_categories_name_check})) { // update	
                   $cat_lang_id = $lang2['id'];
