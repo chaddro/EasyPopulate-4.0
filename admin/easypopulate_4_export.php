@@ -788,7 +788,7 @@ while ($row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array
 
 if ($ep_dltype == 'attrib_basic') { // must write last record
   // Clean the texts that could break CSV file formatting
-  $datarow = ep_4_rmv_chars($filelayout, $active_row, $csv_delimiter);
+  $dataRow = ep_4_rmv_chars($filelayout, $active_row, $csv_delimiter);
   
   fwrite($fp, $dataRow); // write 1 line of csv data (this can be slow...)
   $ep_export_count++;

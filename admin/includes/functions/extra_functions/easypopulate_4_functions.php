@@ -264,7 +264,7 @@ function ep_4_CEONURIExists () {
 	}
 }
 
-if (!function_exists(zen_get_sub_categories)) {
+if (!function_exists('zen_get_sub_categories')) {
 	function zen_get_sub_categories(&$categories, $categories_id) {
 		global $db;
 		$project = PROJECT_VERSION_MAJOR.'.'.PROJECT_VERSION_MINOR;
@@ -515,11 +515,11 @@ function ep_4_remove_product($product_model) {
 		$ep_stack_sql_error = true;
 		if ($ep_debug_logging == true) {
 			$string = "MySQL error ".($ep_uses_mysqli ? mysqli_errno($db->link) : mysql_errno()).": ".($ep_uses_mysqli ? mysqli_error($db->link) : mysql_error())."\nWhen executing:\n$sql\n";
-			write_debug_log($string);
+			write_debug_log_4($string);
 		}
 	} elseif ($ep_debug_logging_all == true) {
 		$string = "MySQL PASSED\nWhen executing:\n$sql\n";
-		write_debug_log($string);
+		write_debug_log_4($string);
 	}
 	while (!$products->EOF) {
 		zen_remove_product($products->fields['products_id']);
@@ -625,7 +625,7 @@ function ep_4_query($query) {
 	if (($ep_uses_mysqli ? mysqli_errno($db->link) : mysql_errno())) {
 		$ep_stack_sql_error = true;
 		if ($ep_debug_logging == true) {
-			$string = ($ep_uses_mysqli ? "MySQLi" : "MySQL") . " error ".($ep_uses_mysqli ? mysqli_errno($db->link) : mysql_errno() ) . ": ".($ep_uses_mysqli ? mysqli_error($db->link) : $mysql_error())."\nWhen executing:\n$query\n";
+			$string = ($ep_uses_mysqli ? "MySQLi" : "MySQL") . " error ".($ep_uses_mysqli ? mysqli_errno($db->link) : mysql_errno() ) . ": ".($ep_uses_mysqli ? mysqli_error($db->link) : mysql_error())."\nWhen executing:\n$query\n";
 			write_debug_log_4($string);
 		}
 	} elseif ($ep_debug_logging_all == true) {

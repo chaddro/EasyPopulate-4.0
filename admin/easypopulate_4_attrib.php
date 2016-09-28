@@ -288,7 +288,7 @@ while ($contents = fgetcsv($handle, 0, $csv_delimiter, $csv_enclosure)) { // whi
 						$sql7 = $db->bindVars($sql7, ':values_names_index:', $values_names_index, 'integer');
 						$sql7 = $db->bindVars($sql7, ':v_products_id:', $v_products_id, 'integer');
 						$sql7 = $db->bindVars($sql7, ':v_products_options_id:', $v_products_options_id, 'integer');
-						$sql7 = $db->bindVars($sql7, ':a_products_options_values_id:', $a_productsion_options_values_id, 'integer');
+						$sql7 = $db->bindVars($sql7, ':a_products_options_values_id:', $a_products_options_values_id, 'integer');
 						$errorcheck = ep_4_query($sql7);
 						$table_products_attributes_update = 1;
 					}
