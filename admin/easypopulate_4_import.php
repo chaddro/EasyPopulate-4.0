@@ -512,7 +512,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
             $v_manufacturers_id = ($ep_uses_mysqli ? mysqli_insert_id($db->link) : mysql_insert_id()); // id is auto_increment, so can use this function
             
             if ($result) {
-              zen_record_admin_activity('Inserted manufacturer ' . addslashes($v_manufacturers_name) . ' via EP4.', 'info');
+              zen_record_admin_activity('Inserted manufacturer ' . zen_db_input($v_manufacturers_name) . ' via EP4.', 'info');
             }
 
             // BUG FIX: TABLE_MANUFACTURERS_INFO need an entry for each installed language! chadd 11-14-2011
@@ -671,9 +671,9 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
               }
               // TABLE_CATEGORIES_DESCRIPTION has an entry for EACH installed languag
               // Check for multiple categories language. If a column is not defined, default to the main language:
-              // categories_name = '".addslashes($thiscategoryname)."'";
+              // categories_name = '".zen_db_input($thiscategoryname)."'";
               // else, set to that langauges category entry:
-              // categories_name = '".addslashes($categories_names_array[$lid][$category_index])."'";
+              // categories_name = '".zen_db_input($categories_names_array[$lid][$category_index])."'";
               foreach ($langcode as $lang2) {
                 $v_categories_name_check = 'v_categories_name_' . $lang2['id'];
                 if (isset(${$v_categories_name_check})) { // update	
@@ -758,7 +758,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
               $v_artists_id = ($ep_uses_mysqli ? mysqli_insert_id($db->link) : mysql_insert_id()); // id is auto_increment, so can use this function
               
               if ($result) {
-                zen_record_admin_activity('Inserted record artist ' . $addslashes(ep_4_curly_quotes($v_artists_name)) . ' via EP4.', 'info');
+                zen_record_admin_activity('Inserted record artist ' . zen_db_input(ep_4_curly_quotes($v_artists_name)) . ' via EP4.', 'info');
               }
 
               foreach ($langcode as $lang) {
@@ -839,7 +839,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
               $v_record_company_id = ($ep_uses_mysqli ? mysqli_insert_id($db->link) : mysql_insert_id()); // id is auto_increment, so can use this function
               
               if ($result) {
-                zen_record_admin_activity('Inserted record company ' . addslashes(ep_4_curly_quotes($v_record_company_name)) . ' via EP4.', 'info');
+                zen_record_admin_activity('Inserted record company ' . zen_db_input(ep_4_curly_quotes($v_record_company_name)) . ' via EP4.', 'info');
               }
 
               foreach ($langcode as $lang) {
@@ -884,7 +884,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
               $v_music_genre_id = ($ep_uses_mysqli ? mysqli_insert_id($db->link) : mysql_insert_id()); // id is auto_increment
               
               if ($result) {
-                zen_record_admin_activity('Inserted music genre ' . addslashes($v_music_genre_name) . ' via EP4.', 'info');
+                zen_record_admin_activity('Inserted music genre ' . zen_db_input($v_music_genre_name) . ' via EP4.', 'info');
               }
             }
           } else { // $v_music_genre_name == '' or name length violation
