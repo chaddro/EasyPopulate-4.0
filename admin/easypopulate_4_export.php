@@ -247,6 +247,9 @@ while ($row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array
       $active_language_id = $row['v_language_id'];
 
       $active_row['v_products_model'] = $row['v_products_model'];
+      if ($chosen_key != 'v_products_model' && zen_not_null($chosen_key)) {
+          $active_row[$chosen_key] = $row[$chosen_key];
+      }
       $active_row['v_products_options_type'] = $row['v_products_options_type'];
 
       $l_id = $row['v_language_id'];
