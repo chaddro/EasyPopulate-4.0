@@ -1688,7 +1688,7 @@ $result_incategory = ($ep_uses_mysqli ? mysqli_fetch_array($result_incategory) :
           zen_update_products_price_sorter($v_products_id);
         } else {
           // this record is missing the product_model
-          $display_output .= EASYPOPULATE_4_DISPLAY_RESULT_NO_MODEL;
+          $display_output .= sprintf(EASYPOPULATE_4_DISPLAY_RESULT_NO_MODEL, $chosen_key);
           foreach ($items as $col => $summary) {
             if ($col == $filelayout[$chosen_key]){
               continue;
