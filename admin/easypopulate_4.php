@@ -491,7 +491,7 @@ if (((isset($error) && !$error) || !isset($error)) && (!is_null($_POST["delete"]
              echo "<b>" . EASYPOPULATE_4_DISPLAY_FILTERABLE_EXPORTS . "</b><br />";
 
              echo zen_draw_pull_down_menu('ep_export_type', $export_type_array) . ' ';
-             echo ' ' . zen_draw_pull_down_menu('ep_category_filter', array_merge(array(0 => array("id" => '', 'text' => EASYPOPULATE_4_DD_FILTER_CATEGORIES)), zen_get_category_tree())) . ' ';
+             echo ' ' . zen_draw_pull_down_menu('ep_category_filter', $category_filter_array) . ' ';
              echo ' ' . zen_draw_pull_down_menu('ep_manufacturer_filter', $manufacturers_array) . ' ';
              echo ' ' . zen_draw_pull_down_menu('ep_status_filter', $status_array) . ' ';
              echo zen_draw_input_field('export', EASYPOPULATE_4_DD_FILTER_EXPORT, ' style="padding: 0px"', false, 'submit');
