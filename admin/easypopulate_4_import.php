@@ -676,23 +676,21 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
               // categories_name = '".zen_db_input($categories_names_array[$lid][$category_index])."'";
               foreach ($langcode as $lang2) {
                 $v_categories_name_check = 'v_categories_name_' . $lang2['id'];
-                if (isset(${$v_categories_name_check})) { // update	
+    
                   $cat_lang_id = $lang2['id'];
                   $sql = "INSERT INTO " . TABLE_CATEGORIES_DESCRIPTION . " SET 
 										categories_id   = :categories_id:,
 										language_id     = :language_id:,
 										categories_name = :categories_name:";
-                  $sql = $db->bindVars($sql, ':categories_name:', ep_4_curly_quotes($categories_names_array[$cat_lang_id][$category_index]), 'string');
-                } else { // column is missing, so default to defined column's value
-                  $cat_lang_id = $lang2['id'];
-                  $sql = "INSERT INTO " . TABLE_CATEGORIES_DESCRIPTION . " SET 
-										categories_id   = :categories_id:,
-										language_id     = :language_id:,
-										categories_name = :categories_name:";
-                  $sql = $db->bindVars($sql, ':categories_name:', ep_4_curly_quotes($thiscategoryname), 'string');
-                }
                 $sql = $db->bindVars($sql, ':categories_id:', $max_category_id, 'integer');
                 $sql = $db->bindVars($sql, ':language_id:', $cat_lang_id, 'integer');
+
+                if (isset(${$v_categories_name_check})) { // update
+                  $sql = $db->bindVars($sql, ':categories_name:', ep_4_curly_quotes($categories_names_array[$cat_lang_id][$category_index]), 'string');
+                } else { // column is missing, so default to defined column's value
+                  $sql = $db->bindVars($sql, ':categories_name:', ep_4_curly_quotes($thiscategoryname), 'string');
+                }
+
                 $result = ep_4_query($sql);
                 if ($result) {
                   zen_record_admin_activity('Inserted category description ' . (int) $max_category_id . ' via EP4.', 'info');
