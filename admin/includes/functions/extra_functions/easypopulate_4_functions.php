@@ -39,7 +39,7 @@ function ep4_zen_field_length($tbl, $fld) {
 	$ep_uses_mysqli = ((PROJECT_VERSION_MAJOR > '1' || PROJECT_VERSION_MINOR >= '5.3') ? true : false);
 
 	$meta = array();
-	$result = ($ep_uses_mysqli ? mysqli_query("SELECT $fld FROM $tbl") : mysql_query("SELECT $fld FROM $tbl"));
+	$result = ($ep_uses_mysqli ? mysqli_query($db->link, "SELECT $fld FROM $tbl") : mysql_query("SELECT $fld FROM $tbl"));
 	if (!$result) {
     	echo 'Could not run query: ' . ($ep_uses_mysqli ? mysqli_error($db->link) : mysql_error());
       unset($project);
@@ -49,7 +49,7 @@ function ep4_zen_field_length($tbl, $fld) {
       
     	exit;
 	}
-	$length = ($ep_uses_mysqli ? mysqli_field_len($result, 0) : mysql_field_len($result, 0));
+	$length = ($ep_uses_mysqli ? mysqli_fetch_field_direct($result, 0)->length : mysql_field_len($result, 0));
   unset($project);
   unset($ep_uses_mysqli);
   unset($meta);
@@ -59,7 +59,8 @@ function ep4_zen_field_length($tbl, $fld) {
 }
 
 function ep_4_get_languages() {
-	$project = PROJECT_VERSION_MAJOR.'.'.PROJECT_VERSION_MINOR;
+    $ep_languages_array = array();
+    $project = PROJECT_VERSION_MAJOR.'.'.PROJECT_VERSION_MINOR;
 	$ep_uses_mysqli = ((PROJECT_VERSION_MAJOR > '1' || PROJECT_VERSION_MINOR >= '5.3') ? true : false);
 	$langcode = array();
 	$languages_query = ep_4_query("SELECT languages_id, name, code FROM ".TABLE_LANGUAGES." ORDER BY sort_order");
