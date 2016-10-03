@@ -112,7 +112,7 @@ define('EASYPOPULATE_4_DISPLAY_DB_FLD_LGTH', 'Database Field Lengths');
 define('EASYPOPULATE_4_DISPLAY_TITLE_UPLOAD', 'Upload EP File');
 define('EASYPOPULATE_4_DISPLAY_MAX_UP_SIZE', 'Http Max Upload File Size: %1$d bytes (%2$d Mbytes)');
 define('EASYPOPULATE_4_DISPLAY_UPLOAD_BUTTON_TEXT', 'Upload File');
-define('EASYPOPULATE_4_DD_STATUS_DEFAULT', 'Status');
+define('EASYPOPULATE_4_DD_STATUS_DEFAULT', 'Status (active)');
 define('EASYPOPULATE_4_DD_STATUS_ACTIVE', 'active');
 define('EASYPOPULATE_4_DD_STATUS_INACTIVE', 'inactive');
 define('EASYPOPULATE_4_DD_STATUS_ALL', 'all');

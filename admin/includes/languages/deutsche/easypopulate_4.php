@@ -112,7 +112,7 @@ define('EASYPOPULATE_4_DISPLAY_DB_FLD_LGTH', 'Datenbank Feldlängen');
 define('EASYPOPULATE_4_DISPLAY_TITLE_UPLOAD', 'Datei für den Import hochladen');
 define('EASYPOPULATE_4_DISPLAY_MAX_UP_SIZE', 'Http Maximale Dateigröße für den Upload: %1$d bytes (%2$d Mbytes)');
 define('EASYPOPULATE_4_DISPLAY_UPLOAD_BUTTON_TEXT', 'Hochladen');
-define('EASYPOPULATE_4_DD_STATUS_DEFAULT', 'Status');
+define('EASYPOPULATE_4_DD_STATUS_DEFAULT', 'Status (aktiv)');
 define('EASYPOPULATE_4_DD_STATUS_ACTIVE', 'aktiv');
 define('EASYPOPULATE_4_DD_STATUS_INACTIVE', 'inaktiv');
 define('EASYPOPULATE_4_DD_STATUS_ALL', 'alle');
