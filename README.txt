@@ -20,7 +20,7 @@ At least one specific known issue is that dates must be formatted to be like: YY
    product. This means that if two rows of data have the same v_products_model data with only a difference of the category name,
    then the product will appear in both categories and a change to the data in one entry will appear in the other category. See the
    previous sentence about effect of two products having the same products_model identifier.
-   "Duplicate" products with the same products_model number is not supported when using the v_products_model as the primary key. 
+   "Duplicate" products with the same products_model number is not supported when using the v_products_model as the primary key, they will each end up with the same information.
    If you have these entries in your database, you may get unpredictable results when importing data.
    
    The second method of import is to use the products_id.  
@@ -30,7 +30,8 @@ At least one specific known issue is that dates must be formatted to be like: YY
    It is always possible to export the products_id as a user defined field even if products_model is the chosen primary
    field.  Use of the products_model field allows for matching of data from perhaps an outside vendor to the data in the database.
    Use of the products_id will allow export of the store, modification of that file and then again import of the applicable row(s) of
-   data to update the modified field(s).  When working with the products_id as a primary key, there are two settings.  One with
+   data to update the modified field(s) (This could include assigning a products_model to the products_id).
+   When working with the products_id as a primary key, there are two settings.  One with
    products_id only, where rows with a blank products_id will be skipped like with a blank products_model entry described above, the 
    other, blank_new, will assign a new products_id (next "available") for records that have a blank for the products_id field in the
    applicable row.
@@ -59,18 +60,18 @@ Also there is NO streaming upload or download support. Sorry if you liked this f
 the code's performance and streaming the data was a real memory hog. To download your exported file, you will need to 
 "right-click, save-as". You may be able to set your browser to automatically download csv/CSV files when clicking on the download link. I'll come up with a better solution in due time. 
 
-5) File names act as a switch inside the script for Importing. This means that in order to affect the fields associated with say
+5) File names are important and act as a switch inside the script for Importing. This means that in order process data associated with
 featured product, the filename must begin with the non-case sensitive name of Featured-EP.  Anything that follows that name can be
-modified to suit but must follow the file naming convention of your host and software.  The filenames requiring this unique file
-naming are namely: PriceBreaks-EP, CategoryMeta-EP, Featured-EP, SBA-Stock-EP, and Attrib-Basic-EP/Attrib-Detailed-EP ... these 
-import files must have names that start with this string.
+modified to suit but must follow the file naming "rules" of your host and software.  The filenames requiring unique file
+naming are: PriceBreaks-EP, CategoryMeta-EP, Featured-EP, SBA-Stock-EP, and Attrib-Basic-EP/Attrib-Detailed-EP ... these
+import files must have names that start with the applicable string.
 
-For example, attempting to upload a file to modify the featured part(s) of a product where the filename does not begin with 
+For example, attempting to import a file to modify the featured part(s) of a product where the filename does not begin with
 Featured-EP (case insensitive) data will not update the featured specific data of the product.  Files that are not named using the
 identified unique filename prefix will be processed as a full product with each field processed as might be expected for a full
 product import.
 
-6) Basic Attribute Import. Please read the notes below carefully about importing attributes for how to use this feature which is still in development. Currently, you can 
+6) Basic Attribute Import. Please read the notes below carefully about importing attributes and how to use this feature which is still in development. Currently, you can
 at Import create your products_options_name (your attribute name, ie. color), products_options_type (checkbox, dropdown, etc), and 
 products_options_values_name (red, green, blue).
 
@@ -92,7 +93,7 @@ The basic attributes CSV file currently has 4 columns:
 	   unique within the store as linked products have not been tested.
 
 2) v_products_option_type
-	a) this is the type of attribute you want to create and must be
+	a) this is the type of attribute you want to create and should be
 	   a number between 0 - 5 (for a default store or the number associated with your added software) and are defined as follows:
 		0 - Drop Down Box
 		1 - Text Box
@@ -118,13 +119,13 @@ The basic attributes CSV file currently has 4 columns:
 		"Color" with "red,green,blue" as one option name/value pair
 		"Color" with "cyan,magenta,yellow" as another option name/value pair.
 	   Internally, Zen Cart knows these are two distinct options names, 
-	   but this info is not available to the user. (It would have been
+	   but this info is not available to the user. (It may have been
 	   better to have a unique Options Name, and associated Options Display Name
 	   which in turn could be language specific).
 	c) For this reason, the products_options_name_1 must be unique, meaning
 	   you CAN have "Colors" but the associated options_values set will be
 	   the sum of the example above: { red,green,blue,cyan,magenta,yellow }.  
-	   (This is information in the database. The product will still only show 
+	   (This is information in the database. The individual product will still only show
 	   the attributes assigned.)
 	d) It is generally easier to work with and understand the attributes if there
 	   is one option name that has multiple option values associated with it, but 
@@ -136,13 +137,38 @@ The basic attributes CSV file currently has 4 columns:
 	c) note that ONLY these products_options_values_names will be assigned 
 	   to the given products_model
 
+A way to reproduce attributes in one store from another using EP4:
+
+  If store 1 has a unique model # for each product and the option names are unique (only one instance of the option name in all of the ZC option names), then the import of the attributes_basic file has populated store 2 with all of the attributes of the product from store 1. What is missing though is the detail associated with each attribute. So, to update store 2's attribute details, a file has to be generated such that each of the four primary detailed attributes related keys match an existing entry in the attributes table. So, how to accomplish this?
+
+  Here's what I see. It is possible at this point to export the detailed attributes from both store 1 and store 2. Each of these has text versions of the option names and option values names. The model number is whatever it is and the products_attributes_id is expected to be unique to each store.
+
+  So what I would do would be to sort the data in both detailed lists on three fields in the same "order" (either ascending or descending but make it the same on both spreadsheets) such that sorted by products_model, then option_name, and then option_value_name.
+
+  Then pick the method/location desired, but the goal is to eliminate from the list for store 2 any product that is not in store 1. This would be by a comparison of products_model.
+  For now, also eliminate from store 1 any row that doesn't have a model #. (will have to address that separately because really that product never got uploaded to store 2, but at least the list should be small.)
+
+  Then begin moving entire rows as necessary such that the row in store 1 lines up with the row of store 2 by first comparing option names then option value names. Provided nothing "new" has been done with store 2, these should line up exactly with no editing.
+
+  Then once all have been lined up, copy the primary field data from store 2 over the data of the same field for store 1. Once all four columns are copied, save the file as the csv file to be uploaded and then imported into store 2.
+
+  Obviously through this process you'll want to save a backup of the file(s) to minimize any rework. Keep in mind the filenaming convention needed by the plugin.
+
+  And with that, the new file when uploaded and imported to store 2 should cause store 2 to have the same attributes and details of attributes as store 1.
+
+  Other attribute guidance: Currently the detailed attributes unlike the detailed product information
+  for example are based on the specific database centric field record designations.  Because of this,
+  to properly update the detailed information, one must first upload and import the basic information,
+  then download/export the detailed attribute data and after all of this, the CSV file processed
+   as a new imported file with the updated data to be stored in the database.
+
 IMPORTANT NOTE:
 When creating your CSV file, please use Open Office (it's free!). When you save 
 CSV files from Open Office (OO), it will properly encapsulate all fields for import. Excel will not 
 necessarily do this, depending on your data, and the export CSV option 
 you pick from within Excel, also dates and date formats may be revised by Excel and not readable upon import.
 
-In the /examples directory is a sample input file: Attrib-Basic-EP-examples.csv
+In the /examples directory is a sample input file: Attrib-Basic-EP-examples.csv  You can create your own sample file by exporting the data file type of your choosing.
 
 The "Detailed Products Attributes" shows all attribute details assigned to a given products_model,
 with one line per option_name/value combination. So a product with a dropbox of 3 colors will result in 3 lines of
@@ -251,3 +277,14 @@ GENERAL OVERVIEW OF OPERATION:
     vendor in the form of some other file, then purely using the products_model (or possibly some other field as recoded in Ep4) would be suggested. 
     If the data to be imported will be "self generated" then use of the products_id might be more suitable. For those that don't yet have a 
     products_model associated, the same feature can be used to apply one to the product.
+    If you want to delete a product, then set the status of the product to the number 9.
+    Understand that this will completely remove the product from the store, not just disable it (status of 0).
+    To change the master_category_id for a product to be the category of the current row set the status to 7.
+    If there is no master_category_id assigned, then the current category on the row will become the master_category_id.
+    If there is already a master_category_id assigned to the product, then the category on the row will
+    become the master_category_id and the product will be removed from the previous category represented
+    by the master_category_id. The process is performed by always adding to the database before deleting anything.
+    Using this operation it is therefore possible to now remove the linked product through a sequence.
+    If there were three categories assigned to a product, then assigning the master_category_id to
+    each category that is not the current master_category will delete the product from the other
+    category(ies) and do this until the last entry for that product has the category to be the product's master_category_id.

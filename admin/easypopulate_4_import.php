@@ -716,7 +716,7 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
             $sql = $db->bindVars($sql, ':artists_name:', ep_4_curly_quotes($v_artists_name), 'string');
             $result = ep_4_query($sql);
             if ($row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array($result) )) {
-              $v_artists_id = $row['artistsID']; // this id goes into the product_music_extra table
+              $v_artists_id = $row['artistsID']; // this id goes into the product_music_extra table, the other information is collected from the assignment of ${$key} = $items[$value]
               $sql = "UPDATE " . TABLE_RECORD_ARTISTS . " SET 
 								artists_image = :artists_image:,
 								last_modified = CURRENT_TIMESTAMP
