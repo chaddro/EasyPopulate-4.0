@@ -559,9 +559,9 @@ if (!is_null($_POST['import']) && isset($_POST['import'])) {
           foreach ($langcode as $lang) {
             if (!function_exists('mb_split')) {
             // iso-8859-1
-              $categories_names_array[$lang['id']] = explode($categories_delimiter,$items[$filelayout['v_categories_name_'.$lang['id']]]); 
+              $categories_names_array[$lang['id']] = explode($categories_delimiter,$items[$filelayout['v_categories_name_'.$lang['id']]]);
             } else {
-            // utf-8 
+            // utf-8
               $categories_names_array[$lang['id']] = mb_split(preg_quote($categories_delimiter), $items[$filelayout['v_categories_name_' . $lang['id']]]);
             }
 
