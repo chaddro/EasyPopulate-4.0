@@ -305,7 +305,7 @@ if (isset($_FILES['uploadfile'])) {
   if (is_uploaded_file($file['tmp_name'])) {
     ep_4_copy_uploaded_file($file, (EP4_ADMIN_TEMP_DIRECTORY !== 'true' ? /* Storeside */ DIR_FS_CATALOG : /* Admin side */ DIR_FS_ADMIN) . $tempdir);
   }
-  $messageStack->add(sprintf("File uploaded successfully: " . $file['name']), 'success');
+  $messageStack->add(sprintf(EASYPOPULATE_4_DISPLAY_RESULT_UPLOAD_COMPLETE, $file['name'], /*"<td align=center>" .*/ (strtolower(end(explode('.', $file['name']))) == 'csv' ? zen_draw_form('import_form', basename($_SERVER['SCRIPT_NAME']), '', 'post', '', $request_type == 'SSL') . zen_draw_hidden_field('import', urlencode($file['name']), '') . zen_draw_input_field('import_button', EASYPOPULATE_4_DISPLAY_EXPORT_FILE_IMPORT, '', false, 'submit') . EASYPOPULATE_4_DISPLAY_RESULT_UPLOAD_IMPORT . "</form>\n" /*</td>\n"*/ : EASYPOPULATE_4_DISPLAY_RESULT_UPLOAD_NO_CSV), 'success'));
 }
 
 // Handle file deletion (delete only in the current directory for security reasons)
