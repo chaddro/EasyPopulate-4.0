@@ -2,7 +2,7 @@
 
 /*
  * This is the file processed if the import file is a attrib-detailed-ep file.
- *
+ * includes\modules\easypopulate_4_sba_detailed_ep.php, v4.0.35.ZC.2 10-03-2016 mc12345678 $
  */
 
       while ($items = fgetcsv($handle, 0, $csv_delimiter, $csv_enclosure)) { // read 1 line of data

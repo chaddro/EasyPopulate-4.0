@@ -1,5 +1,5 @@
 <?php
-// $Id: easypopulate_4.php, v4.0.35.ZC.1 07-05-2016 mc12345678 $
+// $Id: easypopulate_4.php, v4.0.35.ZC.2 10-03-2016 mc12345678 $
 
 // CSV VARIABLES - need to make this configurable in the ADMIN
 // $csv_delimiter = "\t"; // "\t" = tab AND "," = COMMA
@@ -78,7 +78,7 @@ $ep_debug_logging_all = false; // do not comment out.. make false instead
 //$sql_fail_test == true; // used to cause an sql error on new product upload - tests error handling & logs
 /* Test area end */
 
-$curver = '4.0.35.ZC.1.a';
+$curver = '4.0.36.ZC';
 $message = '';
 if (IS_ADMIN_FLAG) {
   $new_version_details = plugin_version_check_for_updates(2069, $curver);
