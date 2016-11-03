@@ -1,5 +1,5 @@
 <?php
-// $Id: easypopulate_4.php, v4.0.35.ZC 04-29-2016 mc12345678 $
+// $Id: easypopulate_4.php, v4.0.35.ZC.2 10-03-2016 mc12345678 $
 
 // CSV VARIABLES - need to make this configurable in the ADMIN
 // $csv_delimiter = "\t"; // "\t" = tab AND "," = COMMA
@@ -78,7 +78,7 @@ $ep_debug_logging_all = false; // do not comment out.. make false instead
 //$sql_fail_test == true; // used to cause an sql error on new product upload - tests error handling & logs
 /* Test area end */
 
-$curver = '4.0.35.ZC';
+$curver = '4.0.36.ZC';
 $message = '';
 if (IS_ADMIN_FLAG) {
   $new_version_details = plugin_version_check_for_updates(2069, $curver);
@@ -88,7 +88,7 @@ if (IS_ADMIN_FLAG) {
 }
 
 // Current EP Version - Modded by mc12345678 after Chadd had done so much
-$curver              = $curver . ' - 04-29-2016' . $message;
+$curver              = $curver . ' - 07-05-2016' . $message;
 $display_output = ''; // results of import displayed after script run
 $ep_dltype = NULL;
 $ep_stack_sql_error = false; // function returns true on any 1 error, and notifies user of an error
@@ -252,7 +252,7 @@ if (($collation == 'utf8') && ((substr($project, 0, 5) == "1.3.8") || (substr($p
 // default langauage should not be important since all installed languages are used $langcode[]
 // and we should iterate through that array (even if only 1 stored value)
 // $epdlanguage_id is used only in categories generation code since the products import code doesn't support multi-language categories
-/* @var $epdlanguage_query type array */
+/* @var $epdlanguage_query array */
 //$epdlanguage_query = $db->Execute("SELECT languages_id, name FROM ".TABLE_LANGUAGES." WHERE code = '".DEFAULT_LANGUAGE."'");
 if (!defined(DEFAULT_LANGUAGE)) {
   $epdlanguage_query = ep_4_query("SELECT languages_id, code FROM " . TABLE_LANGUAGES . " ORDER BY languages_id LIMIT 1");
@@ -305,7 +305,7 @@ if (isset($_FILES['uploadfile'])) {
   if (is_uploaded_file($file['tmp_name'])) {
     ep_4_copy_uploaded_file($file, (EP4_ADMIN_TEMP_DIRECTORY !== 'true' ? /* Storeside */ DIR_FS_CATALOG : /* Admin side */ DIR_FS_ADMIN) . $tempdir);
   }
-  $messageStack->add(sprintf("File uploaded successfully: " . $file['name']), 'success');
+  $messageStack->add(sprintf(EASYPOPULATE_4_DISPLAY_RESULT_UPLOAD_COMPLETE, $file['name'], /*"<td align=center>" .*/ (strtolower(end(explode('.', $file['name']))) == 'csv' ? zen_draw_form('import_form', basename($_SERVER['SCRIPT_NAME']), '', 'post', '', $request_type == 'SSL') . zen_draw_hidden_field('import', urlencode($file['name']), '') . zen_draw_input_field('import_button', EASYPOPULATE_4_DISPLAY_EXPORT_FILE_IMPORT, '', false, 'submit') . EASYPOPULATE_4_DISPLAY_RESULT_UPLOAD_IMPORT . "</form>\n" /*</td>\n"*/ : EASYPOPULATE_4_DISPLAY_RESULT_UPLOAD_NO_CSV), 'success'));
 }
 
 // Handle file deletion (delete only in the current directory for security reasons)
@@ -463,6 +463,15 @@ if (((isset($error) && !$error) || !isset($error)) && (!is_null($_POST["delete"]
 
         <div align = "left">
              <?php
+             $export_type_array = array();
+             $export_type_array = array(array("id" => '0', 'text' => EASYPOPULATE_4_DD_DOWNLOAD_DEFAULT),
+               array("id" => '0', 'text' => EASYPOPULATE_4_DD_DOWNLOAD_COMPLETE),
+               array("id" => '1', 'text' => EASYPOPULATE_4_DD_DOWNLOAD_QUANTITY),
+               array("id" => '2', 'text' => EASYPOPULATE_4_DD_DOWNLOAD_BREAKS));
+
+             $category_filter_array = array();
+             $category_filter_array = array_merge(array(0 => array("id" => '', 'text' => EASYPOPULATE_4_DD_FILTER_CATEGORIES)), zen_get_category_tree());
+
              $manufacturers_array = array();
              $manufacturers_array[] = array("id" => '', 'text' => EASYPOPULATE_4_DISPLAY_MANUFACTURERS);
              if ($ep_uses_mysqli) {
@@ -478,15 +487,11 @@ if (((isset($error) && !$error) || !isset($error)) && (!is_null($_POST["delete"]
                }
              }
              $status_array = array(array("id" => '1', 'text' => EASYPOPULATE_4_DD_STATUS_DEFAULT ), array("id" => '1', 'text' => EASYPOPULATE_4_DD_STATUS_ACTIVE), array("id" => '0', 'text' => EASYPOPULATE_4_DD_STATUS_INACTIVE), array("id" => '3', 'text' => EASYPOPULATE_4_DD_STATUS_ALL));
-             $export_type_array = array(array("id" => '0', 'text' => EASYPOPULATE_4_DD_DOWNLOAD_DEFAULT),
-               array("id" => '0', 'text' => EASYPOPULATE_4_DD_DOWNLOAD_COMPLETE),
-               array("id" => '1', 'text' => EASYPOPULATE_4_DD_DOWNLOAD_QUANTITY),
-               array("id" => '2', 'text' => EASYPOPULATE_4_DD_DOWNLOAD_BREAKS));
 
              echo "<b>" . EASYPOPULATE_4_DISPLAY_FILTERABLE_EXPORTS . "</b><br />";
 
              echo zen_draw_pull_down_menu('ep_export_type', $export_type_array) . ' ';
-             echo ' ' . zen_draw_pull_down_menu('ep_category_filter', array_merge(array(0 => array("id" => '', 'text' => EASYPOPULATE_4_DD_FILTER_CATEGORIES)), zen_get_category_tree())) . ' ';
+             echo ' ' . zen_draw_pull_down_menu('ep_category_filter', $category_filter_array) . ' ';
              echo ' ' . zen_draw_pull_down_menu('ep_manufacturer_filter', $manufacturers_array) . ' ';
              echo ' ' . zen_draw_pull_down_menu('ep_status_filter', $status_array) . ' ';
              echo zen_draw_input_field('export', EASYPOPULATE_4_DD_FILTER_EXPORT, ' style="padding: 0px"', false, 'submit');
@@ -541,12 +546,10 @@ if (((isset($error) && !$error) || !isset($error)) && (!is_null($_POST["delete"]
         <?php } /* End SBA1 Addition */ 
 		$zco_notifier->notify('EP4_LINK_SELECTION_END');
 		?>
-
         <br><?php echo EASYPOPULATE_4_DISPLAY_TITLE_EXPORT_ONLY; ?><br />
         <a href="<?php echo zen_href_link(FILENAME_EASYPOPULATE_4, 'export=options', $request_type); ?>"><?php echo EASYPOPULATE_4_DISPLAY_EXPORT_OPTION_NAMES; ?></a><br />
         <a href="<?php echo zen_href_link(FILENAME_EASYPOPULATE_4, 'export=values', $request_type); ?>"><?php echo EASYPOPULATE_4_DISPLAY_EXPORT_OPTION_VALUES; ?></a><br />
         <a href="<?php echo zen_href_link(FILENAME_EASYPOPULATE_4, 'export=optionvalues', $request_type); ?>"><?php echo EASYPOPULATE_4_DISPLAY_EXPORT_OPTION_NAMES_TO_VALUES; ?></a><br />
-
         <?php
 // List uploaded files in multifile mode
 // Table header

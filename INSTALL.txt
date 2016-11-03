@@ -11,7 +11,7 @@ and can be downloaded from here:
 
 http://www.zen-cart.com/index.php?main_page=product_contrib_info&products_id=81
 
-Also note that EasyPopulate 4.0 Beta will install and run independently of all other 
+Also note that EasyPopulate 4.0 will install and run independently of all other
 versions of easypopulate. Names 1.2.5.4 (and flavors) and EP Advance 3.0.3.
 
 INSTALLATION (Upgrade from any prior version of EP4) is suggested as follows:
@@ -39,8 +39,12 @@ INSTALLATION:
 	a) If you are using zencart 1.3.8/1.3.9, you need to also upload the additional
         files in the "zencart 1.3 extra files" folder. 
 
-	b)  If you are using zencart 1.5.x, no additional files need to be uploaded as the file necessary
-	 to support ZenCart 1.5.x has been placed within the above "admin" directory. 
+	b)  If you are using zencart 1.5.x, the files necessary to support ZenCart 1.5.x are already within the plugins "admin" directory, and should be placed onto your server.
+
+	c)  Create a directory where EP4 related datafiles will be uploaded/exported.  If this
+	 directory will be in your admin area, then be sure to either merge the contents/changes
+	 of the folder htaccess4AdminTempFolder with your new folder, or place the file(s) there.
+	 This directory is *not* auto-created.
 
 3. Login to your store's admin. Under Tools you will see a new entry "Easy Populate 4". 
    (If you do not see this entry, you did not upload your files correctly.)

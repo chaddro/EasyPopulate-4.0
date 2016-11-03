@@ -310,3 +310,42 @@
 4.0.35.ZC 04/29/2016            Modified version number as github contained 4.0.35 and wanted to be sure that users that downloaded
                                         that version would receive notification of the updated file.  This is the version
                                         submitted to ZC.
+4.0.35.ZC.2 10/03/2016          Correctedissues related to version 4.0.35.ZC and incorporated comments received by
+                                        users of the program as identified in the ZC forum including:
+                                        Modified the usage and installation instructions to try to provide 
+                                          clearer direction in particular areas.
+                                        Cleaned up some documentation.
+                                        Improved system response/notification following upload of a csv file.
+                                        Resequenced some coding for readibility and consistency.
+                                        Corrected sanitization code that was incorrectly implemented, in some cases 
+                                          requiring more information to be entered in an import file than expected or
+                                          planned.
+                                        Increased the usability of alternate primary keys in import/export of data.
+                                        Pulled some import file types into their own unique file to:
+                                          1) simplify readibility
+                                          2) reduce program load demand (at this time research indicates that files
+                                             incorporated within if statements are not loaded as part of the 
+                                             overall program execution until needed.)
+                                          3) Lead into other structures that could be added to the code to offer
+                                             further expandibility.
+                                          4) Maintain structures to also lead into code execution from outside of the
+                                             main program controller and offer an interface with external code.
+                                        Removed excess code execution that performed no function. In some cases by
+                                          commenting out the code, in others by removing it.
+                                        Modifying some functions to in some cases incorporate ZC code improvments
+                                          such as using zen_db_input instead of just addslashes as the ZC version
+                                          of the data cleansing is improved with later versions of ZC to use 
+                                          functions other than just the basic addslashes PHP code.
+                                        Furthered addressing PHP 7.X related warnings by further pre-defining variables
+                                          before their first use.
+                                        In some cases reduced the run time of some code by accessing PHP functions
+                                          to capture the expected/necessary data rather than unnecessary loops.
+                                        Improved error reporting screen now that the primary key can be changed.
+                                        Forced unsetting of variables in functions that generated "one-time use" 
+                                          variables.
+                                        Modified the install code to improve the process for future upgrades.
+                                        Updated one of the dropdowns to reflect the datatype included with that option.
+                                        Added German installation instructions.
+4.0.36.ZC                       Updated the curver to reflect the latest version that might be identified by other
+                                        users that perhaps previously downloaded 4.0.36.a from github.
+                                        

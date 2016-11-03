@@ -1,5 +1,5 @@
 <?php
-// $Id: easypopulate_4_export.php, v4.0.33 02-29-2016 mc12345678 $
+// $Id: easypopulate_4_export.php, v4.0.35.ZC.2 10-03-2016 mc12345678 $
 
 if (!defined('IS_ADMIN_FLAG')) {
   die('Illegal Access');
@@ -36,7 +36,7 @@ if (isset($_POST['ep_export_type'])) {
     $ep_dltype = 'priceqty'; // Model/Price/Qty
   } elseif ($_POST['ep_export_type'] == '2') {
     $ep_dltype = 'pricebreaks'; // Model/Price/Breaks
-	}
+  }
 }
 
 // override for $ep_dltype
@@ -247,6 +247,9 @@ while ($row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array
       $active_language_id = $row['v_language_id'];
 
       $active_row['v_products_model'] = $row['v_products_model'];
+      if ($chosen_key != 'v_products_model' && zen_not_null($chosen_key)) {
+          $active_row[$chosen_key] = $row[$chosen_key];
+      }
       $active_row['v_products_options_type'] = $row['v_products_options_type'];
 
       $l_id = $row['v_language_id'];
@@ -788,7 +791,7 @@ while ($row = ($ep_uses_mysqli ? mysqli_fetch_array($result) : mysql_fetch_array
 
 if ($ep_dltype == 'attrib_basic') { // must write last record
   // Clean the texts that could break CSV file formatting
-  $datarow = ep_4_rmv_chars($filelayout, $active_row, $csv_delimiter);
+  $dataRow = ep_4_rmv_chars($filelayout, $active_row, $csv_delimiter);
   
   fwrite($fp, $dataRow); // write 1 line of csv data (this can be slow...)
   $ep_export_count++;

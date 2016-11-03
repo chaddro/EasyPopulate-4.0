@@ -1,5 +1,5 @@
 <?php
-// $Id: easypopulate_4.php, v4.0.31 08-29-2015 mc12345678 $
+// $Id: easypopulate_4.php, v4.0.35.ZC.2 10-03-2016 mc12345678 $
 
 // $display_output defines
 
@@ -22,8 +22,10 @@ define('EASYPOPULATE_4_DISPLAY_RESULT_NEW_PRODUCT', '<br /><font color="green"><
 define('EASYPOPULATE_4_DISPLAY_RESULT_NEW_PRODUCT_FAIL', '<br /><font color="red"><b>ADD NEW PRODUCT FAILED! - Model:</b> %s - SQL error. Check Easy Populate error log in uploads directory</font>');
 define('EASYPOPULATE_4_DISPLAY_RESULT_UPDATE_PRODUCT', '<br /><font color="mediumblue"><b>UPDATED! - Model:</b> %s</font> | ');
 define('EASYPOPULATE_4_DISPLAY_RESULT_UPDATE_PRODUCT_FAIL', '<br /><font color="red"><b>UPDATE PRODUCT FAILED! - Model:</b> %s - SQL error. Check Easy Populate error log in uploads directory</font>');
-define('EASYPOPULATE_4_DISPLAY_RESULT_NO_MODEL', '<br /><font color="red"><b>No model field in record. This line was not imported</b></font>');
-define('EASYPOPULATE_4_DISPLAY_RESULT_UPLOAD_COMPLETE','<br /><b>Upload Complete</b></p>'); // close paragraph above
+define('EASYPOPULATE_4_DISPLAY_RESULT_NO_MODEL', '<br /><font color="red"><b>No %1$s field data in record. This line was not imported</b></font>');
+define('EASYPOPULATE_4_DISPLAY_RESULT_UPLOAD_IMPORT', ' file to database or see below for more.');
+define('EASYPOPULATE_4_DISPLAY_RESULT_UPLOAD_COMPLETE','<br /><b>File uploaded Successfully</b>: %1$s %2$s');
+define('EASYPOPULATE_4_DISPLAY_RESULT_UPLOAD_NO_CSV', ' file is not a CSV file. See below for options.');
 define('EASYPOPULATE_4_DISPLAY_RESULT_ARTISTS_NAME_LONG','<br /><font color="red"><b>SKIPPED! - Artist Name:</b> %s - exceeds max. length: %s</font>');
 define('EASYPOPULATE_4_DISPLAY_RESULT_RECORD_COMPANY_NAME_LONG','<br /><font color="red"><b>SKIPPED! - Record Company Name:</b> %s - exceeds max. length: %s</font>');
 define('EASYPOPULATE_4_DISPLAY_RESULT_MUSIC_GENRE_NAME_LONG','<br /><font color="red"><b>SKIPPED! - Music Genre Name:</b> %s - exceeds max. length: %s</font>');
@@ -79,7 +81,7 @@ define('ATTRIB_DETAILED_EP_DESC','Prefix: %1$s. %2$s will be processed through t
 define('SBA_DETAILED_EP_DESC','Prefix: %1$s. %2$s will be processed through the Detailed Stock by Attributes filters.');
 define('SBA_STOCK_EP_DESC','Prefix: %1$s. %2$s will be processed through the Stock by Attributes Stock Modification filters.');
 define('ORDERS_EP_DESC', 'Prefix: %1$s. %2$s will not be processed for import.');
-define('CATCHALL_EP_DESC', 'This contains any other file. %2$s will be processed like the upload of a full data file.');
+define('CATCHALL_EP_DESC', 'This contains any other file. %2$s will be processed like a full data file.');
 
 // error log defines - for ep_debug_log.txt
 define('EASYPOPULATE_4_ERRORLOG_SQL_ERROR', 'MySQL error %s: %s\nWhen executing:\n%sn');
@@ -112,7 +114,7 @@ define('EASYPOPULATE_4_DISPLAY_DB_FLD_LGTH', 'Database Field Lengths');
 define('EASYPOPULATE_4_DISPLAY_TITLE_UPLOAD', 'Upload EP File');
 define('EASYPOPULATE_4_DISPLAY_MAX_UP_SIZE', 'Http Max Upload File Size: %1$d bytes (%2$d Mbytes)');
 define('EASYPOPULATE_4_DISPLAY_UPLOAD_BUTTON_TEXT', 'Upload File');
-define('EASYPOPULATE_4_DD_STATUS_DEFAULT', 'Status');
+define('EASYPOPULATE_4_DD_STATUS_DEFAULT', 'Status (active)');
 define('EASYPOPULATE_4_DD_STATUS_ACTIVE', 'active');
 define('EASYPOPULATE_4_DD_STATUS_INACTIVE', 'inactive');
 define('EASYPOPULATE_4_DD_STATUS_ALL', 'all');
